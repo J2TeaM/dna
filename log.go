@@ -3,6 +3,7 @@ package dna
 import (
 	"fmt"
 	"reflect"
+	"time"
 )
 
 // Log prints format to screen with GO-syntax representation except for string
@@ -26,9 +27,26 @@ func Log(a ...interface{}) {
 	fmt.Printf(format, a...)
 }
 
-// Log prints an variable with full format: "%#v"
+// Log prints an variable with full format: "%#v". Only accept one variable
 func Logv(a interface{}) {
 	fmt.Printf("%#v\n", a)
+}
+
+// LogStruct prints struct type with its field name and field value. Using for debug
+func LogStruct(a interface{}) {
+	tempintslice := []int{0}
+	ielements := reflect.TypeOf(a).Elem().NumField()
+	for i := 0; i < ielements; i++ {
+		tempintslice[0] = i
+		f := reflect.TypeOf(a).Elem().FieldByIndex(tempintslice)
+		v := reflect.ValueOf(a).Elem().FieldByIndex(tempintslice)
+		if f.Type.String() != "time.Time" {
+			fmt.Printf("%v : %#v\n", f.Name, v.Interface())
+		} else {
+			fmt.Printf("%v : %#v\n", f.Name, String(v.Interface().(time.Time).String()).ReplaceWithRegexp(`\+.+$`, ``).Trim())
+		}
+
+	}
 }
 
 // Print outputs the values on screen

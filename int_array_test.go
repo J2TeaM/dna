@@ -158,3 +158,13 @@ func ExampleIntArray_Unique() {
 	Logv(x.Unique())
 	// Output: dna.IntArray{1, 2, 3, 5, 6}
 }
+
+func ExampleParseIntArray() {
+	var str String
+	var expectedArray IntArray = IntArray{}
+	str = `{123,123,123123,123}`
+	expectedArray = ParseIntArray(str)
+	Logv(expectedArray)
+	// Output:
+	// dna.IntArray{123, 123, 123123, 123}
+}

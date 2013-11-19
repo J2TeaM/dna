@@ -1,6 +1,8 @@
 package dna
 
 import (
+	"database/sql/driver"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -139,4 +141,37 @@ func (a IntArray) Unique() IntArray {
 		}
 	}
 	return tmp
+}
+
+// Value implements the Valuer interface in database/sql/driver package.
+func (a IntArray) Value() (driver.Value, error) {
+	return driver.Value(string(String(fmt.Sprintf("%#v", a)).Replace("dna.IntArray", ""))), nil
+}
+
+// parseStringArray returns dna.IntArray-typed array from postgresql-array-typed int
+// Ex: {123,456} => dna.IntArray{123, 456}
+func ParseIntArray(str String) IntArray {
+	if str.Match(`^{[0-9,]+}$`) == true {
+		return str.Replace("{", "").Replace("}", "").Split(",").ToIntArray()
+	} else {
+		panic("Int array from sql is not in correct format!")
+	}
+}
+
+// Scan implements the Scanner interface in database/sql package.
+func (a *IntArray) Scan(src interface{}) error {
+	var source IntArray
+	switch src.(type) {
+	case string:
+		source = ParseIntArray(String(string(src.(string))))
+		Logv("adasdas")
+	case []byte:
+		source = ParseIntArray(String(string(src.([]byte))))
+	case nil:
+		source = IntArray{}
+	default:
+		return errors.New("Incompatible type for dna.IntArray type")
+	}
+	*a = source
+	return nil
 }

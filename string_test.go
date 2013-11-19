@@ -397,3 +397,96 @@ func ExampleString_Repeat() {
 	// "Hôm nay.Hôm nay.Hôm nay.Hôm nay.Hôm nay."
 	// ""
 }
+
+func ExampleString_Underscore() {
+	Logv(String("DateCreated").Underscore())
+	Logv(String("this-isFine").Underscore())
+	//Output : "date_created"
+	//"this_is_fine"
+}
+
+func ExampleString_ToSnakeCase() {
+	Logv(String("DateCreated").Underscore())
+	Logv(String("thisIsTitle").Underscore())
+	// Output: "date_created"
+	// "this_is_title"
+}
+
+func ExampleString_Camelize() {
+	Logv(String("date_created").Camelize())
+	Logv(String("this_is_the_world").Camelize())
+	Logv(String("today-is-fine").Camelize())
+	Logv(String("_today-is_the-day").Camelize())
+	// Output: "dateCreated"
+	// "thisIsTheWorld"
+	// "todayIsFine"
+	// "TodayIsTheDay"
+}
+
+func ExampleString_Dasherize() {
+	Logv(String("DateCreated").Dasherize())
+	Logv(String("DateCreated_Today").Dasherize())
+	//Output: "date-created"
+	//"date-created-today"
+}
+
+func ExampleString_IsEmpty() {
+	Logv(String("").IsEmpty())
+	Logv(String("  ").IsEmpty())
+	Logv(String("123").IsEmpty())
+	// Output: true
+	// false
+	// false
+}
+
+func ExampleString_IsLower() {
+	Logv(String("aaaa12").IsLower())
+	Logv(String("aaBa12").IsLower())
+	// Output: true
+	// false
+}
+
+func ExampleString_IsUpper() {
+	Logv(String("AAA12").IsUpper())
+	Logv(String("aaBa12").IsUpper())
+	// Output: true
+	// false
+}
+
+func ExampleString_IsNumeric() {
+	Logv(String("234354").IsNumeric())
+	Logv(String("234354 ").IsNumeric())
+	Logv(String("asd").IsNumeric())
+	// Output:
+	// true
+	// false
+	// false
+}
+
+func ExampleString_IsAlpha() {
+	Logv(String("234354").IsAlpha())
+	Logv(String("234354 ").IsAlpha())
+	Logv(String("asd").IsAlpha())
+	// Output:
+	// false
+	// false
+	// true
+}
+
+func ExampleString_IsAlphaNumeric() {
+	Logv(String("234354").IsAlphaNumeric())
+	Logv(String("234354 ").IsAlphaNumeric())
+	Logv(String("asd2132").IsAlphaNumeric())
+	// Output:
+	// true
+	// false
+	// true
+}
+
+func ExampleString_Between() {
+	Logv(String(`<a>foobar</a>`).Between(`<a>`, `</a>`))
+	Logv(String(`<a>foobar</a><a>foobar</a>`).Between(`<a>`, `</a>`))
+	// Output;
+	// "foobar"
+	// "foobar"
+}

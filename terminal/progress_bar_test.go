@@ -75,7 +75,7 @@ func ExampleProgressBar_Show() {
 	bar.Width = 40
 	for i := 1; i <= 34; i++ {
 		bar.Show(Int(i), Int(100).Rand().ToString()+"random data", "Completion custom data")
-		time.Sleep(time.Duration(Int(100).Rand().Value()) * time.Millisecond)
+		time.Sleep(time.Duration(Int(100).Rand().ToPrimitiveType()) * time.Millisecond)
 	}
 	// Progress bar appearance while running:
 	// Downloading... 	[       55.07% - t:02s - t_left:02s      ]

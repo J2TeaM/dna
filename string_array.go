@@ -1,6 +1,8 @@
 package dna
 
 import (
+	"database/sql/driver"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -137,4 +139,99 @@ func (sa StringArray) IndexWithRegexp(pattern String) Int {
 		}
 	}
 	return -1
+}
+
+// Value implements the Valuer interface in database/sql/driver package.
+func (sa StringArray) Value() (driver.Value, error) {
+	return driver.Value(string(String(fmt.Sprintf("%#v", sa)).Replace("dna.StringArray", ""))), nil
+}
+
+// ParseStringArray returns dna.StringArray-typed array from postgresql-array-typed string
+// Ex: {"abc","def"} => dna.StringArray{"abc", "def"}
+func ParseStringArray(str String) StringArray {
+	var i Int = 0
+	var length Int = str.Length()
+	if str.CharAt(0) != "{" || str.CharAt(length-1) != "}" {
+		panic("The input is not postgresql array")
+	}
+	// openQIdx is the open quote index
+	// closeQIdx is the close quote index
+	var openQIdx Int = 0
+	var closeQIdx Int = 0
+
+	// indexes of values not inside quotes
+	// openNoqIdx is open no quote index
+	// closeNoQIdx is close no quote index
+	var openNoQIdx Int = 0
+	var closeNoQIdx Int = 0
+
+	// used to check if first value is not quoted & is the first element of an array
+	// fcNoQV is the first comma of no quoted value
+	var fcNoQV Bool = true
+
+	// return value
+	var result StringArray
+
+	// to check if comma (,) is inside quotes
+	// isVRecoreded is the value inside quotes being recorded
+	var isVRecoreded = false
+	// Loop through pos 1 to pos length-2
+	i++
+	for i < length {
+		switch str.CharAt(i) {
+		case `\`:
+			i = i + 2
+		case `"`:
+			closeQIdx = i
+			if closeQIdx > openQIdx && openQIdx != 0 && isVRecoreded == true {
+				result.Push(str.Substring(openQIdx+1, closeQIdx).Replace(`\"`, `"`))
+				isVRecoreded = false
+				// reset no quoted value
+				openNoQIdx = 0
+				closeNoQIdx = 0
+				fcNoQV = false
+				// Log(str.Substring(openQIdx+1, closeQIdx))
+			} else {
+				isVRecoreded = true
+			}
+			openQIdx = closeQIdx
+			i++
+		case `,`:
+			if isVRecoreded == false {
+				closeNoQIdx = i
+				if closeNoQIdx > openNoQIdx && (openNoQIdx != 0 || fcNoQV == true) {
+					result.Push(str.Substring(openNoQIdx+1, closeNoQIdx).Replace(`\"`, `"`))
+					// Log("---", str.Substring(openNoQIdx+1, closeNoQIdx))
+				}
+				openNoQIdx = closeNoQIdx
+			}
+			i++
+		case `}`:
+			if isVRecoreded == false && str.CharAt(i-1) != `"` {
+				closeNoQIdx = i
+				result.Push(str.Substring(openNoQIdx+1, closeNoQIdx).Replace(`\"`, `"`))
+			}
+			i++
+		default:
+			i++
+		}
+	}
+	return result
+}
+
+// Scan implements the Scanner interface in database/sql package.
+func (sa *StringArray) Scan(src interface{}) error {
+	var source StringArray
+	switch src.(type) {
+	case string:
+		source = ParseStringArray(String(string(src.(string))))
+	case []byte:
+		source = ParseStringArray(String(string(src.([]byte))))
+	case nil:
+		source = StringArray{}
+	default:
+		return errors.New("Incompatible type for dna.StringArray type")
+	}
+	*sa = source
+	return nil
 }

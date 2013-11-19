@@ -1,6 +1,8 @@
 package dna
 
 import (
+	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -35,8 +37,29 @@ func (i Int) ToFormattedString(width Int, hasZeroPadding Bool) String {
 }
 
 // Value returns primitive int type
-func (i Int) Value() int {
+func (i Int) ToPrimitiveType() int {
 	return int(i)
+}
+
+// Value implements the Valuer interface in database/sql/driver package.
+func (i Int) Value() (driver.Value, error) {
+	return driver.Value(int(i)), nil
+}
+
+// Scan implements the Scanner interface in database/sql package.
+// Default value for nil is 0
+func (i *Int) Scan(src interface{}) error {
+	var source Int
+	switch src.(type) {
+	case int64:
+		source = Int(int(src.(int64)))
+	case nil:
+		source = 0
+	default:
+		return errors.New("Incompatible type for dna.Int type")
+	}
+	*i = source
+	return nil
 }
 
 // ToFloat returns Float from Int
@@ -47,6 +70,24 @@ func (i Int) ToFloat() Float {
 // ToHex returns hex string from Int
 func (i Int) ToHex() String {
 	return String(fmt.Sprintf("%x", i))
+}
+
+// ToTimeFormat returns int as seconds from 1970-01-01 to format "2013-05-14 11:00:00"
+// It is used to work with postgresql
+func (i Int) ToTimeFormat() String {
+	tm := time.Unix(int64(i), 0)
+	year := fmt.Sprint(tm.Year())
+	month := fmt.Sprintf("%d", tm.Month())
+	day := fmt.Sprint(tm.Day())
+	hour := fmt.Sprint(tm.Hour())
+	min := fmt.Sprint(tm.Minute())
+	sec := fmt.Sprint(tm.Second())
+	ret := year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec
+	return String(ret)
+}
+
+func (i Int) ToTime() time.Time {
+	return time.Unix(int64(i), 0)
 }
 
 // ToBin returns binary string from Int

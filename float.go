@@ -1,6 +1,8 @@
 package dna
 
 import (
+	"database/sql/driver"
+	"errors"
 	"fmt"
 	"math"
 )
@@ -40,7 +42,28 @@ func (f Float) ToInt() Int {
 	return f.Floor()
 }
 
-// Value returns primitive type float64
-func (f Float) Value() float64 {
+// ToPrimitiveValue returns primitive type float64
+func (f Float) ToPrimitiveValue() float64 {
 	return float64(f)
+}
+
+// Value implements the Valuer interface in database/sql/driver package.
+func (f Float) Value() (driver.Value, error) {
+	return driver.Value(float64(f)), nil
+}
+
+// Scan implements the Scanner interface in database/sql package.
+// Default value for nil is 0
+func (f *Float) Scan(src interface{}) error {
+	var source Float
+	switch src.(type) {
+	case float64:
+		source = Float(src.(float64))
+	case nil:
+		source = 0
+	default:
+		return errors.New("Incompatible type for dna.Float type")
+	}
+	*f = source
+	return nil
 }

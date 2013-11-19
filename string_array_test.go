@@ -18,6 +18,54 @@ func TestStringArray_Map(t *testing.T) {
 	}
 }
 
+func TestStringArray_ParseStringArray(t *testing.T) {
+
+	var str String
+	var expectedArray StringArray = StringArray{}
+	var resultedArray StringArray = StringArray{}
+
+	// Set 1
+	str = `{"Lê Việt Anh",HOLETHU,"tran,thai,thinh",YYYYYY,"tap nhu\" lai"}`
+	expectedArray = ParseStringArray(str)
+	resultedArray = StringArray{"Lê Việt Anh", "HOLETHU", "tran,thai,thinh", "YYYYYY", "tap nhu\" lai"}
+	for idx, val := range resultedArray {
+		if val != expectedArray[idx] {
+			t.Error("sfsd")
+		}
+	}
+
+	// Set 2
+	str = `{HOLETHU,"Lê Việt Anh","tran,thai,thinh","tap nhu\" lai"}`
+	expectedArray = ParseStringArray(str)
+	resultedArray = StringArray{"HOLETHU", "Lê Việt Anh", "tran,thai,thinh", "tap nhu\" lai"}
+	for idx, val := range resultedArray {
+		if val != expectedArray[idx] {
+			t.Error("sfsd")
+		}
+	}
+
+	// Set 3
+	str = `{"HO LE THU","Lê Việt Anh","tran,thai,thinh","tap nhu\" lai",popopopdas}`
+	expectedArray = ParseStringArray(str)
+	resultedArray = StringArray{"HO LE THU", "Lê Việt Anh", "tran,thai,thinh", "tap nhu\" lai", "popopopdas"}
+	for idx, val := range resultedArray {
+		if val != expectedArray[idx] {
+			t.Error("sfsd")
+		}
+	}
+
+	// Set 4
+	str = `{xxxxx,"HO LE's THU","Lê, Việt Anh","tran,thai,thinh","tap nhu\" lai",popopopdas}`
+	expectedArray = ParseStringArray(str)
+	resultedArray = StringArray{"xxxxx", "HO LE's THU", "Lê, Việt Anh", "tran,thai,thinh", "tap nhu\" lai", "popopopdas"}
+	for idx, val := range resultedArray {
+		if val != expectedArray[idx] {
+			t.Error("sfsd")
+		}
+	}
+
+}
+
 // Example cases
 func ExampleStringArray() {
 	x := StringArray{"1", "2", "3", "4", "5"}                          // literal
@@ -153,4 +201,14 @@ func ExampleStringArray_IndexWithRegexp() {
 	// Output: 0
 	// 1
 	// -1
+}
+
+func ExampleParseStringArray() {
+	var str String
+	var expectedArray StringArray = StringArray{}
+	str = `{"Lê Việt Anh",HOLETHU,"tran,thai,thinh",YYYYYY,"tap nhu\" lai"}`
+	expectedArray = ParseStringArray(str)
+	Logv(expectedArray)
+	// Output:
+	// dna.StringArray{"Lê Việt Anh", "HOLETHU", "tran,thai,thinh", "YYYYYY", "tap nhu\" lai"}
 }

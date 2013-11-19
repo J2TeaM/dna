@@ -266,7 +266,7 @@ func (b *ProgressBar) getDrawingBar(overlayedString String) String {
 	var result String
 	var incompletePart, completePart *ColorString
 	if overlayedString.IsBlank() {
-		bgBarWidth := Float(b.percent.Value() / 100 * float64(b.Width.Value())).Floor()
+		bgBarWidth := Float(b.percent.ToPrimitiveValue() / 100 * float64(b.Width.ToPrimitiveType())).Floor()
 		completePart = NewColorString(b.CompleteSymbol.Repeat(bgBarWidth))
 		incompletePart = NewColorString(b.IncompleteSymbol.Repeat(b.Width - bgBarWidth))
 	} else {
@@ -279,7 +279,7 @@ func (b *ProgressBar) getDrawingBar(overlayedString String) String {
 		}
 		right := barLeft / 2
 		finalString := String(" ").Repeat(left) + overlayedString + String(" ").Repeat(right)
-		bgBarWidth := Float(b.percent.Value() / 100 * float64(b.Width.Value())).Floor()
+		bgBarWidth := Float(b.percent.ToPrimitiveValue() / 100 * float64(b.Width.ToPrimitiveType())).Floor()
 		completePart = NewColorString(finalString.Substring(0, bgBarWidth))
 		incompletePart = NewColorString(finalString.Substring(bgBarWidth, b.Width))
 	}
