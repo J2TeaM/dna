@@ -8,6 +8,20 @@ import (
 	"time"
 )
 
+// StructScan scans struct-typed value from *sql.Rows. It returns an error if available.
+// The structValue has to be pointer.
+//
+// 	* structValue: Types of struct fields have to be dna basic ones (dna.String, dna.Int...) or time.Time.
+//	* rows: Rows-typed value from sql.Rows
+//	* Return an error
+//
+// When scanning a struct, it will be implemented to the name convention mentioned above:
+// changing from snake case to upper camel case.
+// If a column's name after being camelized is not found in the struct, its value will be ignored automatically.
+// Only matched names will be scanned.
+//
+// For example: If a struct-typed song is utilized to scan an album table, some identical columns will be matched
+// such as id, artists.
 func StructScan(structValue interface{}, rows *sql.Rows) error {
 
 	if reflect.TypeOf(structValue).Kind() != reflect.Ptr {

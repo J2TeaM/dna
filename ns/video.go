@@ -188,7 +188,7 @@ func GetVideo(id Int) (*Video, error) {
 
 	}
 	if video.Link == "" {
-		return video, errors.New(fmt.Sprintf("Video %v : Link not found", video.Id))
+		return nil, errors.New(fmt.Sprintf("Video %v : Link not found", video.Id))
 	} else {
 		video.Checktime = time.Now()
 		return video, nil

@@ -232,7 +232,7 @@ func GetSong(id Int) (*Song, error) {
 	}
 
 	if song.Link == "" {
-		return song, errors.New(fmt.Sprintf("Song %v: Mp3 link not found", song.Id))
+		return nil, errors.New(fmt.Sprintf("Song %v: Mp3 link not found", song.Id))
 	} else {
 		song.Checktime = time.Now()
 		return song, nil

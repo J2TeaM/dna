@@ -285,9 +285,9 @@ func GetAlbum(id Int) (*Album, error) {
 
 	}
 	if album.Nsongs != album.Songids.Length() {
-		return album, errors.New(fmt.Sprintf("Album %v: Songids and Nsongs do not match", album.Id))
+		return nil, errors.New(fmt.Sprintf("Album %v: Songids and Nsongs do not match", album.Id))
 	} else if album.Nsongs == 0 {
-		return album, errors.New(fmt.Sprintf("Album %v: No song found", album.Id))
+		return nil, errors.New(fmt.Sprintf("Album %v: No song found", album.Id))
 	} else {
 		album.Checktime = time.Now()
 		return album, nil
