@@ -1,10 +1,7 @@
 package sqlpg
 
 import (
-	"database/sql"
 	. "dna"
-	"fmt"
-	_ "github.com/lib/pq"
 )
 
 // Config returns config type
@@ -28,11 +25,4 @@ var DefaultConfig *Config = &Config{
 	Post:     5432,
 	Database: "daonguyenanbinh",
 	SSLMode:  "disable",
-}
-
-// Connect returns database of connected server
-func Connect(cf *Config) (*sql.DB, error) {
-	connectionString := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", cf.Username, cf.Password, cf.Host, cf.Post, cf.Database, cf.SSLMode)
-	db, err := sql.Open("postgres", connectionString)
-	return db, err
 }

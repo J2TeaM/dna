@@ -7,8 +7,9 @@ import (
 
 // Testing song with fail link
 func TestGetSong(t *testing.T) {
-	_, err := GetSong(1412937)
+	song1, err := GetSong(1412937)
 	if err == nil {
+		Log(song1)
 		t.Error("The song has to have an error")
 	}
 	song, err := GetSong(1312951)

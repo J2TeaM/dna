@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// getPairValue returns something like `id=123` from a struct
 func getPairValue(structValue interface{}, column dna.String) dna.String {
 	fieldName := ("_" + column).Camelize()
 	val := reflect.ValueOf(structValue).Elem()
@@ -21,15 +22,21 @@ func getPairValue(structValue interface{}, column dna.String) dna.String {
 		case "dna.Float":
 			return dna.String(fmt.Sprintf("%v=%v", column, field.Interface().(dna.Float)))
 		case "dna.String":
-			return dna.String(fmt.Sprintf("%v=%v", column, field.Interface().(dna.String)))
+			return dna.String(fmt.Sprintf("%v=$binhdna$%v$binhdna$", column, field.Interface().(dna.String)))
 		case "dna.StringArray":
 			var tempStr dna.String = dna.String(fmt.Sprintf("%#v", field.Interface().(dna.StringArray))).Replace("dna.StringArray", "")
-			return dna.String(fmt.Sprintf("%v=%v", column, tempStr))
+			return dna.String(fmt.Sprintf("%v=$binhdna$%v$binhdna$", column, tempStr))
 		case "dna.IntArray":
 			var tempStr dna.String = dna.String(fmt.Sprintf("%#v", field.Interface().(dna.StringArray))).Replace("dna.StringArray", "")
-			return dna.String(fmt.Sprintf("%v=%v", column, tempStr))
+			return dna.String(fmt.Sprintf("%v=$binhdna$%v$binhdna$", column, tempStr))
 		case "time.Time":
-			return dna.String(fmt.Sprintf("%v=%v", column, field.Interface().(time.Time)))
+			datetime := field.Interface().(time.Time)
+			if !datetime.IsZero() {
+				return dna.String(fmt.Sprintf("%v=$binhdna$%v$binhdna$", column, datetime))
+			} else {
+				return dna.String(fmt.Sprintf("%v=%v", column, "NULL"))
+			}
+
 		}
 	}
 	return ""
@@ -39,19 +46,19 @@ func getPairValue(structValue interface{}, column dna.String) dna.String {
 // If columns's names are not found, it will return an error.
 // It updates some fields from a struct.
 //
-// 	* tableName : A name of update table.
+// 	* tbName : A name of update table.
 // 	* structValue : A struct-typed value being scanned. Its fields have to be dna basic type or time.Time.
 // 	* conditionColumn : A snake-case column name in the condition, usually it's an id
 // 	* columns : A list of args of column names in the table being updated.
 // 	* Returns an update statement.
-func GetUpdateStatement(tableName dna.String, structValue interface{}, conditionColumn dna.String, columns ...dna.String) (dna.String, error) {
+func GetUpdateStatement(tbName dna.String, structValue interface{}, conditionColumn dna.String, columns ...dna.String) (dna.String, error) {
 	if reflect.TypeOf(structValue).Kind() != reflect.Ptr {
 		panic("StructValue has to be pointer")
 		if reflect.TypeOf(structValue).Elem().Kind() != reflect.Struct {
 			panic("StructValue has to be struct type")
 		}
 	}
-	query := "UPDATE " + tableName + " SET "
+	query := "UPDATE " + tbName + " SET "
 	result := dna.StringArray{}
 	for _, column := range columns {
 		result.Push(getPairValue(structValue, column))

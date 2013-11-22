@@ -35,6 +35,6 @@ func ExampleGetInsertStatement() {
 	// $binhdna$Âm nhạc luôn là nơi chấp cánh tình yêu. Đến với VOICES OF ROMANCE bạn sẽ cảm nhận được sự lãng mạn của tình yêu, sự thăng hoa của cảm xúc, sự cô đơn của chia ly... Các cung bậc của tình yêu đều thể hiện rõ qua từng bài hát.$binhdna$,
 	// $binhdna$$binhdna$,
 	// $binhdna$2007$binhdna$,
-	// $binhdna$0001-01-01 00:00:00$binhdna$
+	// NULL
 	// )
 }

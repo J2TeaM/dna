@@ -66,18 +66,13 @@ func getValueXML(data *String, tag String, position Int) String {
 }
 
 // getSongFromMainPage returns song from main page
-func getSongFromMainPage(id Int) <-chan *Song {
+func getSongFromMainPage(song *Song) <-chan bool {
 
-	channel := make(chan *Song, 1)
+	channel := make(chan bool, 1)
 	go func() {
-		song := NewSong()
-		link := "http://nhacso.net/nghe-nhac/link-joke." + GetKey(id) + "==.html"
+		link := "http://nhacso.net/nghe-nhac/link-joke." + GetKey(song.Id) + "==.html"
 		result, err := http.Get(link)
-		if err != nil || result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
-			channel <- song
-
-		} else {
-			song.Id = id
+		if err == nil && !result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
 			data := &result.Data
 			if data.Match("official") {
 				song.Official = 1
@@ -112,23 +107,20 @@ func getSongFromMainPage(id Int) <-chan *Song {
 					song.Islyric = 0
 				}
 			}
-			channel <- song
 		}
+		channel <- true
 
 	}()
 	return channel
 }
 
 // getSongFromXML returns values from url: http://nhacso.net/flash/song/xnl/1/id/
-func getSongFromXML(id Int) <-chan *Song {
-	channel := make(chan *Song, 1)
+func getSongFromXML(song *Song) <-chan bool {
+	channel := make(chan bool, 1)
 	go func() {
-		song := NewSong()
-		link := "http://nhacso.net/flash/song/xnl/1/id/" + GetKey(id)
+		link := "http://nhacso.net/flash/song/xnl/1/id/" + GetKey(song.Id)
 		result, err := http.Get(link)
-		if err != nil {
-			channel <- song
-		} else {
+		if err == nil {
 			song.Title = getValueXML(&result.Data, "name", 1).Trim()
 			song.Artists = getValueXML(&result.Data, "artist", 0).ToStringArray().SplitWithRegexp("\\|\\|").SplitWithRegexp(" / ").SplitWithRegexp(" - ")
 			song.Artistid = getValueXML(&result.Data, "artistlink", 0).ReplaceWithRegexp("\\.html", "").ReplaceWithRegexp(`^.+-`, "").ToInt()
@@ -151,9 +143,8 @@ func getSongFromXML(id Int) <-chan *Song {
 				song.DateCreated = Int(int64(unix) / 1000).ToTime()
 				song.DateUpdated = time.Now()
 			}
-
-			channel <- song
 		}
+		channel <- true
 
 	}()
 	return channel
@@ -162,76 +153,21 @@ func getSongFromXML(id Int) <-chan *Song {
 // GetSong returns a song whose id is 0
 func GetSong(id Int) (*Song, error) {
 	var song *Song = NewSong()
-	c := make(chan *Song, 2)
+	song.Id = id
+	c := make(chan bool, 2)
 
 	go func() {
-		c <- <-getSongFromXML(id)
+		c <- <-getSongFromXML(song)
 	}()
 	go func() {
-		c <- <-getSongFromMainPage(id)
+		c <- <-getSongFromMainPage(song)
 	}()
 
 	for i := 0; i < 2; i++ {
-		tmpSong := <-c
-		if tmpSong.Id > 0 {
-			song.Id = tmpSong.Id
-		}
-		if tmpSong.Title != "" {
-			song.Title = tmpSong.Title
-		}
-		if tmpSong.Artists.Length() > 0 {
-			song.Artists = tmpSong.Artists
-		}
-		if tmpSong.Artistid > 0 {
-			song.Artistid = tmpSong.Artistid
-		}
-		if tmpSong.Authors.Length() > 0 {
-			song.Authors = tmpSong.Authors
-		}
-		if tmpSong.Authorid > 0 {
-			song.Authorid = tmpSong.Authorid
-		}
-		if tmpSong.Plays > 0 {
-			song.Plays = tmpSong.Plays
-		}
-		if tmpSong.Duration > 0 {
-			song.Duration = tmpSong.Duration
-		}
-		// "/" means that the returned link from XML file
-		if tmpSong.Link != "" && tmpSong.Link != "/" {
-			song.Link = tmpSong.Link
-		}
-		if tmpSong.Topics.Length() > 0 {
-			song.Topics = tmpSong.Topics
-		}
-		if tmpSong.Category.Length() > 0 {
-			song.Category = tmpSong.Category
-		}
-		if tmpSong.Bitrate > 0 {
-			song.Bitrate = tmpSong.Bitrate
-		}
-		if tmpSong.Official > 0 {
-			song.Official = tmpSong.Official
-		}
-		if tmpSong.Islyric > 0 {
-			song.Islyric = tmpSong.Islyric
-		}
-		if tmpSong.Lyric != "" {
-			song.Lyric = tmpSong.Lyric
-		}
-		if !tmpSong.DateCreated.IsZero() {
-			song.DateCreated = tmpSong.DateCreated
-		}
-		if !tmpSong.DateUpdated.IsZero() {
-			song.DateUpdated = tmpSong.DateUpdated
-		}
-		if tmpSong.SameArtist > 0 {
-			song.SameArtist = tmpSong.SameArtist
-		}
-
+		<-c
 	}
 
-	if song.Link == "" {
+	if song.Link == "" || song.Link == "/" {
 		return nil, errors.New(fmt.Sprintf("Song %v: Mp3 link not found", song.Id))
 	} else {
 		song.Checktime = time.Now()

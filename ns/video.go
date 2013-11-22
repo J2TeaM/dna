@@ -47,40 +47,32 @@ func NewVideo() *Video {
 	return video
 }
 
-func getVideoDurationAndSublink(id Int) <-chan *Video {
-	channel := make(chan *Video, 1)
+func getVideoDurationAndSublink(video *Video) <-chan bool {
+	channel := make(chan bool, 1)
 	go func() {
-		video := NewVideo()
-		video.Id = id
-		link := "http://nhacso.net/flash/video/xnl/1/id/" + GetKey(id)
+		link := "http://nhacso.net/flash/video/xnl/1/id/" + GetKey(video.Id)
 		// Log(link)
 		result, err := http.Get(link)
-		if err != nil {
-			// do nothing
-		} else {
+		if err == nil {
 			data := &result.Data
 			// getValueXML is in song.go
 			// Log(getValueXML(data, "duration", 0))
 			video.Duration = getValueXML(data, "duration", 0).RemoveHtmlTags("").ToInt()
 			video.Sublink = getValueXML(data, "subUrl", 0)
 		}
-		channel <- video
+		channel <- true
 	}()
 	return channel
 }
 
-func getVideoFromMainPage(id Int) <-chan *Video {
-	channel := make(chan *Video, 1)
+func getVideoFromMainPage(video *Video) <-chan bool {
+	channel := make(chan bool, 1)
 	go func() {
-		video := NewVideo()
-		link := "http://nhacso.net/xem-video/joke-link." + GetKey(id) + "=.html"
+		link := "http://nhacso.net/xem-video/joke-link." + GetKey(video.Id) + "=.html"
 		// Log(link)
 		result, err := http.Get(link)
-		if err != nil || result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
-			// do nothing cause it has an error
-		} else {
+		if err == nil && !result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
 			data := &result.Data
-			video.Id = id
 			temp := data.FindAllString(`(?mis)<p class="title_video.+Đăng bởi`, 1)
 			if temp.Length() > 0 {
 				title := temp[0].FindAllString(`<h1 class="title">.+</h1>`, 1)
@@ -126,9 +118,8 @@ func getVideoFromMainPage(id Int) <-chan *Video {
 			if len(proceducerid) > 0 {
 				video.Proceducerid = proceducerid[0][1].ToInt()
 			}
-
 		}
-		channel <- video
+		channel <- true
 	}()
 	return channel
 
@@ -137,55 +128,19 @@ func getVideoFromMainPage(id Int) <-chan *Video {
 // GetVideo returns a video and an error (if available)
 func GetVideo(id Int) (*Video, error) {
 	var video *Video = NewVideo()
-	c := make(chan *Video)
+	video.Id = id
+	c := make(chan bool)
 
 	go func() {
-		c <- <-getVideoFromMainPage(id)
+		c <- <-getVideoFromMainPage(video)
 	}()
 
 	go func() {
-		c <- <-getVideoDurationAndSublink(id)
+		c <- <-getVideoDurationAndSublink(video)
 	}()
 
 	for i := 0; i < 2; i++ {
-		tempVideo := <-c
-		if tempVideo.Id > 0 {
-			video.Id = tempVideo.Id
-		}
-		if tempVideo.Title != "" {
-			video.Title = tempVideo.Title
-		}
-		if tempVideo.Artists.Length() > 0 {
-			video.Artists = tempVideo.Artists
-		}
-		if tempVideo.Topics.Length() > 0 {
-			video.Topics = tempVideo.Topics
-		}
-		if tempVideo.Plays > 0 {
-			video.Plays = tempVideo.Plays
-		}
-		if tempVideo.Duration > 0 {
-			video.Duration = tempVideo.Duration
-		}
-		if tempVideo.Official > 0 {
-			video.Official = tempVideo.Official
-		}
-		if tempVideo.Proceducerid > 0 {
-			video.Proceducerid = tempVideo.Proceducerid
-		}
-		if tempVideo.Link != "" {
-			video.Link = tempVideo.Link
-		}
-		if tempVideo.Sublink != "" {
-			video.Sublink = tempVideo.Sublink
-		}
-		if tempVideo.Thumbnail != "" {
-			video.Thumbnail = tempVideo.Thumbnail
-		}
-		if !tempVideo.DateCreated.IsZero() {
-			video.DateCreated = tempVideo.DateCreated
-		}
-
+		<-c
 	}
 	if video.Link == "" {
 		return nil, errors.New(fmt.Sprintf("Video %v : Link not found", video.Id))

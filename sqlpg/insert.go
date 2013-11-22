@@ -37,7 +37,13 @@ func getColumn(f reflect.StructField, structValue interface{}) (dna.String, dna.
 		columnValue = dna.String(fmt.Sprintf("$binhdna$%v$binhdna$", tempStr))
 	case "time.Time":
 		columnName = dna.String(f.Name).ToSnakeCase()
-		columnValue = dna.String(fmt.Sprintf("$binhdna$%v$binhdna$", dna.String(structValue.(time.Time).String()).ReplaceWithRegexp(`\+.+$`, ``).Trim()))
+		datetime := structValue.(time.Time)
+		if !datetime.IsZero() {
+			columnValue = dna.String(fmt.Sprintf("$binhdna$%v$binhdna$", dna.String(datetime.String()).ReplaceWithRegexp(`\+.+$`, ``).Trim()))
+		} else {
+			columnValue = dna.String(fmt.Sprintf("%v", "NULL"))
+		}
+
 	default:
 		// panic("A Field of struct is not dna basic type")
 	}
@@ -45,14 +51,14 @@ func getColumn(f reflect.StructField, structValue interface{}) (dna.String, dna.
 }
 
 // GetInsertQuery returns insert statement from a struct. If input value is not struct, it will panic.
-//	* tableName : A name of table in database you want to insert
+//	* tbName : A name of table in database you want to insert
 //	* structValue : A struct-typed value. The struct's fields has to be dna basic types (dna.Int, dna.String..) or time.Time
 //	* isPrintable: A param determines where to print the pretty result statement
 //	* Return an insert statement
 // Notice:  Insert statement uses Dollar-quoted String Constants with special tag "binhdna".
 // So string or array is contained between $binhdna$ symbols.
 // Therefore no need to escape values.
-func GetInsertStatement(tableName dna.String, structValue interface{}, isPrintable dna.Bool) dna.String {
+func GetInsertStatement(tbName dna.String, structValue interface{}, isPrintable dna.Bool) dna.String {
 	var realKind string
 	var columnNames, columnValues dna.StringArray
 	tempintslice := []int{0}
@@ -94,9 +100,8 @@ func GetInsertStatement(tableName dna.String, structValue interface{}, isPrintab
 
 	}
 	if isPrintable == true {
-		return "INSERT INTO " + tableName + "\n(" + columnNames.Join(",") + ")\n" + "VALUES (\n" + columnValues.Join(",\n") + "\n)"
+		return "INSERT INTO " + tbName + "\n(" + columnNames.Join(",") + ")\n" + "VALUES (\n" + columnValues.Join(",\n") + "\n)"
 	} else {
-		return "INSERT INTO " + tableName + "(" + columnNames.Join(",") + ")" + " VALUES (" + columnValues.Join(",") + ")"
+		return "INSERT INTO " + tbName + "(" + columnNames.Join(",") + ")" + " VALUES (" + columnValues.Join(",") + ")"
 	}
-
 }

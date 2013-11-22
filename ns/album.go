@@ -92,78 +92,61 @@ func getGenresFromDesc(desc String) StringArray {
 	}
 	return ret.SplitWithRegexp(` > `)
 }
-func getAlbumTotalPlays(id Int) <-chan *Album {
-	channel := make(chan *Album, 1)
+func getAlbumTotalPlays(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
 	go func() {
-		album := NewAlbum()
-		album.Id = id
-		link := "http://nhacso.net/statistic/albumtotallisten?listIds=" + id.ToString()
+		link := "http://nhacso.net/statistic/albumtotallisten?listIds=" + album.Id.ToString()
 		result, err := http.Get(link)
-		if err != nil {
-			channel <- album
-		} else {
+		if err == nil {
 			plays := result.Data.FindAllStringSubmatch(`"totalListen":"([0-9]+)"`, 1)
 			if len(plays) > 0 && plays[0].Length() > 1 {
 				album.Plays = plays[0][1].ToInt()
 			}
-
-			channel <- album
 		}
+		channel <- true
 	}()
 	return channel
 }
-func getAlbumIssuedTime(id Int) <-chan *Album {
-	channel := make(chan *Album, 1)
+func getAlbumIssuedTime(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
 	go func() {
-		album := NewAlbum()
-		album.Id = id
-		link := "http://nhacso.net/album/getdescandissuetime?listIds=" + id.ToString()
+		link := "http://nhacso.net/album/getdescandissuetime?listIds=" + album.Id.ToString()
 		// Log(link)
 		result, err := http.Get(link)
-		if err != nil {
-			channel <- album
-		} else {
+		if err == nil {
 			data := &result.Data
 			dateReleased := data.FindAllStringSubmatch(`"IssueTime":"(.+?)"`, 1)
 			if len(dateReleased) > 0 && dateReleased[0].Length() > 1 {
 				album.DateReleased = dateReleased[0][1]
 			}
-			channel <- album
 		}
+		channel <- true
 	}()
 	return channel
 }
-func getAlbumTotalSongs(id Int) <-chan *Album {
-	channel := make(chan *Album, 1)
+func getAlbumTotalSongs(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
 	go func() {
-		album := NewAlbum()
-		album.Id = id
-		link := "http://nhacso.net/album/gettotalsong?listIds=" + id.ToString()
+		link := "http://nhacso.net/album/gettotalsong?listIds=" + album.Id.ToString()
 		result, err := http.Get(link)
-		if err != nil {
-			channel <- album
-		} else {
+		if err == nil {
 			data := &result.Data
 			nsongs := data.FindAllString(`"TotalSong":"[0-9]+"`, 1)
 			if nsongs.Length() > 0 {
 				album.Nsongs = nsongs[0].FindAllString(`[0-9]+`, 1)[0].ToInt()
 			}
-			channel <- album
 		}
+		channel <- true
 	}()
 	return channel
 }
-func getAlbumFromMainPage(id Int) <-chan *Album {
-	channel := make(chan *Album, 1)
+func getAlbumFromMainPage(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
 	go func() {
-		album := NewAlbum()
-		album.Id = id
-		link := "http://nhacso.net/nghe-album/ab." + GetKey(id) + ".html"
+		link := "http://nhacso.net/nghe-album/ab." + GetKey(album.Id) + ".html"
 		// Log(link)
 		result, err := http.Get(link)
-		if err != nil || result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
-			channel <- album
-		} else {
+		if err == nil && !result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
 			data := &result.Data
 			temp := data.FindAllString(`(?mis)class="intro_album_detail.+id="divPlayer`, 1)[0]
 			if !temp.IsBlank() {
@@ -215,8 +198,8 @@ func getAlbumFromMainPage(id Int) <-chan *Album {
 					album.Songids.Push(value.ReplaceWithRegexp(`songid_`, "").ToInt())
 				})
 			}
-			channel <- album
 		}
+		channel <- true
 	}()
 	return channel
 }
@@ -224,65 +207,23 @@ func getAlbumFromMainPage(id Int) <-chan *Album {
 // GetAlbum returns an album and an error (if available)
 func GetAlbum(id Int) (*Album, error) {
 	var album *Album = NewAlbum()
-	c := make(chan *Album)
+	album.Id = id
+	c := make(chan bool)
 
 	go func() {
-		c <- <-getAlbumFromMainPage(id)
+		c <- <-getAlbumFromMainPage(album)
 	}()
 	go func() {
-		c <- <-getAlbumTotalSongs(id)
+		c <- <-getAlbumTotalSongs(album)
 	}()
 	go func() {
-		c <- <-getAlbumIssuedTime(id)
+		c <- <-getAlbumIssuedTime(album)
 	}()
 	go func() {
-		c <- <-getAlbumTotalPlays(id)
+		c <- <-getAlbumTotalPlays(album)
 	}()
 	for i := 0; i < 4; i++ {
-		tempAlbum := <-c
-		if tempAlbum.Id > 0 {
-			album.Id = tempAlbum.Id
-		}
-		if tempAlbum.Title != "" {
-			album.Title = tempAlbum.Title
-		}
-		if tempAlbum.Artists.Length() > 0 {
-			album.Artists = tempAlbum.Artists
-		}
-		if tempAlbum.Artistid > 0 {
-			album.Artistid = tempAlbum.Artistid
-		}
-		if tempAlbum.Topics.Length() > 0 {
-			album.Topics = tempAlbum.Topics
-		}
-		if tempAlbum.Genres.Length() > 0 {
-			album.Genres = tempAlbum.Genres
-		}
-		if tempAlbum.Coverart != "" {
-			album.Coverart = tempAlbum.Coverart
-		}
-		if tempAlbum.Category.Length() > 0 {
-			album.Category = tempAlbum.Category
-		}
-		if tempAlbum.Nsongs > 0 {
-			album.Nsongs = tempAlbum.Nsongs
-		}
-		if tempAlbum.Plays > 0 {
-			album.Plays = tempAlbum.Plays
-		}
-		if tempAlbum.Songids.Length() > 0 {
-			album.Songids = tempAlbum.Songids
-		}
-		if tempAlbum.Description != "" {
-			album.Description = tempAlbum.Description
-		}
-		if tempAlbum.Label != "" {
-			album.Label = tempAlbum.Label
-		}
-		if tempAlbum.DateReleased != "" {
-			album.DateReleased = tempAlbum.DateReleased
-		}
-
+		<-c
 	}
 	if album.Nsongs != album.Songids.Length() {
 		return nil, errors.New(fmt.Sprintf("Album %v: Songids and Nsongs do not match", album.Id))

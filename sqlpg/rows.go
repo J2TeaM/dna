@@ -4,15 +4,19 @@ import (
 	"database/sql"
 	. "dna"
 	"errors"
+	_ "github.com/lib/pq"
 	"reflect"
 	"time"
 )
+
+type Rows struct {
+	*sql.Rows
+}
 
 // StructScan scans struct-typed value from *sql.Rows. It returns an error if available.
 // The structValue has to be pointer.
 //
 // 	* structValue: Types of struct fields have to be dna basic ones (dna.String, dna.Int...) or time.Time.
-//	* rows: Rows-typed value from sql.Rows
 //	* Return an error
 //
 // When scanning a struct, it will be implemented to the name convention mentioned above:
@@ -22,8 +26,7 @@ import (
 //
 // For example: If a struct-typed song is utilized to scan an album table, some identical columns will be matched
 // such as id, artists.
-func StructScan(structValue interface{}, rows *sql.Rows) error {
-
+func (rows *Rows) StructScan(structValue interface{}) error {
 	if reflect.TypeOf(structValue).Kind() != reflect.Ptr {
 		panic("StructValue has to be pointer")
 		if reflect.TypeOf(structValue).Elem().Kind() != reflect.Struct {
@@ -79,7 +82,6 @@ func StructScan(structValue interface{}, rows *sql.Rows) error {
 				if rawValue != nil {
 					field.Set(reflect.ValueOf(rawValue.(time.Time)))
 				}
-
 			}
 		}
 	}

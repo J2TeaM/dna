@@ -5,7 +5,7 @@ import (
 	"dna/ns"
 )
 
-func ExampleStructScan() {
+func ExampleRows_StructScan() {
 	db, err := Connect(DefaultConfig)
 	if err != nil {
 		panic(err)
@@ -16,12 +16,11 @@ func ExampleStructScan() {
 	} else {
 		for rows.Next() {
 			album := ns.NewAlbum()
-			err = StructScan(album, rows)
+			err = rows.StructScan(album)
 			if err != nil {
 				Log(err)
 			}
 			LogStruct(album)
-
 		}
 	}
 	// Output:
@@ -31,7 +30,7 @@ func ExampleStructScan() {
 	// Artistid : 3427
 	// Topics : dna.StringArray{"Nhạc Âu Mỹ"}
 	// Genres : dna.StringArray{"Pop", "Music"}
-	// Category : dna.StringArray{"Nhạc Âu Mỹ", "Pop", "Ballad"}
+	// Category : dna.StringArray{"Nhạc Âu Mỹ", "Dance", "Electronic"}
 	// Coverart : "http://st.nhacso.net/images/album/2013/11/07/1154016226/138382977413_3076_120x120.jpg"
 	// Nsongs : 14
 	// Plays : 115
