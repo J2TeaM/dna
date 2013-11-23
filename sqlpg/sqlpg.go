@@ -4,6 +4,7 @@ import (
 	. "dna"
 )
 
+// Config contains relevant fields to connect to database.
 // Config returns config type
 // Valid values for SSLMode are:
 // 		* disable - No SSL

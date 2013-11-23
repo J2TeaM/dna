@@ -9,6 +9,7 @@ import (
 	"reflect"
 )
 
+// DB is a wrapper of sql.DB but some custom methods are added to enhance its functionalties.
 type DB struct {
 	*sql.DB
 }
@@ -27,6 +28,10 @@ func (db *DB) Query(query dna.String, args ...interface{}) (*Rows, error) {
 	return &Rows{rows}, err
 }
 
+// Insert inserts custom struct to a table.
+// The table's name depends on the type's name and its package's name.
+// Ex: Any instance of type Song from package ns will be inserted into table nssongs.
+// Insert returns an error if the struct fails.
 func (db *DB) Insert(structValue interface{}) error {
 	tbName := GetTableName(structValue)
 	insertQuery := GetInsertStatement(tbName, structValue, false)
@@ -38,6 +43,10 @@ func (db *DB) Insert(structValue interface{}) error {
 	}
 }
 
+// InsertIgnore runs exactly the same as Insert.
+// However if the insert value has already existed in a table,
+// it does not return any error.
+// It only returns an error if and only if other errors occur.
 func (db *DB) InsertIgnore(structValue interface{}) error {
 	err := db.Insert(structValue)
 	if err != nil {
@@ -72,7 +81,24 @@ func (db *DB) Update(structValue interface{}, conditionColumn dna.String, column
 	}
 }
 
-// Select returns ...
+// Select runs an arbitrary SQL query,
+// binding the columns in the result to fields on the struct specified by structValue.
+//
+//	*structValue: A struct value being binded. It has to be a pointer to a slice
+//	*query: A query statement
+//	*args: The args are for any placeholder parameters in the query.
+//	*Returns error if available.
+//
+// It supports only custom struct, basic dna types(dna.Int,dna.String..) and time.Time
+//
+// Basic usage : (See example below for exact implementation):
+//
+// 	// Custone Struct
+// 	songs := &[]ns.Song{}
+// 	err := db.Select(songs, "SELECT * FROM nssongs ORDER BY id ASC LIMIT 10")
+// 	// Basic dna types
+// 	ids := &[]Int{}
+//	err := db.Select(ids, "SELECT id FROM nssongs ORDER BY id ASC LIMIT 10")
 func (db *DB) Select(structValue interface{}, query dna.String, args ...interface{}) error {
 	rows, err := db.Query(query, args...)
 	if err != nil {

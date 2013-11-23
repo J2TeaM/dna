@@ -1,6 +1,6 @@
 /*
  This package is supposed to implements wrapper for postgresql manipulation.
- It intends to leave the standard package alone. It does not modify or alter sql.Rows or sql.Db.
+ It intends to leave the standard package alone. It inherits from sql.Rows or sql.Db.
 
  Name convention once converting from names of a struct to columns' names in a table:
 
