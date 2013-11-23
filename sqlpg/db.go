@@ -3,8 +3,10 @@ package sqlpg
 import (
 	"database/sql"
 	"dna"
+	"errors"
 	"fmt"
 	_ "github.com/lib/pq"
+	"reflect"
 )
 
 type DB struct {
@@ -68,4 +70,36 @@ func (db *DB) Update(structValue interface{}, conditionColumn dna.String, column
 			return nil
 		}
 	}
+}
+
+// Select returns ...
+func (db *DB) Select(structValue interface{}, query dna.String, args ...interface{}) error {
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return err
+	} else {
+		for rows.Next() {
+			ptrStruct := reflect.ValueOf(structValue)
+			if ptrStruct.Kind() == reflect.Ptr {
+				realStruct := reflect.Indirect(ptrStruct)
+				if realStruct.Kind() != reflect.Slice {
+					return errors.New("Select() Method only accepts slice")
+				} else {
+					val := reflect.New(reflect.TypeOf(structValue).Elem().Elem())
+					if reflect.Indirect(val).Kind() == reflect.Struct {
+						rows.StructScan(val.Interface())
+					} else {
+						rows.Scan(val.Interface())
+					}
+					// Log(val.Interface())
+					realStruct.Set(reflect.Append(realStruct, reflect.Indirect(val)))
+				}
+			} else {
+				return errors.New("Select() Method only accepts pointer")
+			}
+
+		}
+	}
+
+	return nil
 }
