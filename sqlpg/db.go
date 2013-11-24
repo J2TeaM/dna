@@ -84,10 +84,10 @@ func (db *DB) Update(structValue interface{}, conditionColumn dna.String, column
 // Select runs an arbitrary SQL query,
 // binding the columns in the result to fields on the struct specified by structValue.
 //
-//	*structValue: A struct value being binded. It has to be a pointer to a slice
-//	*query: A query statement
-//	*args: The args are for any placeholder parameters in the query.
-//	*Returns error if available.
+//	* structValue: A struct value being binded. It has to be a pointer to a slice
+//	* query: A query statement
+//	* args: The args are for any placeholder parameters in the query.
+//	* Returns error if available.
 //
 // It supports only custom struct, basic dna types(dna.Int,dna.String..) and time.Time
 //
