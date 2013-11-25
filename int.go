@@ -41,6 +41,11 @@ func (i Int) ToPrimitiveType() int {
 	return int(i)
 }
 
+// Value returns primitive int type
+func (i Int) ToPrimitiveValue() int {
+	return int(i)
+}
+
 // Value implements the Valuer interface in database/sql/driver package.
 func (i Int) Value() (driver.Value, error) {
 	return driver.Value(int(i)), nil

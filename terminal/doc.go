@@ -38,14 +38,14 @@ Writing custom progress bar:
 	bar.Width = 40
 	for i := 1; i <= 245; i++ {
 		bar.Show(Int(i), Int(100).Rand().ToString()+"random data", "Completion custom data")
-		time.Sleep(time.Duration(Int(100).Rand().Value()) * time.Millisecond)
+		time.Sleep(time.Duration(Int(100).Rand().ToPrimitiveValue()) * time.Millisecond)
 	}
 
 Or using one of defaul theme:
 	bar := NewProgressBarWithTheme(245, ThemeDot)
 	for i := 1; i <= 245; i++ {
 		bar.Show(Int(i), "", "")
-		time.Sleep(time.Duration(Int(100).Rand().Value()) * time.Millisecond)
+		time.Sleep(time.Duration(Int(100).Rand().ToPrimitiveValue()) * time.Millisecond)
 	}
 
 */
