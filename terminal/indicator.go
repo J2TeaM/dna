@@ -159,3 +159,11 @@ func (idc *Indicator) Show(formatString String) {
 	idc.counter += 1
 
 }
+
+//Close prints the final result.
+func (idc *Indicator) Close(formatString String) {
+	idc.console.Erase(Line).Column(1)
+	str := NewColorString("[" + idc.ActiveChar.Repeat(idc.Length) + "]").Color(idc.ActiveColor).Value()
+	renderedText := formatString.Replace("$indicator", str)
+	idc.console.Log(renderedText)
+}

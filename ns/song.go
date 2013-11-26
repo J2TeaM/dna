@@ -178,7 +178,8 @@ func GetSong(id Int) (*Song, error) {
 	}
 }
 
-// interface
+// Fetch implements site.Item interface.
+// Returns error if can not get item
 func (song *Song) Fetch() error {
 	_song, err := GetSong(song.Id)
 	if err != nil {
@@ -189,14 +190,17 @@ func (song *Song) Fetch() error {
 	}
 }
 
+// New implements site.Item interface
+// Returns new site.Item interface
 func (song *Song) New() site.Item {
 	return site.Item(NewSong())
 }
 
-// SetPrimaryCol sets Id or key.
+// SetPrimaryColumn implements site.Item interface.
+// It sets Id or key.
 // Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
-func (song *Song) SetPrimaryCol(v interface{}) {
+func (song *Song) SetPrimaryColumn(v interface{}) {
 	switch v.(type) {
 	case int:
 		song.Id = Int(v.(int))

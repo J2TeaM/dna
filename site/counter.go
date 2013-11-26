@@ -57,8 +57,14 @@ func (c Counter) String() string {
 		format := String("t:%d n:%v fail:%v pass:%v speed:%v total:%v remained:%v")
 		return string(Sprintf(format, getTimeFmt(c.ElapsedTime), c.Count, c.Failure, c.Pass, c.Speed, c.Total, getTimeFmt(c.RemainedTime)))
 	} else {
-		format := String("t:%v n:%v fail:%v pass:%v speed:%v")
+		format := String("t:%v | n:%v | fail:%v | pass:%v | speed:%v")
 		return string(Sprintf(format, getTimeFmt(c.ElapsedTime), c.Count, c.Failure, c.Pass, c.Speed))
 	}
 	return ""
+}
+
+// FinalString prints the last result of a counter
+func (c Counter) FinalString() string {
+	format := String("N:%v | t=%v | (%v✘ - %v✔) | ν=%vitems/s")
+	return string(Sprintf(format, c.Count, getTimeFmt(c.ElapsedTime), c.Failure, c.Pass, c.Speed))
 }
