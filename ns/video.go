@@ -143,7 +143,7 @@ func GetVideo(id Int) (*Video, error) {
 		<-c
 	}
 	if video.Link == "" {
-		return nil, errors.New(fmt.Sprintf("Video %v : Link not found", video.Id))
+		return nil, errors.New(fmt.Sprintf("Nhacso - Video %v : Link not found", video.Id))
 	} else {
 		video.Checktime = time.Now()
 		return video, nil

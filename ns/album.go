@@ -226,9 +226,9 @@ func GetAlbum(id Int) (*Album, error) {
 		<-c
 	}
 	if album.Nsongs != album.Songids.Length() {
-		return nil, errors.New(fmt.Sprintf("Album %v: Songids and Nsongs do not match", album.Id))
+		return nil, errors.New(fmt.Sprintf("Nhacso - Album %v: Songids and Nsongs do not match", album.Id))
 	} else if album.Nsongs == 0 {
-		return nil, errors.New(fmt.Sprintf("Album %v: No song found", album.Id))
+		return nil, errors.New(fmt.Sprintf("Nhacso - Album %v: No song found", album.Id))
 	} else {
 		album.Checktime = time.Now()
 		return album, nil

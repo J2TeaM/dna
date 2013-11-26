@@ -13,7 +13,12 @@ type ColorString struct {
 }
 
 func NewColorString(str String) *ColorString {
-	return &ColorString{str: str, attributes: StringArray{"", ""}, bgColor: StringArray{"", ""}, color: StringArray{"", ""}}
+	return &ColorString{
+		str:        str,
+		attributes: StringArray{"", ""},
+		bgColor:    StringArray{"", ""},
+		color:      StringArray{"", ""},
+	}
 }
 
 func (cs *ColorString) getColor(prefix, suffix, kind String) *ColorString {

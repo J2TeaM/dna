@@ -3,6 +3,7 @@ package ns
 import (
 	. "dna"
 	"dna/http"
+	"dna/site"
 	"errors"
 	"fmt"
 	"math"
@@ -72,6 +73,8 @@ func getSongFromMainPage(song *Song) <-chan bool {
 	go func() {
 		link := "http://nhacso.net/nghe-nhac/link-joke." + GetKey(song.Id) + "==.html"
 		result, err := http.Get(link)
+		// Log(link)
+		// Log(result.Data)
 		if err == nil && !result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
 			data := &result.Data
 			if data.Match("official") {
@@ -92,7 +95,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 			if !topics.IsBlank() {
 				topics = topics.ReplaceWithRegexp("^.+\\\">|<\\/a><\\/li>", "")
 				song.Topics = topics.ToStringArray().SplitWithRegexp(" - ").SplitWithRegexp("/")
-				singer := data.FindAllString("<a class=\"casi\".+>(.+?)<\\/a>", 1)[0]
+				singer := data.FindAllString("<a.+class=\"casi\".+>(.+?)<\\/a>", 1)[0]
 				if topics.Match("Nhạc Hoa") && singer.Match(` / `) {
 					song.SameArtist = 1
 				}
@@ -168,9 +171,42 @@ func GetSong(id Int) (*Song, error) {
 	}
 
 	if song.Link == "" || song.Link == "/" {
-		return nil, errors.New(fmt.Sprintf("Song %v: Mp3 link not found", song.Id))
+		return nil, errors.New(fmt.Sprintf("Nhacso - Song %v: Mp3 link not found", song.Id))
 	} else {
 		song.Checktime = time.Now()
 		return song, nil
+	}
+}
+
+// interface
+func (song *Song) Fetch() error {
+	_song, err := GetSong(song.Id)
+	if err != nil {
+		return err
+	} else {
+		*song = *_song
+		return nil
+	}
+}
+
+func (song *Song) New() site.Item {
+	return site.Item(NewSong())
+}
+
+// SetPrimaryCol sets Id or key.
+// Interface v has type int or dna.Int, it calls Id field.
+// Otherwise if v has type string or dna.String, it calls Key field.
+func (song *Song) SetPrimaryCol(v interface{}) {
+	switch v.(type) {
+	case int:
+		song.Id = Int(v.(int))
+	case Int:
+		song.Id = v.(Int)
+	// case string:
+	// 	song.Key = String(v.(string))
+	// case String:
+	// 	song.Key = v.(String)
+	default:
+		panic("Interface v has to be int")
 	}
 }

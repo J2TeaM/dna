@@ -53,3 +53,7 @@ func LogStruct(a interface{}) {
 func Print(a ...interface{}) {
 	fmt.Print(a...)
 }
+
+func Sprintf(format String, a ...interface{}) String {
+	return String(fmt.Sprintf(format.ToPrimitiveValue(), a...))
+}
