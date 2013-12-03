@@ -11,7 +11,7 @@ func TestDB(t *testing.T) {
 	song.Id = 2
 	song.Title = "Example title"
 	song.Artists = StringArray{"First artists", "Second Artitsts"}
-	db, err := Connect(DefaultConfig)
+	db, err := Connect(NewSQLConfig("./config.ini"))
 	if err != nil {
 		t.Error("DB has to have no connection error")
 	} else {
@@ -78,7 +78,7 @@ func ExampleDB() {
 	song.Id = 2
 	song.Title = "Example title"
 	song.Artists = StringArray{"First artists", "Second Artitsts"}
-	db, err := Connect(DefaultConfig)
+	db, err := Connect(NewSQLConfig("./config.ini"))
 	if err != nil {
 		panic("DB has to have no connection error")
 	}
@@ -139,7 +139,7 @@ func ExampleDB() {
 }
 
 func ExampleDB_Select() {
-	db, err := Connect(DefaultConfig)
+	db, err := Connect(NewSQLConfig("./config.ini"))
 	if err != nil {
 		panic(err)
 	}

@@ -57,3 +57,10 @@ func Print(a ...interface{}) {
 func Sprintf(format String, a ...interface{}) String {
 	return String(fmt.Sprintf(format.ToPrimitiveValue(), a...))
 }
+
+// PanicError panics if err is not nil
+func PanicError(err error) {
+	if err != nil {
+		panic(err.Error())
+	}
+}

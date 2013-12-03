@@ -56,15 +56,18 @@ type Logger struct {
 func NewLogger(color Int, out io.Writer, prefix, path String, flag Int) *Logger {
 	var multi io.Writer
 	if path != "" {
-		file, err := os.OpenFile(path.ToPrimitiveValue(), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		file, err := os.OpenFile(path.String(), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			panic(fmt.Sprintf("Failed to open log file %v : %v", path, err))
+			Log(fmt.Sprintf("Failed to open log file %v : %v - It uses standard output", path, err))
+			multi = io.MultiWriter(out)
+		} else {
+			multi = io.MultiWriter(file, out)
 		}
-		multi = io.MultiWriter(file, out)
+
 	} else {
 		multi = io.MultiWriter(out)
 	}
-	return &Logger{out: multi, prefix: prefix.ToPrimitiveValue(), path: path, flag: int(flag), color: color, console: NewConsole(), defaultOut: out}
+	return &Logger{out: multi, prefix: prefix.String(), path: path, flag: int(flag), color: color, console: NewConsole(), defaultOut: out}
 }
 
 // Cheap integer to fixed-width decimal ASCII.  Give a negative width to avoid zero-padding.
@@ -170,7 +173,7 @@ func (l *Logger) Output(calldepth int, s string) error {
 // 	* Notice: It adds '\n' to the end of the value if newline is not specified based on standard library
 func (l *Logger) Printf(format String, v ...interface{}) {
 	l.console.Foreground(l.color)
-	l.Output(2, fmt.Sprintf(format.ToPrimitiveValue(), v...))
+	l.Output(2, fmt.Sprintf(format.String(), v...))
 	l.console.Display(ResetCode)
 }
 
@@ -203,7 +206,7 @@ func (l *Logger) Fatal(v ...interface{}) {
 // Fatalf is equivalent to l.Printf() followed by a call to os.Exit(1).
 func (l *Logger) Fatalf(format String, v ...interface{}) {
 	l.console.Foreground(l.color)
-	l.Output(2, fmt.Sprintf(format.ToPrimitiveValue(), v...))
+	l.Output(2, fmt.Sprintf(format.String(), v...))
 	l.console.Display(ResetCode)
 	os.Exit(1)
 }
@@ -228,7 +231,7 @@ func (l *Logger) Panic(v ...interface{}) {
 // Panicf is equivalent to l.Printf() followed by a call to panic().
 func (l *Logger) Panicf(format String, v ...interface{}) {
 	l.console.Foreground(l.color)
-	s := fmt.Sprintf(format.ToPrimitiveValue(), v...)
+	s := fmt.Sprintf(format.String(), v...)
 	l.Output(2, s)
 	l.console.Display(ResetCode)
 	panic(s)
@@ -268,7 +271,7 @@ func (l *Logger) Prefix() String {
 func (l *Logger) SetPrefix(prefix String) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.prefix = prefix.ToPrimitiveValue()
+	l.prefix = prefix.String()
 }
 
 // Color returns the output Color for the logger.
@@ -299,7 +302,7 @@ func (l *Logger) SetPath(path String) {
 	l.path = path
 	var multi io.Writer
 	if path != "" {
-		file, err := os.OpenFile(path.ToPrimitiveValue(), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		file, err := os.OpenFile(path.String(), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			panic(fmt.Sprintf("Failed to open log file %v : %v", path, err))
 		}
@@ -314,7 +317,7 @@ func (l *Logger) SetPath(path String) {
 var ERROR *Logger = NewLogger(Red, os.Stderr, "ERROR:", "./log/std.log", Ldate|Ltime|Lshortfile)
 
 // INFO is a default logger to print info message
-var INFO *Logger = NewLogger(Green, os.Stdout, "INFO:", "./log/std.log", Ldate|Ltime|Lshortfile)
+var INFO *Logger = NewLogger(Green, os.Stdout, "INFO:", "./log/std.log", Ldate|Ltime)
 
 // WARNING is a default logger to print warning message
 var WARNING *Logger = NewLogger(Magenta, os.Stdout, "WARNING:", "./log/std.log", Ldate|Ltime|Lshortfile)

@@ -11,8 +11,8 @@ func ExampleColorString() {
 	// "Test string" has black color and red background
 }
 
-func ExampleColorString_SetBackgroundColor() {
-	cs := NewColorString("Test string").SetBackgroundColor(Red).Value()
+func ExampleColorString_SetBgColor() {
+	cs := NewColorString("Test string").SetBgColor(Red).Value()
 	Print(cs)
 	// Output is: "Test string"
 	// "Test string" has red background

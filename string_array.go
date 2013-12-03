@@ -45,7 +45,7 @@ func (sa StringArray) Join(sep String) String {
 
 // Filter loops through a string array and return a new string array whose elements are filtered by anonymous function
 func (sa StringArray) Filter(fn func(v String, i Int) Bool) StringArray {
-	var result StringArray
+	var result = StringArray{}
 	for index, value := range sa {
 		if bool(fn(value, Int(index))) {
 			result = append(result, value)

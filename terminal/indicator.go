@@ -166,4 +166,5 @@ func (idc *Indicator) Close(formatString String) {
 	str := NewColorString("[" + idc.ActiveChar.Repeat(idc.Length) + "]").Color(idc.ActiveColor).Value()
 	renderedText := formatString.Replace("$indicator", str)
 	idc.console.Log(renderedText)
+	idc.console.ShowCursor()
 }

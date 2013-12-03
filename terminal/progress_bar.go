@@ -259,6 +259,11 @@ func (b *ProgressBar) getParsedTokens(tokens String) String {
 	result = result.ReplaceWithRegexp("\\$eta", b.formatDuration(b.remainingTime))
 	result = result.ReplaceWithRegexp("\\$speed", b.speed.ToCommaFormat())
 	result = result.ReplaceWithRegexp("\\$percent", b.percent.ToFormattedString(1, 2))
+	if b.isComplete() {
+		result = result.ReplaceWithRegexp("\\$custom", b.completeCustomData)
+	} else {
+		result = result.ReplaceWithRegexp("\\$custom", b.runningCustomData)
+	}
 	return result
 }
 

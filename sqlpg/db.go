@@ -9,13 +9,16 @@ import (
 	"reflect"
 )
 
+var ErrNoRows = sql.ErrNoRows
+var ErrTxDone = sql.ErrTxDone
+
 // DB is a wrapper of sql.DB but some custom methods are added to enhance its functionalties.
 type DB struct {
 	*sql.DB
 }
 
 // Connect returns database of connected server
-func Connect(cf *Config) (*DB, error) {
+func Connect(cf *SQLConfig) (*DB, error) {
 	connectionString := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", cf.Username, cf.Password, cf.Host, cf.Post, cf.Database, cf.SSLMode)
 	db, err := sql.Open("postgres", connectionString)
 	return &DB{db}, err
@@ -24,8 +27,13 @@ func Connect(cf *Config) (*DB, error) {
 // QueryRecords is a reimplementation of sql.Db.Query().
 // But it returns *Rows not *sql.Rows and error and takes query param as dna.String type
 func (db *DB) Query(query dna.String, args ...interface{}) (*Rows, error) {
-	rows, err := db.DB.Query(query.ToPrimitiveValue(), args...)
+	rows, err := db.DB.Query(query.String(), args...)
 	return &Rows{rows}, err
+}
+
+func (db *DB) QueryRow(query dna.String, args ...interface{}) *Row {
+	row := db.DB.QueryRow(query.String(), args...)
+	return &Row{row}
 }
 
 // Insert inserts custom struct to a table.
@@ -33,14 +41,16 @@ func (db *DB) Query(query dna.String, args ...interface{}) (*Rows, error) {
 // Ex: Any instance of type Song from package ns will be inserted into table nssongs.
 // Insert returns an error if the struct fails.
 func (db *DB) Insert(structValue interface{}) error {
+	db.SetMaxIdleConns(-1)
 	tbName := GetTableName(structValue)
 	insertQuery := GetInsertStatement(tbName, structValue, false)
-	_, err := db.Query(insertQuery)
+	_, err := db.Exec(insertQuery.String())
 	if err != nil {
 		return err
 	} else {
 		return nil
 	}
+
 }
 
 // InsertIgnore runs exactly the same as Insert.
@@ -72,7 +82,7 @@ func (db *DB) Update(structValue interface{}, conditionColumn dna.String, column
 	if err0 != nil {
 		return err0
 	} else {
-		_, err := db.Query(updateQuery)
+		_, err := db.Exec(updateQuery.String())
 		if err != nil {
 			return err
 		} else {
@@ -101,6 +111,7 @@ func (db *DB) Update(structValue interface{}, conditionColumn dna.String, column
 //	err := db.Select(ids, "SELECT id FROM nssongs ORDER BY id ASC LIMIT 10")
 func (db *DB) Select(structValue interface{}, query dna.String, args ...interface{}) error {
 	rows, err := db.Query(query, args...)
+	defer rows.Close()
 	if err != nil {
 		return err
 	} else {

@@ -3,6 +3,8 @@ package ns
 import (
 	. "dna"
 	"dna/http"
+	"dna/site"
+	"dna/sqlpg"
 	"errors"
 	"fmt"
 	"time"
@@ -233,4 +235,41 @@ func GetAlbum(id Int) (*Album, error) {
 		album.Checktime = time.Now()
 		return album, nil
 	}
+}
+
+// Fetch implements site.Item interface.
+// Returns error if can not get item
+func (album *Album) Fetch() error {
+	_album, err := GetAlbum(album.Id)
+	if err != nil {
+		return err
+	} else {
+		*album = *_album
+		return nil
+	}
+}
+
+// New implements site.Item interface
+// Returns new site.Item interface
+func (album *Album) New() site.Item {
+	return site.Item(NewAlbum())
+}
+
+// Init implements site.Item interface.
+// It sets Id or key.
+// Interface v has type int or dna.Int, it calls Id field.
+// Otherwise if v has type string or dna.String, it calls Key field.
+func (album *Album) Init(v interface{}) {
+	switch v.(type) {
+	case int:
+		album.Id = Int(v.(int))
+	case Int:
+		album.Id = v.(Int)
+	default:
+		panic("Interface v has to be int")
+	}
+}
+
+func (album *Album) Save(db *sqlpg.DB) error {
+	return db.InsertIgnore(album)
 }

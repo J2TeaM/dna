@@ -11,7 +11,7 @@ func TestGetAlbum(t *testing.T) {
 	if err == nil {
 		t.Error("The album has to have an error")
 	} else {
-		if err.Error() != "Album 818243: Songids and Nsongs do not match" {
+		if err.Error() != "Nhacso - Album 818243: Songids and Nsongs do not match" {
 			t.Error("Wrong error message.")
 		}
 	}

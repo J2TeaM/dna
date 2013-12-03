@@ -4,6 +4,7 @@ import (
 	. "dna"
 	"dna/http"
 	"dna/site"
+	"dna/sqlpg"
 	"errors"
 	"fmt"
 	"math"
@@ -95,7 +96,13 @@ func getSongFromMainPage(song *Song) <-chan bool {
 			if !topics.IsBlank() {
 				topics = topics.ReplaceWithRegexp("^.+\\\">|<\\/a><\\/li>", "")
 				song.Topics = topics.ToStringArray().SplitWithRegexp(" - ").SplitWithRegexp("/")
-				singer := data.FindAllString("<a.+class=\"casi\".+>(.+?)<\\/a>", 1)[0]
+				temp := data.FindAllString("<a.+class=\"casi\".+>(.+?)<\\/a>", 1)
+				var singer String
+				if temp.Length() > 0 {
+					singer = temp[0]
+				} else {
+					singer = ""
+				}
 				if topics.Match("Nhạc Hoa") && singer.Match(` / `) {
 					song.SameArtist = 1
 				}
@@ -133,9 +140,9 @@ func getSongFromXML(song *Song) <-chan bool {
 				song.Authorid = getValueXML(&result.Data, "authorlink", 0).ReplaceWithRegexp(`\.html`, "").ReplaceWithRegexp(`^.+-`, "").ToInt()
 
 			}
-			duration := &result.Data.FindAllString("<totalTime.+totalTime>", 1)[0]
-			if !duration.IsBlank() {
-				song.Duration = duration.RemoveHtmlTags("").Trim().ToInt()
+			duration := result.Data.FindAllString("<totalTime.+totalTime>", 1)
+			if duration.Length() > 0 {
+				song.Duration = duration[0].RemoveHtmlTags("").Trim().ToInt()
 			}
 
 			song.Link = getValueXML(&result.Data, "mp3link", 0)
@@ -153,7 +160,7 @@ func getSongFromXML(song *Song) <-chan bool {
 	return channel
 }
 
-// GetSong returns a song whose id is 0
+// GetSong returns a song or an error
 func GetSong(id Int) (*Song, error) {
 	var song *Song = NewSong()
 	song.Id = id
@@ -196,11 +203,11 @@ func (song *Song) New() site.Item {
 	return site.Item(NewSong())
 }
 
-// SetPrimaryColumn implements site.Item interface.
+// Init implements site.Item interface.
 // It sets Id or key.
 // Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
-func (song *Song) SetPrimaryColumn(v interface{}) {
+func (song *Song) Init(v interface{}) {
 	switch v.(type) {
 	case int:
 		song.Id = Int(v.(int))
@@ -213,4 +220,8 @@ func (song *Song) SetPrimaryColumn(v interface{}) {
 	default:
 		panic("Interface v has to be int")
 	}
+}
+
+func (song *Song) Save(db *sqlpg.DB) error {
+	return db.InsertIgnore(song)
 }

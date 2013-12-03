@@ -3,6 +3,8 @@ package ns
 import (
 	. "dna"
 	"dna/http"
+	"dna/site"
+	"dna/sqlpg"
 	"errors"
 	"fmt"
 	"math"
@@ -12,19 +14,19 @@ import (
 // Define new Album type.
 // Notice: Artistid should be Artistids , but this field is not important, then it will be ignored.
 type Video struct {
-	Id           Int
-	Title        String
-	Artists      StringArray
-	Topics       StringArray
-	Plays        Int
-	Duration     Int
-	Official     Int
-	Proceducerid Int
-	Link         String
-	Sublink      String
-	Thumbnail    String
-	DateCreated  time.Time
-	Checktime    time.Time
+	Id          Int
+	Title       String
+	Artists     StringArray
+	Topics      StringArray
+	Plays       Int
+	Duration    Int
+	Official    Int
+	Producerid  Int
+	Link        String
+	Sublink     String
+	Thumbnail   String
+	DateCreated time.Time
+	Checktime   time.Time
 }
 
 // NewVideo return default new video
@@ -37,7 +39,7 @@ func NewVideo() *Video {
 	video.Plays = 0
 	video.Duration = 0
 	video.Official = 0
-	video.Proceducerid = 0
+	video.Producerid = 0
 	video.Link = ""
 	video.Sublink = ""
 	video.Thumbnail = ""
@@ -114,9 +116,9 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 
 				}
 			}
-			proceducerid := data.FindAllStringSubmatch(`getProducerByListIds\('(\d+)', '#producer_'\);`, 1)
-			if len(proceducerid) > 0 {
-				video.Proceducerid = proceducerid[0][1].ToInt()
+			producerid := data.FindAllStringSubmatch(`getProducerByListIds\('(\d+)', '#producer_'\);`, 1)
+			if len(producerid) > 0 {
+				video.Producerid = producerid[0][1].ToInt()
 			}
 		}
 		channel <- true
@@ -149,4 +151,41 @@ func GetVideo(id Int) (*Video, error) {
 		return video, nil
 	}
 
+}
+
+// Fetch implements site.Item interface.
+// Returns error if can not get item
+func (video *Video) Fetch() error {
+	_video, err := GetVideo(video.Id)
+	if err != nil {
+		return err
+	} else {
+		*video = *_video
+		return nil
+	}
+}
+
+// New implements site.Item interface
+// Returns new site.Item interface
+func (video *Video) New() site.Item {
+	return site.Item(NewVideo())
+}
+
+// Init implements site.Item interface.
+// It sets Id or key.
+// Interface v has type int or dna.Int, it calls Id field.
+// Otherwise if v has type string or dna.String, it calls Key field.
+func (video *Video) Init(v interface{}) {
+	switch v.(type) {
+	case int:
+		video.Id = Int(v.(int))
+	case Int:
+		video.Id = v.(Int)
+	default:
+		panic("Interface v has to be int")
+	}
+}
+
+func (video *Video) Save(db *sqlpg.DB) error {
+	return db.InsertIgnore(video)
 }

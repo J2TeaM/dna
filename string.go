@@ -12,6 +12,10 @@ import (
 
 //Redefine new string type.
 //This convert many functions from standards `strings` libray to methods of String Type.
+//
+//Notice: String is not nomalized, take a rune as a Unicode code point.
+//It does not handle a character as multiple runs.
+//Look more at http://blog.golang.org/normalization
 type String string
 
 // ToInt returns an integer from string.

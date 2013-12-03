@@ -35,7 +35,7 @@ func (a IntArray) ForEach(fn func(v, i Int)) {
 // Filter loops through every element in array and returns only elements which make
 // input func true.
 func (a IntArray) Filter(fn func(v, i Int) Bool) IntArray {
-	var result IntArray
+	var result = IntArray{}
 	for index, value := range a {
 		if fn(value, Int(index)) {
 			result = append(result, value)

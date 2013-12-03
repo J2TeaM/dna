@@ -2,15 +2,16 @@ package sqlpg
 
 import (
 	. "dna"
+	"dna/cfg"
 )
 
-// Config contains relevant fields to connect to database.
-// Config returns config type
+// SQLConfig contains relevant fields to connect to database.
+// It returns config type
 // Valid values for SSLMode are:
 // 		* disable - No SSL
 // 		* require - Always SSL (skip verification)
 // 		* verify-full - Always SSL (require verification)
-type Config struct {
+type SQLConfig struct {
 	Username String // The user to sign in as
 	Password String // The user's password
 	Host     String // The host to connect to. Values that start with / are for unix domain sockets. (default is localhost)
@@ -19,11 +20,18 @@ type Config struct {
 	SSLMode  String
 }
 
-var DefaultConfig *Config = &Config{
-	Username: "daonguyenanbinh",
-	Password: "",
-	Host:     "127.0.0.1",
-	Post:     5432,
-	Database: "daonguyenanbinh",
-	SSLMode:  "disable",
+// NewSQLConfig loads sql config from a file and returns new SQLConfig.
+func NewSQLConfig(path String) *SQLConfig {
+	cfg, err := cfg.LoadConfigFile(path)
+	PanicError(err)
+	db, err := cfg.GetSection("database")
+	PanicError(err)
+	return &SQLConfig{
+		Username: db["username"],
+		Password: db["password"],
+		Host:     db["host"],
+		Post:     db["port"].ToInt(),
+		Database: db["db"],
+		SSLMode:  db["sslmode"],
+	}
 }

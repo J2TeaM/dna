@@ -6,7 +6,7 @@ import (
 )
 
 func ExampleRows_StructScan() {
-	db, err := Connect(DefaultConfig)
+	db, err := Connect(NewSQLConfig("./config.ini"))
 	if err != nil {
 		panic(err)
 	}

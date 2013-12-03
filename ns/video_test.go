@@ -11,7 +11,7 @@ func TestGetVideo(t *testing.T) {
 	if err == nil {
 		t.Error("Video has to have an error")
 	} else {
-		if err.Error() != "Video 19306 : Link not found" {
+		if err.Error() != "Nhacso - Video 19306 : Link not found" {
 			t.Error("Wrong error message")
 		}
 	}
@@ -34,8 +34,8 @@ func TestGetVideo(t *testing.T) {
 		if video.Duration != 444 {
 			t.Error("Video 16280 has wrong duration ")
 		}
-		if video.Official != 1 || video.Proceducerid != 71 {
-			t.Error("Video 16280 has wrong official or proceducerid ")
+		if video.Official != 1 || video.Producerid != 71 {
+			t.Error("Video 16280 has wrong official or Producerid ")
 		}
 		if video.Link != "http://st02.freesocialmusic.com/mp4/2013/05/30/1430055571/13698818900_3033.mp4" {
 			t.Error("Video 16280 has wrong link ")
@@ -58,7 +58,7 @@ func ExampleGetVideo() {
 		Log("Topics:", video.Topics)
 		Log("Duration:", video.Duration)
 		Log("Official:", video.Official)
-		Log("Proceducerid:", video.Proceducerid)
+		Log("Producerid:", video.Producerid)
 		Log("Link:", video.Link)
 		Log("Thumbnail:", video.Thumbnail)
 		Log("DateCreated:", Int(video.DateCreated.Unix()).ToTimeFormat())
@@ -75,7 +75,7 @@ func ExampleGetVideo() {
 	// Topics: dna.StringArray{"Nhạc Trẻ"}
 	// Duration: 339
 	// Official: 1
-	// Proceducerid: 43
+	// Producerid: 43
 	// Link: http://st02.freesocialmusic.com/mp4/2013/11/06/1178050012/138370336610_2499.mp4
 	// Thumbnail: http://st.nhacso.net/images/video/2013/11/06/1178050012/138370345410_6711_190x110.jpg
 	// DateCreated: 2013-11-6 9:2:46

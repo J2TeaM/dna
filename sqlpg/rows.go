@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+type Row struct {
+	*sql.Row
+}
+
 type Rows struct {
 	*sql.Rows
 }
