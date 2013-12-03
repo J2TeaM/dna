@@ -15,7 +15,7 @@ const (
 	LBrLossless             // Flag of lossless bitrate
 )
 
-// The basic song type
+// Song defines a song type
 type Song struct {
 	Id          Int
 	Key         String
@@ -43,7 +43,7 @@ type Song struct {
 	Thumbnail      String
 }
 
-// Song constructor with key
+// NewSong return a pointer to a new song
 func NewSong() *Song {
 	song := new(Song)
 	song.Key = ""
@@ -108,7 +108,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 
 	channel := make(chan bool, 1)
 	go func() {
-		link := "http://mp3.zing.vn/bai-hat/joke-link/" + song.Key + ".html"
+		link := "http://mp3.zing.vn/bai-hat/google-bot/" + song.Key + ".html"
 		result, err := http.Get(link)
 		// Log(link)
 		// Log(result.Data)
@@ -197,7 +197,7 @@ func GetSong(id Int) (*Song, error) {
 	}
 }
 
-// Getting encoded key used for XML file or direct link
+// GetEncodedKey gets an encoded key used for XML file or a direct link
 func (song *Song) GetEncodedKey(bitrate Bitrate) String {
 	var temp IntArray
 	if bitrate == Lossless {
@@ -210,7 +210,7 @@ func (song *Song) GetEncodedKey(bitrate Bitrate) String {
 
 }
 
-// Notice: The interface of getting mp3 direct link with high quality( 320kbps or lossless) has been deprecated. Need to check it out later!!!
+// GetDirectLink gets a direct link of a song
 func (song *Song) GetDirectLink(bitrate Bitrate) String {
 	return SONG_BASE_URL.Concat(song.GetEncodedKey(bitrate), "/")
 }
@@ -243,10 +243,6 @@ func (song *Song) Init(v interface{}) {
 		song.Id = Int(v.(int))
 	case Int:
 		song.Id = v.(Int)
-	// case string:
-	// 	song.Key = String(v.(string))
-	// case String:
-	// 	song.Key = v.(String)
 	default:
 		panic("Interface v has to be int")
 	}

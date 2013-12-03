@@ -264,6 +264,7 @@ func GetAPIArtist(id Int) (*APIArtist, error) {
 	}
 }
 
+//GetSongFromAPI gets a song from API. It does not get content from main site.
 func GetSongFromAPI(id Int) (*Song, error) {
 	var song *Song = NewSong()
 	song.Id = id

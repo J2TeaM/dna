@@ -72,7 +72,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 
 	channel := make(chan bool, 1)
 	go func() {
-		link := "http://nhacso.net/nghe-nhac/link-joke." + GetKey(song.Id) + "==.html"
+		link := "http://nhacso.net/nghe-nhac/google-bot." + GetKey(song.Id) + "==.html"
 		result, err := http.Get(link)
 		// Log(link)
 		// Log(result.Data)

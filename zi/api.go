@@ -4,7 +4,7 @@ import (
 	"dna"
 )
 
-// Using zing API
+// APISong maps JSON fields of a song in the API to struct fields.
 type APISong struct {
 	Id             dna.Int                   `json:"song_id"`
 	Key            dna.String                `json:"song_id_encode"`
@@ -38,6 +38,7 @@ type APISong struct {
 	Response       APIResponse               `json:"response"`
 }
 
+// APISongLyric maps JSON fields of a song lyric in the API to struct fields.
 type APISongLyric struct {
 	Id       dna.String  `json:"id"`
 	Content  dna.String  `json:"content"`
@@ -46,10 +47,12 @@ type APISongLyric struct {
 	Response APIResponse `json:"response"`
 }
 
+// APIResponse maps JSON fields of a reponse in the API to a struct field.
 type APIResponse struct {
 	MsgCode dna.Int `json:"msgCode"`
 }
 
+// APIAlbum maps JSON fields of an album in the API to struct fields.
 type APIAlbum struct {
 	Id             dna.Int     `json:"playlist_id"`
 	Title          dna.String  `json:"title"`
@@ -76,6 +79,7 @@ type APIAlbum struct {
 	Response       APIResponse `json:"response"`
 }
 
+// APIVideo maps JSON fields of a video in the API to struct fields.
 type APIVideo struct {
 	Id             dna.Int                   `json:"video_id"`
 	Title          dna.String                `json:"title"`
@@ -97,6 +101,7 @@ type APIVideo struct {
 	Response       APIResponse               `json:"response"`
 }
 
+// APIVideoLyric maps JSON fields of a video lyric in the API to struct fields.
 type APIVideoLyric struct {
 	Id          dna.String  `json:"id"`
 	Content     dna.String  `json:"content"`
@@ -107,6 +112,7 @@ type APIVideoLyric struct {
 	Response    APIResponse `json:"response"`
 }
 
+// APIArtist maps JSON fields of an artist in the API to struct fields.
 type APIArtist struct {
 	Id           dna.Int     `json:"artist_id"`
 	Name         dna.String  `json:"name"`

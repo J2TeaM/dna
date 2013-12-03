@@ -52,7 +52,7 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 
 	channel := make(chan bool, 1)
 	go func() {
-		link := "http://mp3.zing.vn/album/joke-link/" + album.Key + ".html"
+		link := "http://mp3.zing.vn/album/google-bot/" + album.Key + ".html"
 		result, err := http.Get(link)
 		// Log(link)
 		// Log(result.Data)
@@ -96,7 +96,9 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 
 			artistsArr := data.FindAllStringSubmatch(`<h1 class="detail-title">.+(<a.+)`, -1)
 			if len(artistsArr) > 0 {
-				album.Artists = artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique()
+				album.Artists = StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique().Map(func(val String, idx Int) String {
+					return val.Trim()
+				}).([]String))
 			}
 
 			covertArr := data.FindAllStringSubmatch(`<span class="album-detail-img">(.+)`, -1)

@@ -1,6 +1,3 @@
-/*
- This package implements some methods: encryption, decyptions regarding to mp3.zing.vn
-*/
 package zi
 
 import (
@@ -10,11 +7,12 @@ import (
 )
 
 const (
-	TV_BASE_URL dna.String = "http://tv.zing.vn/html5/video"
-	// SONG_BASE_URL  dna.String = "http://mp3.zing.vn/download/song/joke-link"
-	SONG_BASE_URL  dna.String = "http://api.mp3.zing.vn/api/mobile/source/song"
-	VIDEO_BASE_URL dna.String = "http://mp3.zing.vn/html5/video"
+	TV_BASE_URL    dna.String = "http://tv.zing.vn/html5/video"                 // Base URL of direct tv video link
+	SONG_BASE_URL  dna.String = "http://api.mp3.zing.vn/api/mobile/source/song" // Base URL of direct song link
+	VIDEO_BASE_URL dna.String = "http://mp3.zing.vn/html5/video"                // Base URL of direct video link
 )
+
+// SONG_BASE_URL  dna.String = "http://mp3.zing.vn/download/song/joke-link"  (deprecated)
 
 var a = dna.String("0IWOUZ6789ABCDEF").Split("")
 var b = dna.String("0123456789abcdef").Split("")
@@ -41,7 +39,7 @@ const (
 	Resolution1080p Resolution = 1080
 )
 
-// Checking if key is valid
+// CheckKey returns true if key is valid
 func CheckKey(key dna.String) dna.Bool {
 	for _, v := range key.Split("") {
 		if a.IndexOf(v) == -1 {
@@ -51,7 +49,7 @@ func CheckKey(key dna.String) dna.Bool {
 	return true
 }
 
-// Encode integer ID into Key
+// Encrypt encodes an integer ID into a key
 func Encrypt(id dna.Int) dna.String {
 	return dna.StringArray(id.ToHex().Split("").Map(
 		func(v dna.String, i dna.Int) dna.String {
@@ -59,7 +57,7 @@ func Encrypt(id dna.Int) dna.String {
 		}).([]dna.String)).Join("")
 }
 
-// Decode Key into integer ID
+// Decrypt decodes a key into an integer ID
 func Decrypt(key dna.String) dna.Int {
 	return dna.ParseInt(dna.StringArray(key.Split("").Map(func(v dna.String, i dna.Int) dna.String {
 		return b[a.IndexOf(v)]
@@ -84,7 +82,7 @@ func getCipherText(id dna.Int, tailArray dna.IntArray) dna.String {
 		}).([]dna.String)).Join("")
 }
 
-// Decode the encoded key to key
+// DecodeEncodedKey decodes an encoded key to a key
 func DecodeEncodedKey(key dna.String) dna.String {
 	var y dna.IntArray = key[5:15].Split("").Map(func(v dna.String, i dna.Int) dna.Int {
 		for j, val := range c {
