@@ -4,7 +4,11 @@ import (
 	. "dna"
 	"dna/http"
 	"encoding/json"
-	"time"
+)
+
+// Defines key code of API
+const (
+	API_KEYCODE = String("fafd463e2131914934b73310aa34a23f")
 )
 
 //GetAPISong fetchs a song from API url. An url pattern is:
@@ -63,7 +67,8 @@ func GetAPISong(id Int) (*APISong, error) {
 	var apisong = new(APISong)
 	apisong.Id = id
 	apisong.Key = GetKey(id)
-	link := `http://api.mp3.zing.vn/api/mobile/song/getsonginfo?keycode=fafd463e2131914934b73310aa34a23f&requestdata={"id":"` + apisong.Key + `"}`
+	baseURL := "http://api.mp3.zing.vn/api/mobile/song/getsonginfo?"
+	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, apisong.Key)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
@@ -89,7 +94,8 @@ func GetAPISong(id Int) (*APISong, error) {
 //	}
 func GetAPISongLyric(id Int) (*APISongLyric, error) {
 	var apisongLyric = new(APISongLyric)
-	link := `http://api.mp3.zing.vn/api/mobile/song/getlyrics?keycode=fafd463e2131914934b73310aa34a23f&requestdata={"id":"` + GetKey(id) + `"}`
+	baseURL := "http://api.mp3.zing.vn/api/mobile/song/getlyrics?"
+	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, GetKey(id))
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
@@ -134,7 +140,8 @@ func GetAPISongLyric(id Int) (*APISongLyric, error) {
 func GetAPIAlbum(id Int) (*APIAlbum, error) {
 	var apialbum = new(APIAlbum)
 	apialbum.Id = id
-	link := `http://api.mp3.zing.vn/api/mobile/playlist/getplaylistinfo?key=fafd463e2131914934b73310aa34a23f&requestdata={"id":` + (apialbum.Id - 307843200).ToString() + `}`
+	baseURL := "http://api.mp3.zing.vn/api/mobile/playlist/getplaylistinfo?"
+	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, apialbum.Id-ID_DIFFERENCE)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
@@ -180,7 +187,8 @@ func GetAPIAlbum(id Int) (*APIAlbum, error) {
 func GetAPIVideo(id Int) (*APIVideo, error) {
 	var apivideo = new(APIVideo)
 	apivideo.Id = id
-	link := `http://api.mp3.zing.vn/api/mobile/video/getvideoinfo?keycode=fafd463e2131914934b73310aa34a23f&requestdata={"id":` + (apivideo.Id - 307843200).ToString() + `}`
+	baseURL := "http://api.mp3.zing.vn/api/mobile/video/getvideoinfo?"
+	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, apivideo.Id-ID_DIFFERENCE)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
@@ -208,7 +216,8 @@ func GetAPIVideo(id Int) (*APIVideo, error) {
 //	}
 func GetAPIVideoLyric(id Int) (*APIVideoLyric, error) {
 	var apiVideoLyric = new(APIVideoLyric)
-	link := `http://api.mp3.zing.vn/api/mobile/video/getlyrics?keycode=fafd463e2131914934b73310aa34a23f&requestdata={"id":` + (id - 307843200).ToString() + `}`
+	baseURL := "http://api.mp3.zing.vn/api/mobile/video/getlyrics?"
+	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, id-ID_DIFFERENCE)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
@@ -253,7 +262,8 @@ func GetAPIVideoLyric(id Int) (*APIVideoLyric, error) {
 func GetAPIArtist(id Int) (*APIArtist, error) {
 	var apiArtist = new(APIArtist)
 	apiArtist.Id = id
-	link := `http://api.mp3.zing.vn/api/mobile/artist/getartistinfo?key=fafd463e2131914934b73310aa34a23f&requestdata={"id":` + apiArtist.Id.ToString() + `}`
+	baseURL := "http://api.mp3.zing.vn/api/mobile/artist/getartistinfo?"
+	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, apiArtist.Id)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
@@ -264,45 +274,61 @@ func GetAPIArtist(id Int) (*APIArtist, error) {
 	}
 }
 
-//GetSongFromAPI gets a song from API. It does not get content from main site.
-func GetSongFromAPI(id Int) (*Song, error) {
-	var song *Song = NewSong()
-	song.Id = id
-
-	asong, err := GetAPISong(id)
-
-	if err != nil {
-		return nil, err
+//GetAPITV fetchs an artist from API url. An url pattern is:
+//http://api.tv.zing.vn/2.0/media/info?api_key=d04210a70026ad9323076716781c223f&media_id=51497&session_key=91618dfec493ed7dc9d61ac088dff36b&
+//
+//NOTICE: SubTitle and Tracking fields are not properly decoded.
+//
+//The following result:
+// 	{
+// 	  "response": {
+// 	    "id": 51497,
+// 	    "title": "Vòng Liveshow",
+// 	    "full_name": "The Voice - Season 5 - Tập 23 - Vòng Liveshow",
+// 	    "episode": 23,
+// 	    "release_date": "6/12/2013",
+// 	    "duration": 2537,
+// 	    "thumbnail": "2013/1206/e3/fb7ee815918eff0e231760e7b2f4fe2c_1386344026.jpg",
+// 	    "file_url": "stream6.tv.zdn.vn/streaming/e466a331d093ceece2a383a3d2523309/52a291af/2013/1206/e3/8cbe06097d66e66284b9488c850e0875.mp4?format=f360&device=ios",
+// 	    "other_url": {
+// 	      "Video3GP": "stream.m.tv.zdn.vn/tv/b74aaf5ea32af297c60a0493d310f560/52a291af/Video3GP/2013/1206/e3/eb28c70b3d5a75eae62a3f7b3825ddcc.3gp?format=f3gp&device=ios",
+// 	      "Video720": "stream6.tv.zdn.vn/streaming/46d702b8f98fc59a3a3ffb5b104b2470/52a291af/Video720/2013/1206/e3/d4bbac8c340dbbd2131070b87a07e876.mp4?format=f720&device=ios",
+// 	      "Video480": "stream6.tv.zdn.vn/streaming/5e6b574fe2c59e513ae71473a7f801fd/52a291af/Video480/2013/1206/e3/4142383c2cffccbfec718321a513c488.mp4?format=f480&device=ios"
+// 	    },
+// 	    "link_url": "http://tv.zing.vn/video/the-voice---season-5-tap-23-vong-liveshow/IWZAI9A9.html",
+// 	    "program_id": 1848,
+// 	    "program_name": "The Voice - Season 5",
+// 	    "program_thumbnail": "channel/2/2/221b495a68ee884668f203ad34a0468e_1379405083.jpg",
+// 	    "program_genre": [
+// 	      {
+// 	        "id": 78,
+// 	        "name": "TV Show"
+// 	      }
+// 	    ],
+// 	    "listen": 4527,
+// 	    "comment": 2,
+// 	    "like": 11,
+// 	    "rating": 10,
+// 	    "sub_title": {},
+// 	    "tracking": {},
+// 	    "signature": "b7b45e7b6f8220fe68ab6ada7a4218a0"
+// 	  }
+// 	}
+func GetAPITV(id Int) (*APITV, error) {
+	baseURL := "http://api.tv.zing.vn/2.0/media/info"
+	link := Sprintf("%v?api_key=%v&media_id=%v&session_key=%v&", baseURL, TV_API_KEY, (id - ID_DIFFERENCE), TV_SESSION_KEY)
+	// Log(link)
+	tvRes := new(tempAPITVReponse)
+	result, err := http.Get(link)
+	if err == nil {
+		data := &result.Data
+		json.Unmarshal([]byte(*data), tvRes)
+		return &tvRes.Response, nil
 	} else {
-
-		if asong.Video.Id > 0 {
-			song.VideoId = asong.Video.Id + 307843200
-		}
-		if asong.AlbumId > 0 {
-			song.AlbumId = asong.AlbumId + 307843200
-		}
-		song.ArtistId = asong.ArtistId.ToInt()
-		song.IsHit = asong.IsHit
-		song.IsOfficial = asong.IsOfficial
-		song.DownloadStatus = asong.DownloadStatus
-		song.Copyright = asong.Copyright
-		flags := 0
-		for key, val := range asong.Source {
-			switch {
-			case key == "128" && val != "":
-				flags = flags | LBr128
-			case key == "320" && val != "":
-				flags = flags | LBr320
-			case key == "lossless" && val != "":
-				flags = flags | LBrLossless
-			}
-		}
-		song.BitrateFlags = Int(flags)
-		song.Likes = asong.Likes
-		song.Comments = asong.Comments
-		song.Thumbnail = asong.Thumbnail
-		song.Checktime = time.Now()
-		return song, nil
+		return nil, err
 	}
+}
 
+type tempAPITVReponse struct {
+	Response APITV `json:"response"`
 }

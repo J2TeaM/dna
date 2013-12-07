@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Defines bitrate constant flags with correspondent values: 1 ,2, 4
 const (
 	LBr128      = 1 << iota // Flag of  128kbps bitrate
 	LBr320                  // Flag of 320kbps bitrate
@@ -30,7 +31,7 @@ type Song struct {
 	DateCreated time.Time
 	Checktime   time.Time
 	// Add more 11 fields from official API
-	ArtistId       Int
+	ArtistIds      IntArray
 	VideoId        Int
 	AlbumId        Int
 	IsHit          Int
@@ -59,7 +60,7 @@ func NewSong() *Song {
 	song.DateCreated = time.Time{}
 	song.Checktime = time.Time{}
 	// Add more 10 fields
-	song.ArtistId = 0
+	song.ArtistIds = IntArray{}
 	song.VideoId = 0
 	song.AlbumId = 0
 	song.IsHit = 0
@@ -71,6 +72,89 @@ func NewSong() *Song {
 	song.Comments = 0
 	song.Thumbnail = ""
 	return song
+}
+
+//GetSongFromAPI gets a song from API. It does not get content from main site.
+func GetSongFromAPI(id Int) (*Song, error) {
+	var song *Song = NewSong()
+	song.Id = id
+
+	asong, err := GetAPISong(id)
+	if err != nil {
+		return nil, err
+	} else {
+		if asong.Response.MsgCode == 1 {
+			if asong.Key != GetKey(song.Id) {
+				panic("Resulted key and computed key are not match.")
+			}
+			song.Key = asong.Key
+			song.Title = asong.Title
+			song.Artists = StringArray(asong.Artists.Split(" , ").Map(func(val String, idx Int) String {
+				return val.Trim()
+			}).([]String)).SplitWithRegexp(",").Filter(func(v String, i Int) Bool {
+				if v != "" {
+					return true
+				} else {
+					return false
+				}
+			})
+			song.ArtistIds = asong.ArtistIds.Split(",").ToIntArray()
+			song.Authors = asong.Authors.Split(", ").Filter(func(v String, i Int) Bool {
+				if v != "" {
+					return true
+				} else {
+					return false
+				}
+			})
+			song.Plays = asong.Plays
+			song.Topics = StringArray(asong.Topics.Split(", ").Map(func(val String, idx Int) String {
+				return val.Trim()
+			}).([]String)).SplitWithRegexp(" / ").Unique().Filter(func(v String, i Int) Bool {
+				if v != "" {
+					return true
+				} else {
+					return false
+				}
+			})
+			// song.Link
+			// song.Path
+			// song.Lyric
+			// song.DateCreated
+			// song.Checktime = time.Time{}
+			if asong.Video.Id > 0 {
+				song.VideoId = asong.Video.Id + 307843200
+			}
+			if asong.AlbumId > 0 {
+				song.AlbumId = asong.AlbumId + 307843200
+			}
+
+			song.IsHit = asong.IsHit
+			song.IsOfficial = asong.IsOfficial
+			song.DownloadStatus = asong.DownloadStatus
+			song.Copyright = asong.Copyright
+			flags := 0
+			for key, val := range asong.Source {
+				switch {
+				case key == "128" && val != "":
+					flags = flags | LBr128
+				case key == "320" && val != "":
+					flags = flags | LBr320
+				case key == "lossless" && val != "":
+					flags = flags | LBrLossless
+				}
+			}
+			song.BitrateFlags = Int(flags)
+			song.Likes = asong.Likes
+			song.Comments = asong.Comments
+			song.Thumbnail = asong.Thumbnail
+			song.Checktime = time.Now()
+			return song, nil
+		} else {
+			return nil, errors.New("Message code invalid " + asong.Response.MsgCode.ToString().String())
+		}
+
+	}
+
 }
 
 func getSongFromXML(song *Song) <-chan bool {
@@ -86,7 +170,7 @@ func getSongFromXML(song *Song) <-chan bool {
 				pathArr := song.Link.FindAllStringSubmatch(`song-load/(.+)`, -1)
 				if len(linkArr) > 0 {
 					song.Path = DecodePath(pathArr[0][1])
-					dateCreatedArr := song.Path.FindAllStringSubmatch(`^/(\d{4}/\d{2}/\d{2})`, -1)
+					dateCreatedArr := song.Path.FindAllStringSubmatch(`^/?(\d{4}/\d{2}/\d{2})`, -1)
 					if len(dateCreatedArr) > 0 {
 						year := dateCreatedArr[0][1].FindAllStringSubmatch(`^(\d{4})/\d{2}/\d{2}`, -1)[0][1].ToInt()
 						month := dateCreatedArr[0][1].FindAllStringSubmatch(`^\d{4}/(\d{2})/\d{2}`, -1)[0][1].ToInt()
@@ -171,21 +255,72 @@ func getSongFromMainPage(song *Song) <-chan bool {
 	return channel
 }
 
+func getSongLyricFromApi(song *Song) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		songLyric, err := GetAPISongLyric(song.Id)
+		if err == nil {
+			song.Lyric = songLyric.Content
+		}
+		channel <- true
+
+	}()
+	return channel
+}
+
+// getSongFromApi returns song from API. Alternative better version of getSongFromMainPage
+func getSongFromApi(song *Song) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		asong, err := GetSongFromAPI(song.Id)
+		if err == nil {
+			if asong.Key != GetKey(song.Id) {
+				panic("Resulted key and computed key are not match.")
+			}
+			song.Key = asong.Key
+			song.Title = asong.Title
+			song.Artists = asong.Artists
+			song.ArtistIds = asong.ArtistIds
+			song.Authors = asong.Authors
+			song.Plays = asong.Plays
+			song.Topics = asong.Topics
+			song.VideoId = asong.VideoId
+			song.AlbumId = asong.AlbumId
+			song.IsHit = asong.IsHit
+			song.IsOfficial = asong.IsOfficial
+			song.DownloadStatus = asong.DownloadStatus
+			song.Copyright = asong.Copyright
+			song.BitrateFlags = asong.BitrateFlags
+			song.Likes = asong.Likes
+			song.Comments = asong.Comments
+			song.Thumbnail = asong.Thumbnail
+		}
+		channel <- true
+
+	}()
+	return channel
+}
+
 // GetSong returns a song or an error
 func GetSong(id Int) (*Song, error) {
 	var song *Song = NewSong()
 	song.Id = id
 	song.Key = GetKey(id)
-	c := make(chan bool, 2)
+	c := make(chan bool, 3)
 
+	go func() {
+		c <- <-getSongLyricFromApi(song)
+	}()
 	go func() {
 		c <- <-getSongFromXML(song)
 	}()
 	go func() {
-		c <- <-getSongFromMainPage(song)
+		// Note: in the case the API is deprecated,
+		// please use func getSongFromMainPage() to get info directly from main page.
+		c <- <-getSongFromApi(song)
 	}()
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		<-c
 	}
 
@@ -218,7 +353,7 @@ func (song *Song) GetDirectLink(bitrate Bitrate) String {
 // Fetch implements site.Item interface.
 // Returns error if can not get item
 func (song *Song) Fetch() error {
-	_song, err := GetSongFromAPI(song.Id)
+	_song, err := GetSong(song.Id)
 	if err != nil {
 		return err
 	} else {
@@ -249,5 +384,6 @@ func (song *Song) Init(v interface{}) {
 }
 
 func (song *Song) Save(db *sqlpg.DB) error {
-	return db.Update(song, "id", "artist_id", "video_id", "album_id", "is_hit", "is_official", "download_status", "copyright", "bitrate_flags", "likes", "comments", "thumbnail")
+	// return db.Update(song, "id", "artist_id", "video_id")
+	return db.InsertIgnore(song)
 }

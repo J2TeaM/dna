@@ -9,12 +9,12 @@ type APISong struct {
 	Id             dna.Int                   `json:"song_id"`
 	Key            dna.String                `json:"song_id_encode"`
 	Title          dna.String                `json:"title"`
-	ArtistId       dna.String                `json:"artist_id"`
+	ArtistIds      dna.String                `json:"artist_id"`
 	Artists        dna.String                `json:"artist"`
 	AlbumId        dna.Int                   `json:"album_id"`
 	Album          dna.String                `json:"album"`
-	ComposerId     dna.Int                   `json:"composer_id"`
-	Composer       dna.String                `json:"composer"`
+	AuthorId       dna.Int                   `json:"composer_id"`
+	Authors        dna.String                `json:"composer"`
 	GenreId        dna.String                `json:"genre_id"`
 	Zaloid         dna.Int                   `json:"zaloid"`
 	Username       dna.String                `json:"username"`
@@ -33,7 +33,7 @@ type APISong struct {
 	Favourites     dna.Int                   `json:"favourites"`
 	FavouritesThis dna.Bool                  `json:"favourite_this"`
 	Comments       dna.Int                   `json:"comments"`
-	GenreName      dna.String                `json:"genre_name"`
+	Topics         dna.String                `json:"genre_name"`
 	Video          APIVideo                  `json:"video"`
 	Response       APIResponse               `json:"response"`
 }
@@ -56,21 +56,21 @@ type APIResponse struct {
 type APIAlbum struct {
 	Id             dna.Int     `json:"playlist_id"`
 	Title          dna.String  `json:"title"`
-	ArtistId       dna.String  `json:"artist_id"`
+	ArtistIds      dna.String  `json:"artist_id"`
 	Artists        dna.String  `json:"artist"`
 	GenreId        dna.String  `json:"genre_id"`
 	Zaloid         dna.Int     `json:"zaloid"`
 	Username       dna.String  `json:"username"`
-	Cover          dna.String  `json:"cover"`
+	Coverart       dna.String  `json:"cover"`
 	Description    dna.String  `json:"description":`
 	IsHit          dna.Int     `json:"is_hit"`
 	IsOfficial     dna.Int     `json:"is_official"`
 	IsAlbum        dna.Int     `json:"is_album"`
-	Year           dna.String  `json:"year"`
+	YearReleased   dna.String  `json:"year"`
 	StatusId       dna.Int     `json:"status_id"`
 	Link           dna.String  `json:"link"`
 	Plays          dna.Int     `json:"total_play"`
-	GenreName      dna.String  `json:"genre_name"`
+	Topics         dna.String  `json:"genre_name"`
 	Likes          dna.Int     `json:"likes"`
 	LikeThis       dna.Bool    `json:"like_this"`
 	Comments       dna.Int     `json:"comments"`
@@ -83,7 +83,7 @@ type APIAlbum struct {
 type APIVideo struct {
 	Id             dna.Int                   `json:"video_id"`
 	Title          dna.String                `json:"title"`
-	ArtistId       dna.String                `json:"artist_id"`
+	ArtistIds      dna.String                `json:"artist_id"`
 	Artists        dna.String                `json:"artist"`
 	GenreId        dna.String                `json:"genre_id"`
 	Thumbnail      dna.String                `json:"thumbnail"`
@@ -97,7 +97,7 @@ type APIVideo struct {
 	Favourites     dna.Int                   `json:"favourites"`
 	FavouritesThis dna.Bool                  `json:"favourite_this"`
 	Comments       dna.Int                   `json:"comments"`
-	GenreName      dna.String                `json:"genre_name"`
+	Topics         dna.String                `json:"genre_name"`
 	Response       APIResponse               `json:"response"`
 }
 
@@ -114,27 +114,59 @@ type APIVideoLyric struct {
 
 // APIArtist maps JSON fields of an artist in the API to struct fields.
 type APIArtist struct {
-	Id           dna.Int     `json:"artist_id"`
-	Name         dna.String  `json:"name"`
-	Alias        dna.String  `json:"alias"`
-	Birthname    dna.String  `json:"birthname`
-	Birthday     dna.String  `json:"birthday"`
-	Sex          dna.Int     `json:"sex"`
-	GenreId      dna.String  `json:"genre_id"`
-	Avatar       dna.String  `json:"avatar"`
-	Cover        dna.String  `json:"cover"`
-	Cover2       dna.String  `json:"cover2"`
-	ZmeAcc       dna.String  `json:"zme_acc"`
-	Role         dna.String  `json:"role"`
-	Website      dna.String  `json:"website"`
-	Biography    dna.String  `json:"biography"`
-	AgencyName   dna.String  `json:"agency_name"`
-	NationalName dna.String  `json:"national_name"`
-	IsOfficial   dna.Int     `json:"is_official"`
-	YearActive   dna.String  `json:"year_active"`
-	StatusId     dna.Int     `json:"status_id"`
-	DateCreated  dna.Int     `json:"created_date"`
-	Link         dna.String  `json:"link"`
-	GenreName    dna.String  `json:"genre_name"`
-	Response     APIResponse `json:"response"`
+	Id          dna.Int     `json:"artist_id"`
+	Name        dna.String  `json:"name"`
+	Alias       dna.String  `json:"alias"`
+	Birthname   dna.String  `json:"birthname`
+	Birthday    dna.String  `json:"birthday"`
+	Sex         dna.Int     `json:"sex"`
+	GenreId     dna.String  `json:"genre_id"`
+	Avatar      dna.String  `json:"avatar"`
+	Coverart    dna.String  `json:"cover"`
+	Coverart2   dna.String  `json:"cover2"`
+	ZmeAcc      dna.String  `json:"zme_acc"`
+	Role        dna.String  `json:"role"`
+	Website     dna.String  `json:"website"`
+	Biography   dna.String  `json:"biography"`
+	Publisher   dna.String  `json:"agency_name"`
+	Country     dna.String  `json:"national_name"`
+	IsOfficial  dna.Int     `json:"is_official"`
+	YearActive  dna.String  `json:"year_active"`
+	StatusId    dna.Int     `json:"status_id"`
+	DateCreated dna.Int     `json:"created_date"`
+	Link        dna.String  `json:"link"`
+	Topics      dna.String  `json:"genre_name"`
+	Response    APIResponse `json:"response"`
+}
+
+//APITV maps JSON fields of a tv program in the API to struct fields.
+//
+//NOTICE: SubTitle and Tracking fields are not properly decoded.
+type APITV struct {
+	Id               dna.Int                   `json:"id"`
+	Title            dna.String                `json:"title"`
+	Fullname         dna.String                `json:"full_name"`
+	Episode          dna.Int                   `json:"episode"`
+	DateReleased     dna.String                `json:"release_date"`
+	Duration         dna.Int                   `json:"duration"`
+	Thumbnail        dna.String                `json:"thumbnail"`
+	FileUrl          dna.String                `json:"file_url"`
+	OtherUrl         map[dna.String]dna.String `json:"other_url"`
+	LinkUrl          dna.String                `json:"link_url"`
+	ProgramId        dna.Int                   `json:"program_id"`
+	ProgramName      dna.String                `json:"program_name"`
+	ProgramThumbnail dna.String                `json:"program_thumbnail"`
+	ProgramGenres    []APIProgramGenre         `json:"program_genre"`
+	Plays            dna.Int                   `json:"listen"`
+	Comments         dna.Int                   `json:"comment"`
+	Likes            dna.Int                   `json:"like"`
+	Rating           dna.Float                 `json:"rating"`
+	SubTitle         dna.String                `json:"sub_title"`
+	Tracking         dna.String                `json:"tracking"`
+	Signature        dna.String                `json:"signature"`
+}
+
+type APIProgramGenre struct {
+	Id   dna.Int    `json:"id"`
+	Name dna.String `json:"name"`
 }

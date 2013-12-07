@@ -25,6 +25,14 @@ type Album struct {
 	Description  String
 	DateCreated  time.Time
 	Checktime    time.Time
+	// add more 6 fields
+	IsAlbum    Int
+	IsHit      Int
+	IsOfficial Int
+	Likes      Int
+	Comments   Int
+	StatusId   Int
+	ArtistIds  IntArray
 }
 
 // NewAlbum returns a new pointer to Album
@@ -44,7 +52,72 @@ func NewAlbum() *Album {
 	album.Description = ""
 	album.DateCreated = time.Time{}
 	album.Checktime = time.Time{}
+	// add more 6 fields
+	album.IsAlbum = 0
+	album.IsHit = 0
+	album.IsOfficial = 0
+	album.Likes = 0
+	album.StatusId = 0
+	album.Comments = 0
+	album.ArtistIds = IntArray{}
 	return album
+}
+
+//GetAlbumFromAPI gets a album from API. It does not get content from main site.
+func GetAlbumFromAPI(id Int) (*Album, error) {
+	var album *Album = NewAlbum()
+	album.Id = id
+	apialbum, err := GetAPIAlbum(id)
+	if err != nil {
+		return nil, err
+	} else {
+		if apialbum.Response.MsgCode == 1 {
+			if GetKey(apialbum.Id+307843200) != GetKey(album.Id) {
+				panic("Resulted key and computed key are not match.")
+			}
+
+			album.Title = apialbum.Title
+			album.Artists = StringArray(apialbum.Artists.Split(" , ").Map(func(val String, idx Int) String {
+				return val.Trim()
+			}).([]String)).SplitWithRegexp(",").Filter(func(v String, i Int) Bool {
+				if v != "" {
+					return true
+				} else {
+					return false
+				}
+			})
+
+			album.Topics = StringArray(apialbum.Topics.Split(", ").Map(func(val String, idx Int) String {
+				return val.Trim()
+			}).([]String)).SplitWithRegexp(" / ").Unique().Filter(func(v String, i Int) Bool {
+				if v != "" {
+					return true
+				} else {
+					return false
+				}
+			})
+			album.Plays = apialbum.Plays
+			// album.Songids
+			// album.Nsongs
+			// album.EncodedKey
+			// album.Coverart
+			// album.DateCreated
+			album.YearReleased = apialbum.YearReleased
+			album.Description = apialbum.Description.RemoveHtmlTags("")
+
+			album.ArtistIds = apialbum.ArtistIds.Split(",").ToIntArray()
+			album.IsAlbum = apialbum.IsAlbum
+			album.IsHit = apialbum.IsHit
+			album.IsOfficial = apialbum.IsOfficial
+			album.Likes = apialbum.Likes
+			album.StatusId = apialbum.StatusId
+			album.Comments = apialbum.Comments
+			album.Checktime = time.Now()
+			return album, nil
+		} else {
+			return nil, errors.New("Message code invalid " + apialbum.Response.MsgCode.ToString().String())
+		}
+	}
 }
 
 // getSongFromMainPage returns album from main page
@@ -64,49 +137,49 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 				album.EncodedKey = encodedKeyArr[0][1]
 			}
 
-			playsArr := data.FindAllStringSubmatch(`Lượt nghe:</span>(.+)</p>`, -1)
-			if len(playsArr) > 0 {
-				album.Plays = playsArr[0][1].Trim().Replace(".", "").ToInt()
-			}
+			// playsArr := data.FindAllStringSubmatch(`Lượt nghe:</span>(.+)</p>`, -1)
+			// if len(playsArr) > 0 {
+			// 	album.Plays = playsArr[0][1].Trim().Replace(".", "").ToInt()
+			// }
 
-			yearsArr := data.FindAllStringSubmatch(`Năm phát hành:</span>(.+)</p>`, -1)
-			if len(yearsArr) > 0 {
-				album.YearReleased = yearsArr[0][1].Trim()
-			}
+			// yearsArr := data.FindAllStringSubmatch(`Năm phát hành:</span>(.+)</p>`, -1)
+			// if len(yearsArr) > 0 {
+			// 	album.YearReleased = yearsArr[0][1].Trim()
+			// }
 
 			nsongsArr := data.FindAllStringSubmatch(`Số bài hát:</span>(.+)</p>`, -1)
 			if len(nsongsArr) > 0 {
 				album.Nsongs = nsongsArr[0][1].Trim().ToInt()
 			}
 
-			topicsArr := data.FindAllStringSubmatch(`Thể loại:(.+)`, -1)
-			if len(topicsArr) > 0 {
-				album.Topics = topicsArr[0][1].RemoveHtmlTags("").Trim().Split(", ").SplitWithRegexp(` / `).Unique()
-			}
+			// topicsArr := data.FindAllStringSubmatch(`Thể loại:(.+)`, -1)
+			// if len(topicsArr) > 0 {
+			// 	album.Topics = topicsArr[0][1].RemoveHtmlTags("").Trim().Split(", ").SplitWithRegexp(` / `).Unique()
+			// }
 
-			descArr := data.FindAllStringSubmatch(`(?mis)(<p id="_albumIntro" class="rows2".+#_albumIntro">)Xem toàn bộ</a>`, -1)
-			if len(descArr) > 0 {
-				album.Description = descArr[0][1].RemoveHtmlTags("").Trim()
-			}
+			// descArr := data.FindAllStringSubmatch(`(?mis)(<p id="_albumIntro" class="rows2".+#_albumIntro">)Xem toàn bộ</a>`, -1)
+			// if len(descArr) > 0 {
+			// 	album.Description = descArr[0][1].RemoveHtmlTags("").Trim()
+			// }
 
-			titleArr := data.FindAllStringSubmatch(`<h1 class="detail-title">(.+) - <a.+`, -1)
-			if len(titleArr) > 0 {
-				album.Title = titleArr[0][1].RemoveHtmlTags("").Trim()
-			}
+			// titleArr := data.FindAllStringSubmatch(`<h1 class="detail-title">(.+) - <a.+`, -1)
+			// if len(titleArr) > 0 {
+			// 	album.Title = titleArr[0][1].RemoveHtmlTags("").Trim()
+			// }
 
-			artistsArr := data.FindAllStringSubmatch(`<h1 class="detail-title">.+(<a.+)`, -1)
-			if len(artistsArr) > 0 {
-				album.Artists = StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique().Map(func(val String, idx Int) String {
-					return val.Trim()
-				}).([]String))
-			}
+			// artistsArr := data.FindAllStringSubmatch(`<h1 class="detail-title">.+(<a.+)`, -1)
+			// if len(artistsArr) > 0 {
+			// 	album.Artists = StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique().Map(func(val String, idx Int) String {
+			// 		return val.Trim()
+			// 	}).([]String))
+			// }
 
 			covertArr := data.FindAllStringSubmatch(`<span class="album-detail-img">(.+)`, -1)
 			if len(covertArr) > 0 {
 				album.Coverart = covertArr[0][1].GetTagAttributes("src")
 				datecreatedArr := album.Coverart.FindAllStringSubmatch(`_([0-9]+)\..+$`, -1)
 				if len(datecreatedArr) > 0 {
-					Log(int64(datecreatedArr[0][1].ToInt()))
+					// Log(int64(datecreatedArr[0][1].ToInt()))
 					album.DateCreated = time.Unix(int64(datecreatedArr[0][1].ToInt()), 0)
 				}
 			}
@@ -125,18 +198,48 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 	return channel
 }
 
+// getAlbumFromAPI returns album from API
+func getAlbumFromAPI(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		apialbum, err := GetAlbumFromAPI(album.Id)
+		if err == nil {
+			album.Title = apialbum.Title
+			album.Artists = apialbum.Artists
+			album.Topics = apialbum.Topics
+			album.Plays = apialbum.Plays
+			album.YearReleased = apialbum.YearReleased
+			album.Description = apialbum.Description
+			album.ArtistIds = apialbum.ArtistIds
+			album.IsAlbum = apialbum.IsAlbum
+			album.IsHit = apialbum.IsHit
+			album.IsOfficial = apialbum.IsOfficial
+			album.Likes = apialbum.Likes
+			album.StatusId = apialbum.StatusId
+			album.Comments = apialbum.Comments
+			album.Checktime = time.Now()
+		}
+		channel <- true
+
+	}()
+	return channel
+}
+
 // GetAlbum returns a pointer to Album
 func GetAlbum(id Int) (*Album, error) {
 	var album *Album = NewAlbum()
 	album.Id = id
 	album.Key = GetKey(id)
-	c := make(chan bool, 1)
+	c := make(chan bool, 2)
 
 	go func() {
 		c <- <-getAlbumFromMainPage(album)
 	}()
+	go func() {
+		c <- <-getAlbumFromAPI(album)
+	}()
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 2; i++ {
 		<-c
 	}
 
@@ -188,5 +291,5 @@ func (album *Album) Init(v interface{}) {
 }
 
 func (album *Album) Save(db *sqlpg.DB) error {
-	return db.Update(album, "id", "artist_id", "video_id", "album_id", "is_hit", "is_official", "download_status", "copyright", "bitrate_flags", "likes", "comments")
+	return db.InsertIgnore(album)
 }

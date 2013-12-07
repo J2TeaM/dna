@@ -46,6 +46,7 @@ func atomicUpdate(errChannel chan bool, state *StateHandler) {
 		if saveErr != nil {
 			Log("cannot save item", saveErr.Error())
 			LogStruct(it)
+			Log("")
 		}
 	}
 	if state.IsComplete() == false {

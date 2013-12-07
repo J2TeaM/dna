@@ -3,6 +3,7 @@ package ns
 import (
 	. "dna"
 	"testing"
+	"time"
 )
 
 //Testing video with fail link
@@ -49,36 +50,25 @@ func TestGetVideo(t *testing.T) {
 
 func ExampleGetVideo() {
 	video, err := GetVideo(18272)
-	if err != nil {
-		Log(err.Error())
-	} else {
-		Log("Id:", video.Id)
-		Log("Title:", video.Title)
-		Log("Artists:", video.Artists)
-		Log("Topics:", video.Topics)
-		Log("Duration:", video.Duration)
-		Log("Official:", video.Official)
-		Log("Producerid:", video.Producerid)
-		Log("Link:", video.Link)
-		Log("Thumbnail:", video.Thumbnail)
-		Log("DateCreated:", Int(video.DateCreated.Unix()).ToTimeFormat())
-		if video.Plays > 0 {
-			Log("Plays > 0")
-		}
-		Log("Sublink:", video.Sublink)
-
+	PanicError(err)
+	if video.Plays < 0 {
+		panic("Plays has to be greater than 0")
 	}
+	video.Plays = 100
+	video.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
+	LogStruct(video)
 	// Output:
-	// Id: 18272
-	// Title: Còn Có Anh
-	// Artists: dna.StringArray{"Mạnh Quân", "Khang Việt"}
-	// Topics: dna.StringArray{"Nhạc Trẻ"}
-	// Duration: 339
-	// Official: 1
-	// Producerid: 43
-	// Link: http://st02.freesocialmusic.com/mp4/2013/11/06/1178050012/138370336610_2499.mp4
-	// Thumbnail: http://st.nhacso.net/images/video/2013/11/06/1178050012/138370345410_6711_190x110.jpg
-	// DateCreated: 2013-11-6 9:2:46
-	// Plays > 0
-	// Sublink:
+	// Id : 18272
+	// Title : "Còn Có Anh"
+	// Artists : dna.StringArray{"Mạnh Quân", "Khang Việt"}
+	// Topics : dna.StringArray{"Nhạc Trẻ"}
+	// Plays : 100
+	// Duration : 339
+	// Official : 1
+	// Producerid : 43
+	// Link : "http://st02.freesocialmusic.com/mp4/2013/11/06/1178050012/138370336610_2499.mp4"
+	// Sublink : ""
+	// Thumbnail : "http://st.nhacso.net/images/video/2013/11/06/1178050012/138370345410_6711_190x110.jpg"
+	// DateCreated : "2013-11-06 09:02:46"
+	// Checktime : "2013-11-21 00:00:00"
 }

@@ -11,6 +11,8 @@ But the exploitation cannot remain for long time. So it has to be checked again.
 Basic types of this package are: Song, Video, Artist, Album, TV that conforms site.Item interface.
 All types with prefix "API" mean the are the types representing items from API and have to be converted to the basic types of the package.
 
+The difference between basic types' ids and real ids from the site is a constant : ID_DIFFERENCE =  307843200
+
 PROGRESS: type TV, Artist are not complete!!!!!
 */
 package zi

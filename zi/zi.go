@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+//The difference between basic types' ids and real ids from the site is a constant
+const (
+	ID_DIFFERENCE = dna.Int(307843200)
+)
+
+// Define base url constants of type song, tv, video.
 const (
 	TV_BASE_URL    dna.String = "http://tv.zing.vn/html5/video"                 // Base URL of direct tv video link
 	SONG_BASE_URL  dna.String = "http://api.mp3.zing.vn/api/mobile/source/song" // Base URL of direct song link

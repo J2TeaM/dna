@@ -70,7 +70,7 @@ func getVideoDurationAndSublink(video *Video) <-chan bool {
 func getVideoFromMainPage(video *Video) <-chan bool {
 	channel := make(chan bool, 1)
 	go func() {
-		link := "http://nhacso.net/xem-video/joke-link." + GetKey(video.Id) + "=.html"
+		link := "http://nhacso.net/xem-video/google-bot." + GetKey(video.Id) + "=.html"
 		// Log(link)
 		result, err := http.Get(link)
 		if err == nil && !result.Data.Match("Rất tiếc, chúng tôi không tìm thấy thông tin bạn yêu cầu!") {
@@ -109,10 +109,12 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 				video.Thumbnail = thumbLink[0].FindAllStringSubmatch(`poster="(.+?)" `, 1)[0][1]
 				video.Link = thumbLink[0].FindAllStringSubmatch(`src="(.+?)" `, 1)[0][1]
 				if video.Link != "" {
-					ts := video.Link.FindAllStringSubmatch(`([0-9]+)_`, 1)[0][1]
-					secs := float64(ts.ToInt()) * math.Pow10(13-len(ts))
-					// Log(secs)
-					video.DateCreated = Float(secs / 1000).ToInt().ToTime()
+					ts := video.Link.FindAllStringSubmatch(`([0-9]+)_`, 1)
+					if len(ts) > 0 {
+						secs := float64(ts[0][1].ToInt()) * math.Pow10(13-len(ts[0][1]))
+						// Log(secs)
+						video.DateCreated = Float(secs / 1000).ToInt().ToTime()
+					}
 
 				}
 			}

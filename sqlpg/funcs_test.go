@@ -2,12 +2,11 @@ package sqlpg
 
 import (
 	. "dna"
-	"dna/ns"
 	"time"
 )
 
 func ExampleGetInsertStatement() {
-	album := ns.NewAlbum()
+	album := NewAlbum()
 	album.Id = 359294
 	album.Title = "Voices Of Romance"
 	album.Artists = StringArray{"Various Artists"}
@@ -41,24 +40,62 @@ func ExampleGetInsertStatement() {
 }
 
 func ExampleGetTableName() {
-	table := GetTableName(ns.NewAlbum())
-	table1 := GetTableName(ns.NewSong())
+	table := GetTableName(NewAlbum())
+	table1 := GetTableName(NewSong())
 	Log(table)
 	Log(table1)
 	// Output:
-	// nsalbums
-	// nssongs
+	// sqlpgalbums
+	// sqlpgsongs
 }
 
+type Album struct {
+	Id           Int
+	Title        String
+	Artists      StringArray
+	Artistid     Int
+	Topics       StringArray
+	Genres       StringArray
+	Category     StringArray
+	Coverart     String
+	Nsongs       Int
+	Plays        Int
+	Songids      IntArray
+	Description  String
+	Label        String
+	DateReleased String
+	Checktime    time.Time
+}
+
+// NewAlbum return default new album
+func NewAlbum() *Album {
+	album := new(Album)
+	album.Id = 0
+	album.Title = ""
+	album.Artists = StringArray{}
+	album.Artistid = 0
+	album.Topics = StringArray{}
+	album.Genres = StringArray{}
+	album.Category = StringArray{}
+	album.Coverart = ""
+	album.Nsongs = 0
+	album.Plays = 0
+	album.Songids = IntArray{}
+	album.Description = ""
+	album.Label = ""
+	album.DateReleased = ""
+	album.Checktime = time.Time{}
+	return album
+}
 func ExampleGetUpdateStatement() {
 	type Test struct {
-		ns.Album
+		Album
 		BoolValue  Bool  // Type dna.Bool
 		FloatValue Float // Type dna.Float
 	}
 	const longForm = "Jan 2, 2006 at 3:04pm (MST)"
 	// Update different types from testStruct demo
-	testStruct := &Test{*ns.NewAlbum(), true, 10.1 / 3}
+	testStruct := &Test{*NewAlbum(), true, 10.1 / 3}
 	testStruct.Id = 345399                                      // Type dna.Int
 	testStruct.Title = "NEW TITLE"                              // Type dna.String
 	testStruct.Artists = StringArray{"FIRST", "SECOND"}         // Type dna.StringArray

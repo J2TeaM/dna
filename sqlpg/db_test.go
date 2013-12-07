@@ -2,28 +2,85 @@ package sqlpg
 
 import (
 	. "dna"
-	"dna/ns"
 	"testing"
+	"time"
 )
 
+type Song struct {
+	Id          Int
+	Title       String
+	Artists     StringArray
+	Artistid    Int
+	Authors     StringArray
+	Authorid    Int
+	Plays       Int
+	Duration    Int
+	Link        String
+	Topics      StringArray
+	Category    StringArray
+	Bitrate     Int
+	Official    Int
+	Islyric     Int
+	DateCreated time.Time
+	DateUpdated time.Time
+	Lyric       String
+	SameArtist  Int
+	Checktime   time.Time
+}
+
+// NewSong returns new song whose id is 0
+func NewSong() *Song {
+	song := new(Song)
+	song.Id = 0
+	song.Title = ""
+	song.Artists = StringArray{}
+	song.Artistid = 0
+	song.Authors = StringArray{}
+	song.Authorid = 0
+	song.Plays = 0
+	song.Duration = 0
+	song.Link = ""
+	song.Topics = StringArray{}
+	song.Category = StringArray{}
+	song.Bitrate = 0
+	song.Official = 0
+	song.Islyric = 0
+	song.Lyric = ""
+	song.DateCreated = time.Time{}
+	song.DateUpdated = time.Time{}
+	song.SameArtist = 0
+	song.Checktime = time.Time{}
+	return song
+}
+
 func TestDB(t *testing.T) {
-	song := ns.NewSong()
+	song := NewSong()
 	song.Id = 2
 	song.Title = "Example title"
 	song.Artists = StringArray{"First artists", "Second Artitsts"}
 	db, err := Connect(NewSQLConfig("./config.ini"))
 	if err != nil {
 		t.Error("DB has to have no connection error")
-	} else {
-		insertErr := db.Insert(song)
-		if insertErr != nil {
-			t.Error("Insert has to be complete")
-		}
+	}
+
+	_, createErr := db.Exec("CREATE table sqlpgsongs as select * from nssongs LIMIT 10")
+	if createErr != nil {
+		t.Error("sqlpgsongs has to be created")
+	}
+
+	insertErr := db.Insert(song)
+	if insertErr != nil {
+		t.Error("Insert has to be complete")
 	}
 
 	insertIgnoreErr := db.InsertIgnore(song)
 	if insertIgnoreErr != nil {
 		t.Error("Insert has to be ignored")
+	}
+
+	insertIgnoreErr2 := db.InsertIgnore(song)
+	if insertIgnoreErr2 != nil {
+		t.Error("Insert has to be ignored 2")
 	}
 
 	song.Artists = StringArray{"Third artists", "Fourth Artitsts"}
@@ -39,7 +96,7 @@ func TestDB(t *testing.T) {
 	}
 
 	for rows.Next() {
-		song1 := ns.NewSong()
+		song1 := NewSong()
 		err = rows.StructScan(song1)
 		if err != nil {
 			t.Error("Row has to be scan")
@@ -69,18 +126,28 @@ func TestDB(t *testing.T) {
 	if queryErr != nil {
 		t.Error("query has to be done")
 	}
+
+	_, dropErr := db.Exec("DROP TABLE IF EXISTS sqlpgsongs")
+	if dropErr != nil {
+		t.Error("sqlpgsongs has to be dropped")
+	}
 }
 
 func ExampleDB() {
 	// CODE is exactly the same as the one in TestDB()
 	// Initialize some fake values for song
-	song := ns.NewSong()
+	song := NewSong()
 	song.Id = 2
 	song.Title = "Example title"
 	song.Artists = StringArray{"First artists", "Second Artitsts"}
 	db, err := Connect(NewSQLConfig("./config.ini"))
 	if err != nil {
 		panic("DB has to have no connection error")
+	}
+
+	_, createErr := db.Exec("CREATE table sqlpgsongs as select * from nssongs LIMIT 10")
+	if createErr != nil {
+		panic("sqlpgsongs has to be created")
 	}
 
 	// Insert a new song
@@ -109,7 +176,7 @@ func ExampleDB() {
 		panic("select has to be done")
 	}
 	for rows.Next() {
-		scannedSong := ns.NewSong()
+		scannedSong := NewSong()
 		err = rows.StructScan(scannedSong)
 		if err != nil {
 			panic("Row has to be scan")
@@ -136,6 +203,12 @@ func ExampleDB() {
 	if queryErr != nil {
 		panic("query has to be done")
 	}
+
+	// drop the table
+	_, dropErr := db.Exec("DROP TABLE IF EXISTS sqlpgsongs")
+	if dropErr != nil {
+		panic("sqlpgsongs has to be dropped")
+	}
 }
 
 func ExampleDB_Select() {
@@ -143,6 +216,12 @@ func ExampleDB_Select() {
 	if err != nil {
 		panic(err)
 	}
+
+	_, createErr := db.Exec("CREATE table sqlpgsongs as select * from nssongs ORDER BY id ASC LIMIT 10")
+	if createErr != nil {
+		panic("sqlpgsongs has to be created")
+	}
+
 	ids := &[]Int{}
 	selectErr := db.Select(ids, "SELECT id FROM nssongs ORDER BY id ASC LIMIT 10")
 	if selectErr != nil {
@@ -152,7 +231,7 @@ func ExampleDB_Select() {
 		Log(*ids)
 	}
 
-	songs := &[]ns.Song{}
+	songs := &[]Song{}
 	selectErr1 := db.Select(songs, "SELECT * FROM nssongs ORDER BY id ASC LIMIT 2")
 	Log("------------------------------------")
 	if selectErr1 != nil {
@@ -163,6 +242,11 @@ func ExampleDB_Select() {
 			LogStruct(&song)
 			Log("------------------------------------")
 		}
+	}
+	// drop the table
+	_, dropErr := db.Exec("DROP TABLE IF EXISTS sqlpgsongs")
+	if dropErr != nil {
+		panic("sqlpgsongs has to be dropped")
 	}
 	// Output:
 	// Length of ids: 10

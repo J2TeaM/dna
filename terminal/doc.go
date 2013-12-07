@@ -1,5 +1,5 @@
 /*
-Package terminal implements the library relating to console, color string. It prints colors, support position of cursor.
+Package terminal implements the library relating to console, color string, progress bar, indicator or loggers. It prints colors, support position of cursor.
 It utilises VT100-compatible escape sequences.
 
 It can be chained when initalize variable typed Console. Example:

@@ -2,7 +2,6 @@ package sqlpg
 
 import (
 	. "dna"
-	"dna/ns"
 )
 
 func ExampleRows_StructScan() {
@@ -15,7 +14,7 @@ func ExampleRows_StructScan() {
 		Log(err)
 	} else {
 		for rows.Next() {
-			album := ns.NewAlbum()
+			album := NewAlbum()
 			err = rows.StructScan(album)
 			if err != nil {
 				Log(err)
@@ -30,7 +29,7 @@ func ExampleRows_StructScan() {
 	// Artistid : 3427
 	// Topics : dna.StringArray{"Nhạc Âu Mỹ"}
 	// Genres : dna.StringArray{"Pop", "Music"}
-	// Category : dna.StringArray{"Nhạc Âu Mỹ", "Dance", "Electronic"}
+	// Category : dna.StringArray{"Dance", "Electronic", "Nhạc Âu Mỹ", "Pop", "Music"}
 	// Coverart : "http://st.nhacso.net/images/album/2013/11/07/1154016226/138382977413_3076_120x120.jpg"
 	// Nsongs : 14
 	// Plays : 115

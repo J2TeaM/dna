@@ -190,8 +190,9 @@ func (sh *StateHandler) GetNCFail() Int {
 	case sh.TableName.Match(`video`) == true:
 		return sh.SiteConfig.NCVideoFail
 	default:
-		panic("Cannot find type of NCFail: it has to be song, album or video")
-		return 0
+		// WARNING.Println("Cannot find type of NCFail: it has to be song, album or video")
+		// WARNING.Println("It returns default value.")
+		return sh.SiteConfig.NCSongFail
 	}
 }
 

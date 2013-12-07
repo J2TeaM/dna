@@ -3,6 +3,7 @@ package ns
 import (
 	. "dna"
 	"testing"
+	"time"
 )
 
 //Testing album with fail link
@@ -90,44 +91,28 @@ func TestGetAlbum(t *testing.T) {
 
 func ExampleGetAlbum() {
 	album, err := GetAlbum(818448)
-	if err != nil {
-		Log(err.Error())
-	} else {
-		Log("Id:", album.Id)
-		Log("Title:", album.Title)
-		Log("Artists:", album.Artists)
-		Log("Artistid:", album.Artistid)
-		Log("Topics:", album.Topics)
-		Log("Genres:", album.Genres)
-		Log("Category:", album.Category)
-		Log("Coverart:", album.Coverart)
-		Log("Nsongs:", album.Nsongs)
-		Log("Label:", album.Label)
-		// Log("Plays:", album.Plays)
-		Log("DateReleased:", album.DateReleased)
-		Log("Songids:", album.Songids)
-		if album.Plays > 0 {
-			Log("Plays > 0")
-		}
-		Log("Description:")
-		Logv(album.Description)
-
+	PanicError(err)
+	if album.Plays < 0 {
+		panic("Plays has to be greater than 0")
 	}
-	// Output:
-	// Id: 818448
-	// Title: France And French Cafe Accordion Music
-	// Artists: dna.StringArray{"Bon Appétit Musique"}
-	// Artistid: 99574
-	// Topics: dna.StringArray{"Nhạc Không Lời"}
-	// Genres: dna.StringArray{"French Pop", "Instrumental"}
-	// Category: dna.StringArray{}
-	// Coverart: http://st.nhacso.net/images/album/2013/11/08/1486073233/138392264619_3426_120x120.jpg
-	// Nsongs: 23
-	// Label: One Media Publishing
-	// DateReleased: 2009
-	// Songids: dna.IntArray{1313103, 1313104, 1313105, 1313106, 1313107, 1313108, 1313109, 1313110, 1313111, 1313112, 1313113, 1313114, 1313115, 1313116, 1313117, 1313118, 1313119, 1313120, 1313121, 1313122, 1313123, 1313124, 1313125}
-	// Plays > 0
-	// Description:
-	// "Genres: French Pop, Instrumental \r\nReleased: Aug 17, 2009/ ℗ 2009 One Media Publishing"
+	album.Plays = 100
+	album.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
+	LogStruct(album)
 
+	// Output:
+	// Id : 818448
+	// Title : "France And French Cafe Accordion Music"
+	// Artists : dna.StringArray{"Bon Appétit Musique"}
+	// Artistid : 99574
+	// Topics : dna.StringArray{"Nhạc Không Lời"}
+	// Genres : dna.StringArray{"French Pop", "Instrumental"}
+	// Category : dna.StringArray{}
+	// Coverart : "http://st.nhacso.net/images/album/2013/11/08/1486073233/138392264619_3426_120x120.jpg"
+	// Nsongs : 23
+	// Plays : 100
+	// Songids : dna.IntArray{1313103, 1313104, 1313105, 1313106, 1313107, 1313108, 1313109, 1313110, 1313111, 1313112, 1313113, 1313114, 1313115, 1313116, 1313117, 1313118, 1313119, 1313120, 1313121, 1313122, 1313123, 1313124, 1313125}
+	// Description : "Genres: French Pop, Instrumental \r\nReleased: Aug 17, 2009/ ℗ 2009 One Media Publishing"
+	// Label : "One Media Publishing"
+	// DateReleased : "2009"
+	// Checktime : "2013-11-21 00:00:00"
 }
