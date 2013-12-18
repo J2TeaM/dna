@@ -3,7 +3,7 @@ package ns
 import (
 	"dna"
 	"dna/http"
-	"dna/site"
+	"dna/item"
 	"dna/sqlpg"
 )
 
@@ -154,7 +154,7 @@ func NewSongCategory() *SongCategory {
 	return soca
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (soca *SongCategory) Fetch() error {
 	_soca, err := GetSongCategory(soca.Genre, soca.Page)
@@ -163,13 +163,19 @@ func (soca *SongCategory) Fetch() error {
 	return err
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (soca *SongCategory) New() site.Item {
-	return site.Item(NewSongCategory())
+// GetId implements GetId methods of item.Item interface
+// GetId always return zero
+func (soca *SongCategory) GetId() dna.Int {
+	return 0
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (soca *SongCategory) New() item.Item {
+	return item.Item(NewSongCategory())
+}
+
+// Init implements item.Item interface.
 func (soca *SongCategory) Init(v interface{}) {
 	var n dna.Int
 	var LastNPages dna.Int = 10                          //  Last 10 pages from each category

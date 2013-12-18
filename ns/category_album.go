@@ -3,7 +3,7 @@ package ns
 import (
 	"dna"
 	"dna/http"
-	"dna/site"
+	"dna/item"
 	"dna/sqlpg"
 )
 
@@ -73,7 +73,7 @@ func NewAlbumCategory() *AlbumCategory {
 	return alca
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (alca *AlbumCategory) Fetch() error {
 	_alca, err := GetAlbumCategory(alca.Genre, alca.Page)
@@ -82,13 +82,19 @@ func (alca *AlbumCategory) Fetch() error {
 	return err
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (alca *AlbumCategory) New() site.Item {
-	return site.Item(NewAlbumCategory())
+// GetId implements GetId methods of item.Item interface
+// GetId always return zero
+func (alca *AlbumCategory) GetId() dna.Int {
+	return 0
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (alca *AlbumCategory) New() item.Item {
+	return item.Item(NewAlbumCategory())
+}
+
+// Init implements item.Item interface.
 func (alca *AlbumCategory) Init(v interface{}) {
 	var n dna.Int
 	var LastNPages dna.Int = 10                          //  Last 10 pages from each category
@@ -112,13 +118,15 @@ func (alca *AlbumCategory) Init(v interface{}) {
 func (alca *AlbumCategory) Save(db *sqlpg.DB) error {
 
 	var last error
-	var aids dna.IntArray
+	var aids = dna.IntArray{}
 	albums := &[]Album{}
 
 	for _, album := range *(alca.Albums) {
 		aids.Push(album.Id)
 	}
-	err := db.Select(albums, "SELECT id, topics, genres from nsalbums WHERE id IN ("+aids.Join(",")+")")
+	query := "SELECT id, topics, genres from nsalbums WHERE id IN (" + aids.Join(",") + ")"
+	// dna.Log(query)
+	err := db.Select(albums, query)
 	dna.PanicError(err)
 	for _, album := range *(alca.Albums) {
 		foundIndex := 0

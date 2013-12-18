@@ -1,19 +1,20 @@
 package site
 
 import (
-	. "dna"
+	"dna"
+	"dna/item"
 	"dna/sqlpg"
 	"sync"
 )
 
 // Range defines a range from first element to last one
 type Range struct {
-	First Int
-	Last  Int
-	Total Int
+	First dna.Int
+	Last  dna.Int
+	Total dna.Int
 }
 
-func NewRange(first, last Int) *Range {
+func NewRange(first, last dna.Int) *Range {
 	total := last - first + 1
 	return &Range{first, last, total}
 }
@@ -39,15 +40,15 @@ func NewRange(first, last Int) *Range {
 // 	Fields used: Cid, IsOver, ExtSlice
 type StateHandler struct {
 	mu         sync.RWMutex
-	Cid        Int         // Current ID of a page Update() is getting.
-	SiteConfig *SiteConfig // Site config containing n continuous failures - NCFail (1st pattern)
-	Range      *Range      // Looping through range if available (2nd pattern)
-	ExtSlice   *IntArray   // Looping through an slice (3rd pattern)
-	Db         *sqlpg.DB   // Connection-to-db state
-	Pattern    Int         // pattern number
-	IsOver     Bool        // IsOver is true when nothing to be updated
-	Item       Item
-	TableName  String
+	Cid        dna.Int       // Current ID of a page Update() is getting.
+	SiteConfig *SiteConfig   // Site config containing n continuous failures - NCFail (1st pattern)
+	Range      *Range        // Looping through range if available (2nd pattern)
+	ExtSlice   *dna.IntArray // Looping through an slice (3rd pattern)
+	Db         *sqlpg.DB     // Connection-to-db state
+	Pattern    dna.Int       // pattern number
+	IsOver     dna.Bool      // IsOver is true when nothing to be updated
+	Item       item.Item
+	TableName  dna.String
 }
 
 // CheckStateHandler panics if StateHandler is not in proper format.
@@ -71,8 +72,8 @@ func CheckStateHandler(state *StateHandler) {
 }
 
 // NewStateHandler returns default updates (1st pattern).
-func NewStateHandler(item Item, config *SiteConfig, db *sqlpg.DB) *StateHandler {
-	tableName := sqlpg.GetTableName(item)
+func NewStateHandler(itm item.Item, config *SiteConfig, db *sqlpg.DB) *StateHandler {
+	tableName := sqlpg.GetTableName(itm)
 	return &StateHandler{
 		Cid:        0,
 		SiteConfig: config,
@@ -81,14 +82,14 @@ func NewStateHandler(item Item, config *SiteConfig, db *sqlpg.DB) *StateHandler 
 		Db:         db,
 		Pattern:    1,
 		IsOver:     false,
-		Item:       item,
+		Item:       itm,
 		TableName:  tableName,
 	}
 }
 
 // NewStateHandlerWithRange returns new StateHandler with 2nd pattern.
-func NewStateHandlerWithRange(item Item, r *Range, config *SiteConfig, db *sqlpg.DB) *StateHandler {
-	tableName := sqlpg.GetTableName(item)
+func NewStateHandlerWithRange(itm item.Item, r *Range, config *SiteConfig, db *sqlpg.DB) *StateHandler {
+	tableName := sqlpg.GetTableName(itm)
 	return &StateHandler{
 		Cid:        r.First - 1,
 		SiteConfig: config,
@@ -97,14 +98,14 @@ func NewStateHandlerWithRange(item Item, r *Range, config *SiteConfig, db *sqlpg
 		Db:         db,
 		Pattern:    2,
 		IsOver:     false,
-		Item:       item,
+		Item:       itm,
 		TableName:  tableName,
 	}
 }
 
 // NewStateHandlerWithExtSlice returns  new StateHandler with 3rd pattern.
-func NewStateHandlerWithExtSlice(item Item, extSlice *IntArray, config *SiteConfig, db *sqlpg.DB) *StateHandler {
-	tableName := sqlpg.GetTableName(item)
+func NewStateHandlerWithExtSlice(itm item.Item, extSlice *dna.IntArray, config *SiteConfig, db *sqlpg.DB) *StateHandler {
+	tableName := sqlpg.GetTableName(itm)
 	return &StateHandler{
 		Cid:        -1, // In this case, Cid means index of current element in external slice
 		SiteConfig: config,
@@ -113,7 +114,7 @@ func NewStateHandlerWithExtSlice(item Item, extSlice *IntArray, config *SiteConf
 		Db:         db,
 		Pattern:    3,
 		IsOver:     false,
-		Item:       item,
+		Item:       itm,
 		TableName:  tableName,
 	}
 }
@@ -125,14 +126,14 @@ func (sh *StateHandler) IncreaseCid() {
 	sh.mu.Unlock()
 }
 
-func (sh *StateHandler) SetCid(n Int) {
+func (sh *StateHandler) SetCid(n dna.Int) {
 	sh.mu.Lock()
 	sh.Cid = n
 	sh.mu.Unlock()
 }
 
 // GetCid returns Cid.
-func (sh *StateHandler) GetCid() Int {
+func (sh *StateHandler) GetCid() dna.Int {
 	sh.mu.RLock()
 	defer sh.mu.RUnlock()
 	if sh.Pattern == 1 || sh.Pattern == 2 {
@@ -148,7 +149,7 @@ func (sh *StateHandler) GetCid() Int {
 }
 
 // IsComplete returns the value of IsOver
-func (sh *StateHandler) IsComplete() Bool {
+func (sh *StateHandler) IsComplete() dna.Bool {
 	sh.mu.RLock()
 	defer sh.mu.RUnlock()
 	return sh.IsOver
@@ -167,19 +168,19 @@ func (sh *StateHandler) GetRange() *Range {
 	return sh.Range
 }
 
-func (sh *StateHandler) GetPattern() Int {
+func (sh *StateHandler) GetPattern() dna.Int {
 	sh.mu.RLock()
 	defer sh.mu.RUnlock()
 	return sh.Pattern
 }
 
-func (sh *StateHandler) GetExtSlice() *IntArray {
+func (sh *StateHandler) GetExtSlice() *dna.IntArray {
 	sh.mu.RLock()
 	defer sh.mu.RUnlock()
 	return sh.ExtSlice
 }
 
-func (sh *StateHandler) GetNCFail() Int {
+func (sh *StateHandler) GetNCFail() dna.Int {
 	sh.mu.RLock()
 	defer sh.mu.RUnlock()
 	switch {
@@ -196,13 +197,13 @@ func (sh *StateHandler) GetNCFail() Int {
 	}
 }
 
-func (sh *StateHandler) GetItem() Item {
+func (sh *StateHandler) GetItem() item.Item {
 	sh.mu.RLock()
 	defer sh.mu.RUnlock()
 	return sh.Item
 }
 
-func (sh *StateHandler) GetTableName() String {
+func (sh *StateHandler) GetTableName() dna.String {
 	sh.mu.RLock()
 	defer sh.mu.RUnlock()
 	return sh.TableName
@@ -215,11 +216,11 @@ func (sh *StateHandler) GetDb() *sqlpg.DB {
 }
 
 // InsertIgnore implements StateHandler.Db.InsertIgnore() method
-func (sh *StateHandler) InsertIgnore(itm Item) {
-	go func() {
-		err := sh.Db.InsertIgnore(itm)
-		if err != nil {
-			Log("Cannot insert new item. ", err.Error())
-		}
-	}()
-}
+// func (sh *StateHandler) InsertIgnore(itm item.Item) {
+// 	go func() {
+// 		err := sh.Db.InsertIgnore(itm)
+// 		if err != nil {
+// 			dna.Log("Cannot insert new item. ", err.Error())
+// 		}
+// 	}()
+// }

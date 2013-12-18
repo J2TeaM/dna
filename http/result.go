@@ -1,20 +1,20 @@
 package http
 
 import (
-	. "dna"
+	"dna"
 	"net/http"
 )
 
 // Result is the custom type of response from an url
 type Result struct {
-	StatusCode Int
-	Status     String
+	StatusCode dna.Int
+	Status     dna.String
 	Header     http.Header
-	Data       String
+	Data       dna.String
 }
 
 // NewResult initializes new result from inputs
-func NewResult(statusCode Int, status String, header http.Header, data String) *Result {
+func NewResult(statusCode dna.Int, status dna.String, header http.Header, data dna.String) *Result {
 	result := new(Result)
 	result.StatusCode = statusCode
 	result.Status = status

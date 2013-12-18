@@ -307,7 +307,9 @@ func ExampleString_RemoveHtmlTags() {
 func ExampleString_GetTagAttributes() {
 	var x String = `<link rel="stylesheet" type="text/css" href="http://google.com" media="all" />`
 	Logv(x.GetTagAttributes("href"))
+	Logv(x.GetTagAttributes("hrefd"))
 	// Output: "http://google.com"
+	// ""
 }
 
 func ExampleString_GetTags() {

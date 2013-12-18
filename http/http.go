@@ -3,7 +3,7 @@ package http
 import (
 	"compress/gzip"
 	"compress/zlib"
-	. "dna"
+	"dna"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,8 +13,7 @@ import (
 // Enable gzip, deflat by default to reduce  network data, redirect to new location from response.
 // It returns data (String type) and error
 // if err is nil then data is "" (empty).
-func Get(url String) (*Result, error) {
-
+func Get(url dna.String) (*Result, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url.ToPrimitiveValue(), nil)
 	req.Header.Add("Accept-Encoding", "gzip,deflate")
@@ -59,5 +58,5 @@ func Get(url String) (*Result, error) {
 	}
 
 	res.Body.Close()
-	return NewResult(Int(res.StatusCode), String(res.Status), res.Header, String(data)), nil
+	return NewResult(dna.Int(res.StatusCode), dna.String(res.Status), res.Header, dna.String(data)), nil
 }

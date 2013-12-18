@@ -187,10 +187,13 @@ func ExampleStringArray_Concat() {
 
 func ExampleStringArray_SplitWithRegexp() {
 	var x StringArray = StringArray{"Hôm nay", "This is fun"}
+	var y StringArray = StringArray{"Joey Yung / Dung Tổ Nhi"}
 	Logv(x.SplitWithRegexp("\\s+"))
 	Logv(x.SplitWithRegexp("\\d+"))
+	Logv(y.SplitWithRegexp(" / "))
 	// Output: dna.StringArray{"Hôm", "nay", "This", "is", "fun"}
 	// dna.StringArray{"Hôm nay", "This is fun"}
+	// dna.StringArray{"Joey Yung", "Dung Tổ Nhi"}
 }
 
 func ExampleStringArray_IndexWithRegexp() {

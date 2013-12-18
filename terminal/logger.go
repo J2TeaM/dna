@@ -312,12 +312,3 @@ func (l *Logger) SetPath(path String) {
 	}
 	l.out = multi
 }
-
-// ERROR is a default logger to print error message
-var ERROR *Logger = NewLogger(Red, os.Stderr, "ERROR:", "./log/std.log", Ldate|Ltime|Lshortfile)
-
-// INFO is a default logger to print info message
-var INFO *Logger = NewLogger(Green, os.Stdout, "INFO:", "./log/std.log", Ldate|Ltime)
-
-// WARNING is a default logger to print warning message
-var WARNING *Logger = NewLogger(Magenta, os.Stdout, "WARNING:", "./log/std.log", Ldate|Ltime|Lshortfile)

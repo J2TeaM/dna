@@ -1,9 +1,9 @@
 package zi
 
 import (
-	. "dna"
+	"dna"
 	"dna/http"
-	"dna/site"
+	"dna/item"
 	"dna/sqlpg"
 	"errors"
 	"time"
@@ -11,28 +11,28 @@ import (
 
 // The basic song type
 type Album struct {
-	Id           Int
-	Key          String
-	EncodedKey   String
-	Title        String
-	Artists      StringArray
-	Coverart     String
-	Topics       StringArray
-	Plays        Int
-	Songids      IntArray
-	YearReleased String
-	Nsongs       Int
-	Description  String
+	Id           dna.Int
+	Key          dna.String
+	EncodedKey   dna.String
+	Title        dna.String
+	Artists      dna.StringArray
+	Coverart     dna.String
+	Topics       dna.StringArray
+	Plays        dna.Int
+	Songids      dna.IntArray
+	YearReleased dna.String
+	Nsongs       dna.Int
+	Description  dna.String
 	DateCreated  time.Time
 	Checktime    time.Time
 	// add more 6 fields
-	IsAlbum    Int
-	IsHit      Int
-	IsOfficial Int
-	Likes      Int
-	Comments   Int
-	StatusId   Int
-	ArtistIds  IntArray
+	IsAlbum    dna.Int
+	IsHit      dna.Int
+	IsOfficial dna.Int
+	Likes      dna.Int
+	Comments   dna.Int
+	StatusId   dna.Int
+	ArtistIds  dna.IntArray
 }
 
 // NewAlbum returns a new pointer to Album
@@ -42,11 +42,11 @@ func NewAlbum() *Album {
 	album.Id = 0
 	album.EncodedKey = ""
 	album.Title = ""
-	album.Artists = StringArray{}
+	album.Artists = dna.StringArray{}
 	album.Coverart = ""
-	album.Topics = StringArray{}
+	album.Topics = dna.StringArray{}
 	album.Plays = 0
-	album.Songids = IntArray{}
+	album.Songids = dna.IntArray{}
 	album.YearReleased = ""
 	album.Nsongs = 0
 	album.Description = ""
@@ -59,12 +59,12 @@ func NewAlbum() *Album {
 	album.Likes = 0
 	album.StatusId = 0
 	album.Comments = 0
-	album.ArtistIds = IntArray{}
+	album.ArtistIds = dna.IntArray{}
 	return album
 }
 
 //GetAlbumFromAPI gets a album from API. It does not get content from main site.
-func GetAlbumFromAPI(id Int) (*Album, error) {
+func GetAlbumFromAPI(id dna.Int) (*Album, error) {
 	var album *Album = NewAlbum()
 	album.Id = id
 	apialbum, err := GetAPIAlbum(id)
@@ -77,9 +77,9 @@ func GetAlbumFromAPI(id Int) (*Album, error) {
 			}
 
 			album.Title = apialbum.Title
-			album.Artists = StringArray(apialbum.Artists.Split(" , ").Map(func(val String, idx Int) String {
+			album.Artists = dna.StringArray(apialbum.Artists.Split(" , ").Map(func(val dna.String, idx dna.Int) dna.String {
 				return val.Trim()
-			}).([]String)).SplitWithRegexp(",").Filter(func(v String, i Int) Bool {
+			}).([]dna.String)).SplitWithRegexp(",").Filter(func(v dna.String, i dna.Int) dna.Bool {
 				if v != "" {
 					return true
 				} else {
@@ -87,9 +87,9 @@ func GetAlbumFromAPI(id Int) (*Album, error) {
 				}
 			})
 
-			album.Topics = StringArray(apialbum.Topics.Split(", ").Map(func(val String, idx Int) String {
+			album.Topics = dna.StringArray(apialbum.Topics.Split(", ").Map(func(val dna.String, idx dna.Int) dna.String {
 				return val.Trim()
-			}).([]String)).SplitWithRegexp(" / ").Unique().Filter(func(v String, i Int) Bool {
+			}).([]dna.String)).SplitWithRegexp(" / ").Unique().Filter(func(v dna.String, i dna.Int) dna.Bool {
 				if v != "" {
 					return true
 				} else {
@@ -169,7 +169,7 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 
 			// artistsArr := data.FindAllStringSubmatch(`<h1 class="detail-title">.+(<a.+)`, -1)
 			// if len(artistsArr) > 0 {
-			// 	album.Artists = StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique().Map(func(val String, idx Int) String {
+			// 	album.Artists = dna.StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique().Map(func(val dna.String, idx dna.Int) dna.String {
 			// 		return val.Trim()
 			// 	}).([]String))
 			// }
@@ -186,9 +186,9 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 
 			songidsArr := data.FindAllString(`id="_divPlsLite.+?"`, -1)
 			if songidsArr.Length() > 0 {
-				album.Songids = IntArray(songidsArr.Map(func(val String, idx Int) Int {
+				album.Songids = dna.IntArray(songidsArr.Map(func(val dna.String, idx dna.Int) dna.Int {
 					return GetId(val.FindAllStringSubmatch(`id="_divPlsLite(.+)"`, -1)[0][1])
-				}).([]Int))
+				}).([]dna.Int))
 			}
 
 		}
@@ -226,7 +226,10 @@ func getAlbumFromAPI(album *Album) <-chan bool {
 }
 
 // GetAlbum returns a pointer to Album
-func GetAlbum(id Int) (*Album, error) {
+//
+// Notice: Once getting special albums' titles such as "Bảng Xếp Hạng Bài Hát Hàn Quốc ...",
+// the albums will be discarded because album.Nsongs and album.Songids.Length() do not match.
+func GetAlbum(id dna.Int) (*Album, error) {
 	var album *Album = NewAlbum()
 	album.Id = id
 	album.Key = GetKey(id)
@@ -244,16 +247,16 @@ func GetAlbum(id Int) (*Album, error) {
 	}
 
 	if album.Nsongs != album.Songids.Length() {
-		return nil, errors.New(Sprintf("Zing - Album %v: Songids and Nsongs do not match", album.Id).String())
-	} else if album.Nsongs == 0 {
-		return nil, errors.New(Sprintf("Zing - Album %v: No song found", album.Id).String())
+		return nil, errors.New(dna.Sprintf("Zing - Album %v: Songids and Nsongs do not match", album.Id).String())
+	} else if album.Nsongs == 0 && album.Songids.Length() == 0 {
+		return nil, errors.New(dna.Sprintf("Zing - Album %v: No song found", album.Id).String())
 	} else {
 		album.Checktime = time.Now()
 		return album, nil
 	}
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (album *Album) Fetch() error {
 	_album, err := GetAlbum(album.Id)
@@ -265,25 +268,30 @@ func (album *Album) Fetch() error {
 	}
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (album *Album) New() site.Item {
-	return site.Item(NewAlbum())
+// GetId implements GetId methods of item.Item interface
+func (album *Album) GetId() dna.Int {
+	return album.Id
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (album *Album) New() item.Item {
+	return item.Item(NewAlbum())
+}
+
+// Init implements item.Item interface.
 // It sets Id or key.
-// Interface v has type int or dna.Int, it calls Id field.
+// dna.Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
 func (album *Album) Init(v interface{}) {
 	switch v.(type) {
 	case int:
-		album.Id = Int(v.(int))
-	case Int:
-		album.Id = v.(Int)
+		album.Id = dna.Int(v.(int))
+	case dna.Int:
+		album.Id = v.(dna.Int)
 	// case string:
-	// 	album.Key = String(v.(string))
-	// case String:
+	// 	album.Key = dna.String(v.(string))
+	// case dna.String:
 	// 	album.Key = v.(String)
 	default:
 		panic("Interface v has to be int")

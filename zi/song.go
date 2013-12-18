@@ -1,9 +1,9 @@
 package zi
 
 import (
-	. "dna"
+	"dna"
 	"dna/http"
-	"dna/site"
+	"dna/item"
 	"dna/sqlpg"
 	"errors"
 	"time"
@@ -18,30 +18,30 @@ const (
 
 // Song defines a song type
 type Song struct {
-	Id          Int
-	Key         String
-	Title       String
-	Artists     StringArray
-	Authors     StringArray
-	Plays       Int
-	Topics      StringArray
-	Link        String
-	Path        String
-	Lyric       String
+	Id          dna.Int
+	Key         dna.String
+	Title       dna.String
+	Artists     dna.StringArray
+	Authors     dna.StringArray
+	Plays       dna.Int
+	Topics      dna.StringArray
+	Link        dna.String
+	Path        dna.String
+	Lyric       dna.String
 	DateCreated time.Time
 	Checktime   time.Time
 	// Add more 11 fields from official API
-	ArtistIds      IntArray
-	VideoId        Int
-	AlbumId        Int
-	IsHit          Int
-	IsOfficial     Int
-	DownloadStatus Int
-	Copyright      String
-	BitrateFlags   Int
-	Likes          Int
-	Comments       Int
-	Thumbnail      String
+	ArtistIds      dna.IntArray
+	VideoId        dna.Int
+	AlbumId        dna.Int
+	IsHit          dna.Int
+	IsOfficial     dna.Int
+	DownloadStatus dna.Int
+	Copyright      dna.String
+	BitrateFlags   dna.Int
+	Likes          dna.Int
+	Comments       dna.Int
+	Thumbnail      dna.String
 }
 
 // NewSong return a pointer to a new song
@@ -50,17 +50,17 @@ func NewSong() *Song {
 	song.Key = ""
 	song.Id = 0
 	song.Title = ""
-	song.Artists = StringArray{}
-	song.Authors = StringArray{}
+	song.Artists = dna.StringArray{}
+	song.Authors = dna.StringArray{}
 	song.Plays = 0
-	song.Topics = StringArray{}
+	song.Topics = dna.StringArray{}
 	song.Link = ""
 	song.Path = ""
 	song.Lyric = ""
 	song.DateCreated = time.Time{}
 	song.Checktime = time.Time{}
 	// Add more 10 fields
-	song.ArtistIds = IntArray{}
+	song.ArtistIds = dna.IntArray{}
 	song.VideoId = 0
 	song.AlbumId = 0
 	song.IsHit = 0
@@ -75,7 +75,7 @@ func NewSong() *Song {
 }
 
 //GetSongFromAPI gets a song from API. It does not get content from main site.
-func GetSongFromAPI(id Int) (*Song, error) {
+func GetSongFromAPI(id dna.Int) (*Song, error) {
 	var song *Song = NewSong()
 	song.Id = id
 
@@ -89,9 +89,9 @@ func GetSongFromAPI(id Int) (*Song, error) {
 			}
 			song.Key = asong.Key
 			song.Title = asong.Title
-			song.Artists = StringArray(asong.Artists.Split(" , ").Map(func(val String, idx Int) String {
+			song.Artists = dna.StringArray(asong.Artists.Split(" , ").Map(func(val dna.String, idx dna.Int) dna.String {
 				return val.Trim()
-			}).([]String)).SplitWithRegexp(",").Filter(func(v String, i Int) Bool {
+			}).([]dna.String)).SplitWithRegexp(",").Filter(func(v dna.String, i dna.Int) dna.Bool {
 				if v != "" {
 					return true
 				} else {
@@ -99,7 +99,7 @@ func GetSongFromAPI(id Int) (*Song, error) {
 				}
 			})
 			song.ArtistIds = asong.ArtistIds.Split(",").ToIntArray()
-			song.Authors = asong.Authors.Split(", ").Filter(func(v String, i Int) Bool {
+			song.Authors = asong.Authors.Split(", ").Filter(func(v dna.String, i dna.Int) dna.Bool {
 				if v != "" {
 					return true
 				} else {
@@ -107,9 +107,9 @@ func GetSongFromAPI(id Int) (*Song, error) {
 				}
 			})
 			song.Plays = asong.Plays
-			song.Topics = StringArray(asong.Topics.Split(", ").Map(func(val String, idx Int) String {
+			song.Topics = dna.StringArray(asong.Topics.Split(", ").Map(func(val dna.String, idx dna.Int) dna.String {
 				return val.Trim()
-			}).([]String)).SplitWithRegexp(" / ").Unique().Filter(func(v String, i Int) Bool {
+			}).([]dna.String)).SplitWithRegexp(" / ").Unique().Filter(func(v dna.String, i dna.Int) dna.Bool {
 				if v != "" {
 					return true
 				} else {
@@ -143,7 +143,7 @@ func GetSongFromAPI(id Int) (*Song, error) {
 					flags = flags | LBrLossless
 				}
 			}
-			song.BitrateFlags = Int(flags)
+			song.BitrateFlags = dna.Int(flags)
 			song.Likes = asong.Likes
 			song.Comments = asong.Comments
 			song.Thumbnail = asong.Thumbnail
@@ -207,9 +207,9 @@ func getSongFromMainPage(song *Song) <-chan bool {
 			artistsArr := data.FindAllStringSubmatch(`<h1 class="detail-title">.+</h1><span>-</span>(.+)`, -1)
 			if len(artistsArr) > 0 {
 				artists := artistsArr[0][1].RemoveHtmlTags("").Trim().Split(", ").SplitWithRegexp("ft. ")
-				song.Artists = StringArray(artists.Map(func(val String, i Int) String {
+				song.Artists = dna.StringArray(artists.Map(func(val dna.String, i dna.Int) dna.String {
 					return val.Trim()
-				}).([]String))
+				}).([]dna.String))
 			}
 
 			playsArr := data.FindAllStringSubmatch(`Lượt nghe: (.+)</p>`, -1)
@@ -220,7 +220,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 			authorsArr := data.FindAllStringSubmatch(`Sáng tác:(.+?)\|`, -1)
 			if len(authorsArr) > 0 {
 				authors := authorsArr[0][1].RemoveHtmlTags("").Trim().Split(", ").SplitWithRegexp(" / ").SplitWithRegexp(" & ")
-				song.Authors = StringArray(authors.Map(func(val String, idx Int) String {
+				song.Authors = dna.StringArray(authors.Map(func(val dna.String, idx dna.Int) dna.String {
 					switch {
 					case val == "Đang Cập Nhật":
 						return ""
@@ -229,7 +229,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 					default:
 						return val
 					}
-				}).([]String)).Filter(func(v String, i Int) Bool {
+				}).([]dna.String)).Filter(func(v dna.String, i dna.Int) dna.Bool {
 					if v != "" {
 						return true
 					} else {
@@ -302,7 +302,7 @@ func getSongFromApi(song *Song) <-chan bool {
 }
 
 // GetSong returns a song or an error
-func GetSong(id Int) (*Song, error) {
+func GetSong(id dna.Int) (*Song, error) {
 	var song *Song = NewSong()
 	song.Id = id
 	song.Key = GetKey(id)
@@ -325,7 +325,7 @@ func GetSong(id Int) (*Song, error) {
 	}
 
 	if song.Link == "" {
-		return nil, errors.New(Sprintf("Zing - Song %v: Mp3 link not found", song.Id).String())
+		return nil, errors.New(dna.Sprintf("Zing - Song %v: Mp3 link not found", song.Id).String())
 	} else {
 		song.Checktime = time.Now()
 		return song, nil
@@ -333,24 +333,24 @@ func GetSong(id Int) (*Song, error) {
 }
 
 // GetEncodedKey gets an encoded key used for XML file or a direct link
-func (song *Song) GetEncodedKey(bitrate Bitrate) String {
-	var temp IntArray
+func (song *Song) GetEncodedKey(bitrate Bitrate) dna.String {
+	var temp dna.IntArray
 	if bitrate == Lossless {
-		temp = IntArray{11, 12, 13, 13, 11, 14, 13, 13}
+		temp = dna.IntArray{11, 12, 13, 13, 11, 14, 13, 13}
 	} else {
-		temp = Int(bitrate).ToString().Split("").ToIntArray()
+		temp = dna.Int(bitrate).ToString().Split("").ToIntArray()
 	}
-	tailArray := IntArray{10}.Concat(temp).Concat(IntArray{10, 2, 0, 1, 0})
+	tailArray := dna.IntArray{10}.Concat(temp).Concat(dna.IntArray{10, 2, 0, 1, 0})
 	return getCipherText(GetId(song.Key), tailArray)
 
 }
 
 // GetDirectLink gets a direct link of a song
-func (song *Song) GetDirectLink(bitrate Bitrate) String {
+func (song *Song) GetDirectLink(bitrate Bitrate) dna.String {
 	return SONG_BASE_URL.Concat(song.GetEncodedKey(bitrate), "/")
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (song *Song) Fetch() error {
 	_song, err := GetSong(song.Id)
@@ -362,22 +362,27 @@ func (song *Song) Fetch() error {
 	}
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (song *Song) New() site.Item {
-	return site.Item(NewSong())
+// GetId implements GetId methods of item.Item interface
+func (song *Song) GetId() dna.Int {
+	return song.Id
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (song *Song) New() item.Item {
+	return item.Item(NewSong())
+}
+
+// Init implements item.Item interface.
 // It sets Id or key.
-// Interface v has type int or dna.Int, it calls Id field.
+// dna.Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
 func (song *Song) Init(v interface{}) {
 	switch v.(type) {
 	case int:
-		song.Id = Int(v.(int))
-	case Int:
-		song.Id = v.(Int)
+		song.Id = dna.Int(v.(int))
+	case dna.Int:
+		song.Id = v.(dna.Int)
 	default:
 		panic("Interface v has to be int")
 	}

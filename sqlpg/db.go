@@ -17,11 +17,21 @@ type DB struct {
 	*sql.DB
 }
 
-// Connect returns database of connected server
+// Connect returns database of connected server.
+// Returns an error if cannot connect to to server
 func Connect(cf *SQLConfig) (*DB, error) {
 	connectionString := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", cf.Username, cf.Password, cf.Host, cf.Post, cf.Database, cf.SSLMode)
 	db, err := sql.Open("postgres", connectionString)
-	return &DB{db}, err
+	if err != nil {
+		return nil, err
+	} else {
+		pingErr := db.Ping()
+		if pingErr != nil {
+			return nil, errors.New(fmt.Sprintf("Cannot connect to database. Error: %s", pingErr.Error()))
+		} else {
+			return &DB{db}, nil
+		}
+	}
 }
 
 // QueryRecords is a reimplementation of sql.Db.Query().
@@ -40,13 +50,18 @@ func (db *DB) QueryRow(query dna.String, args ...interface{}) *Row {
 // The table's name depends on the type's name and its package's name.
 // Ex: Any instance of type Song from package ns will be inserted into table nssongs.
 // Insert returns an error if the struct fails.
+//
+// The error format is:
+// 	Error description - $$$error$$$SQL_QUERY$$$error$$$
+// Sql query is enclosed by `$$$error$$$`
 func (db *DB) Insert(structValue interface{}) error {
 	db.SetMaxIdleConns(-1)
 	tbName := GetTableName(structValue)
 	insertQuery := GetInsertStatement(tbName, structValue, false)
 	_, err := db.Exec(insertQuery.String())
 	if err != nil {
-		return err
+		str := dna.Sprintf("%s - $$$error$$$%v$$$error$$$", err.Error(), insertQuery).String()
+		return errors.New(str)
 	} else {
 		return nil
 	}
@@ -57,6 +72,8 @@ func (db *DB) Insert(structValue interface{}) error {
 // However if the insert value has already existed in a table,
 // it does not return any error.
 // It only returns an error if and only if other errors occur.
+//
+// The error format is the same as the one of sqlpg.DB.Insert()
 func (db *DB) InsertIgnore(structValue interface{}) error {
 	err := db.Insert(structValue)
 	if err != nil {
@@ -76,15 +93,20 @@ func (db *DB) InsertIgnore(structValue interface{}) error {
 // 	* conditionColumn : A snake-case column name in the condition, usually it's an id
 // 	* columns : A list of args of column names in the table being updated.
 // 	* Returns an update statement.
+// The error format is:
+// 	Error description - $$$error$$$SQL_QUERY$$$error$$$
+// Sql query is enclosed by `$$$error$$$`
 func (db *DB) Update(structValue interface{}, conditionColumn dna.String, columns ...dna.String) error {
 	tbName := GetTableName(structValue)
 	updateQuery, err0 := GetUpdateStatement(tbName, structValue, conditionColumn, columns...)
 	if err0 != nil {
-		return err0
+		str := dna.Sprintf("%s - $$$error$$$%v$$$error$$$", err0.Error(), updateQuery).String()
+		return errors.New(str)
 	} else {
 		_, err := db.Exec(updateQuery.String())
 		if err != nil {
-			return err
+			str := dna.Sprintf("%s - $$$error$$$%v$$$error$$$", err.Error(), updateQuery).String()
+			return errors.New(str)
 		} else {
 			return nil
 		}
@@ -111,7 +133,6 @@ func (db *DB) Update(structValue interface{}, conditionColumn dna.String, column
 //	err := db.Select(ids, "SELECT id FROM nssongs ORDER BY id ASC LIMIT 10")
 func (db *DB) Select(structValue interface{}, query dna.String, args ...interface{}) error {
 	rows, err := db.Query(query, args...)
-	defer rows.Close()
 	if err != nil {
 		return err
 	} else {
@@ -138,5 +159,8 @@ func (db *DB) Select(structValue interface{}, query dna.String, args ...interfac
 		}
 	}
 
+	if rows != nil {
+		rows.Close()
+	}
 	return nil
 }

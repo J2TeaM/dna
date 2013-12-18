@@ -1,9 +1,9 @@
 package ns
 
 import (
-	. "dna"
+	"dna"
 	"dna/http"
-	"dna/site"
+	"dna/item"
 	"dna/sqlpg"
 	"errors"
 	"fmt"
@@ -14,17 +14,17 @@ import (
 // Define new Album type.
 // Notice: Artistid should be Artistids , but this field is not important, then it will be ignored.
 type Video struct {
-	Id          Int
-	Title       String
-	Artists     StringArray
-	Topics      StringArray
-	Plays       Int
-	Duration    Int
-	Official    Int
-	Producerid  Int
-	Link        String
-	Sublink     String
-	Thumbnail   String
+	Id          dna.Int
+	Title       dna.String
+	Artists     dna.StringArray
+	Topics      dna.StringArray
+	Plays       dna.Int
+	Duration    dna.Int
+	Official    dna.Int
+	Producerid  dna.Int
+	Link        dna.String
+	Sublink     dna.String
+	Thumbnail   dna.String
 	DateCreated time.Time
 	Checktime   time.Time
 }
@@ -34,8 +34,8 @@ func NewVideo() *Video {
 	video := new(Video)
 	video.Id = 0
 	video.Title = ""
-	video.Artists = StringArray{}
-	video.Topics = StringArray{}
+	video.Artists = dna.StringArray{}
+	video.Topics = dna.StringArray{}
 	video.Plays = 0
 	video.Duration = 0
 	video.Official = 0
@@ -88,9 +88,9 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 
 				artists := temp[0].FindAllString(`<h2>.+</h2>`, -1)
 				if artists.Length() > 0 {
-					video.Artists = StringArray(artists.Map(func(val String, idx Int) String {
+					video.Artists = dna.StringArray(artists.Map(func(val dna.String, idx dna.Int) dna.String {
 						return val.RemoveHtmlTags("").Trim()
-					}).([]String)).Unique()
+					}).([]dna.String)).SplitWithRegexp(` / `).Unique()
 				}
 
 			}
@@ -113,7 +113,7 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 					if len(ts) > 0 {
 						secs := float64(ts[0][1].ToInt()) * math.Pow10(13-len(ts[0][1]))
 						// Log(secs)
-						video.DateCreated = Float(secs / 1000).ToInt().ToTime()
+						video.DateCreated = dna.Float(secs / 1000).ToInt().ToTime()
 					}
 
 				}
@@ -130,7 +130,7 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 }
 
 // GetVideo returns a video and an error (if available)
-func GetVideo(id Int) (*Video, error) {
+func GetVideo(id dna.Int) (*Video, error) {
 	var video *Video = NewVideo()
 	video.Id = id
 	c := make(chan bool)
@@ -155,7 +155,7 @@ func GetVideo(id Int) (*Video, error) {
 
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (video *Video) Fetch() error {
 	_video, err := GetVideo(video.Id)
@@ -167,22 +167,27 @@ func (video *Video) Fetch() error {
 	}
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (video *Video) New() site.Item {
-	return site.Item(NewVideo())
+// GetId implements GetId methods of item.Item interface
+func (video *Video) GetId() dna.Int {
+	return video.Id
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (video *Video) New() item.Item {
+	return item.Item(NewVideo())
+}
+
+// Init implements item.Item interface.
 // It sets Id or key.
-// Interface v has type int or dna.Int, it calls Id field.
+// dna.Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
 func (video *Video) Init(v interface{}) {
 	switch v.(type) {
 	case int:
-		video.Id = Int(v.(int))
-	case Int:
-		video.Id = v.(Int)
+		video.Id = dna.Int(v.(int))
+	case dna.Int:
+		video.Id = v.(dna.Int)
 	default:
 		panic("Interface v has to be int")
 	}

@@ -1,34 +1,34 @@
 package zi
 
 import (
-	. "dna"
-	"dna/site"
+	"dna"
+	"dna/item"
 	"dna/sqlpg"
 	"errors"
 	"time"
 )
 
 type Artist struct {
-	Id          Int
-	Name        String
-	Alias       String
-	Birthname   String
-	Birthday    String
-	Sex         Int
-	Link        String
-	Topics      StringArray
-	Avatar      String
-	Coverart    String
-	Coverart2   String
-	ZmeAcc      String
-	Role        String
-	Website     String
-	Biography   String
-	Publisher   String
-	Country     String
-	IsOfficial  Int
-	YearActive  String
-	StatusId    Int
+	Id          dna.Int
+	Name        dna.String
+	Alias       dna.String
+	Birthname   dna.String
+	Birthday    dna.String
+	Sex         dna.Int
+	Link        dna.String
+	Topics      dna.StringArray
+	Avatar      dna.String
+	Coverart    dna.String
+	Coverart2   dna.String
+	ZmeAcc      dna.String
+	Role        dna.String
+	Website     dna.String
+	Biography   dna.String
+	Publisher   dna.String
+	Country     dna.String
+	IsOfficial  dna.Int
+	YearActive  dna.String
+	StatusId    dna.Int
 	DateCreated time.Time
 	Checktime   time.Time
 }
@@ -42,7 +42,7 @@ func NewArtist() *Artist {
 	artist.Birthday = ""
 	artist.Sex = 0
 	artist.Link = ""
-	artist.Topics = StringArray{}
+	artist.Topics = dna.StringArray{}
 	artist.Avatar = ""
 	artist.Coverart = ""
 	artist.Coverart2 = ""
@@ -61,7 +61,7 @@ func NewArtist() *Artist {
 }
 
 //GetArtistFromAPI gets a artist from API.
-func GetArtistFromAPI(id Int) (*Artist, error) {
+func GetArtistFromAPI(id dna.Int) (*Artist, error) {
 	var artist *Artist = NewArtist()
 	artist.Id = id
 
@@ -103,11 +103,11 @@ func GetArtistFromAPI(id Int) (*Artist, error) {
 }
 
 // GetArtist returns a artist or an error
-func GetArtist(id Int) (*Artist, error) {
+func GetArtist(id dna.Int) (*Artist, error) {
 	artist, err := GetArtistFromAPI(id)
 	if err == nil {
 		if artist.Name == "" {
-			return nil, errors.New(Sprintf("Zing - Artist %v: Artist not found", artist.Id).String())
+			return nil, errors.New(dna.Sprintf("Zing - Artist %v: Artist not found", artist.Id).String())
 		} else {
 			return artist, nil
 		}
@@ -116,7 +116,7 @@ func GetArtist(id Int) (*Artist, error) {
 	}
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (artist *Artist) Fetch() error {
 	_artist, err := GetArtist(artist.Id)
@@ -128,22 +128,27 @@ func (artist *Artist) Fetch() error {
 	}
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (artist *Artist) New() site.Item {
-	return site.Item(NewArtist())
+// GetId implements GetId methods of item.Item interface
+func (artist *Artist) GetId() dna.Int {
+	return artist.Id
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (artist *Artist) New() item.Item {
+	return item.Item(NewArtist())
+}
+
+// Init implements item.Item interface.
 // It sets Id or key.
-// Interface v has type int or dna.Int, it calls Id field.
+// dna.Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
 func (artist *Artist) Init(v interface{}) {
 	switch v.(type) {
 	case int:
-		artist.Id = Int(v.(int))
-	case Int:
-		artist.Id = v.(Int)
+		artist.Id = dna.Int(v.(int))
+	case dna.Int:
+		artist.Id = v.(dna.Int)
 	default:
 		panic("Interface v has to be int")
 	}

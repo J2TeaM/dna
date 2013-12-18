@@ -2,6 +2,7 @@ package zi
 
 import (
 	. "dna"
+	"time"
 )
 
 func ExampleTV_GetEncodedKey() {
@@ -46,6 +47,7 @@ func ExampleGetTV() {
 	tv.Likes = 50
 	tv.Comments = 9
 	tv.Rating = 8.927536231884059
+	tv.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
 	tv.FileUrl = "stream6.tv.zdn.vn/streaming/ed283ead88766c5a8ed4a82ee4abf2f4/52a2af3c/2013/1125/91/2eddbfaa80233df649d9c6f2dcf2c214.mp4?format=f360&device=ios"
 	LogStruct(tv)
 	// Output:
@@ -53,7 +55,7 @@ func ExampleGetTV() {
 	// Key : "IWZAI70B"
 	// Title : "Full Show"
 	// Fullname : "MTV Europe Music Awards (EMA) - Full Show"
-	// Eposide : 0
+	// Episode : 0
 	// DateReleased : "2013-11-25 00:00:00"
 	// Duration : 6296
 	// Thumbnail : "2013/1125/91/0e8396a11de4bca6bf2c7329400ee2db_1385438291.jpg"
@@ -71,4 +73,5 @@ func ExampleGetTV() {
 	// Subtitle : ""
 	// Tracking : ""
 	// Signature : "ec657cea3927205faab0c933f8ebdef2"
+	// Checktime : "2013-11-21 00:00:00"
 }

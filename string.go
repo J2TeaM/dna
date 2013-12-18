@@ -222,8 +222,12 @@ func (s String) RemoveHtmlTags(tag String) String {
 
 // GetTagAttributes returns only one attribute per tag. HTML parse by using regexp is not sufficient but in some cases, it's better to use them.
 func (s String) GetTagAttributes(att String) String {
-	return s.FindAllStringSubmatch(String(fmt.Sprintf("%v\\s*=[\"']([^\"']+?)[\"']", att)), -1)[0][1]
-
+	ret := s.FindAllStringSubmatch(String(fmt.Sprintf("%v\\s*=[\"']([^\"']+?)[\"']", att)), -1)
+	if len(ret) > 0 {
+		return ret[0][1]
+	} else {
+		return ""
+	}
 }
 
 // GetTags returns tags of HTML-like string. NOTE: this method does not resolve the nested tags.

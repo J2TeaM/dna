@@ -1,9 +1,9 @@
 package ns
 
 import (
-	. "dna"
+	"dna"
 	"dna/http"
-	"dna/site"
+	"dna/item"
 	"dna/sqlpg"
 	"errors"
 	"fmt"
@@ -12,24 +12,24 @@ import (
 )
 
 type Song struct {
-	Id          Int
-	Title       String
-	Artists     StringArray
-	Artistid    Int
-	Authors     StringArray
-	Authorid    Int
-	Plays       Int
-	Duration    Int
-	Link        String
-	Topics      StringArray
-	Category    StringArray
-	Bitrate     Int
-	Official    Int
-	Islyric     Int
+	Id          dna.Int
+	Title       dna.String
+	Artists     dna.StringArray
+	Artistid    dna.Int
+	Authors     dna.StringArray
+	Authorid    dna.Int
+	Plays       dna.Int
+	Duration    dna.Int
+	Link        dna.String
+	Topics      dna.StringArray
+	Category    dna.StringArray
+	Bitrate     dna.Int
+	Official    dna.Int
+	Islyric     dna.Int
 	DateCreated time.Time
 	DateUpdated time.Time
-	Lyric       String
-	SameArtist  Int
+	Lyric       dna.String
+	SameArtist  dna.Int
 	Checktime   time.Time
 }
 
@@ -38,15 +38,15 @@ func NewSong() *Song {
 	song := new(Song)
 	song.Id = 0
 	song.Title = ""
-	song.Artists = StringArray{}
+	song.Artists = dna.StringArray{}
 	song.Artistid = 0
-	song.Authors = StringArray{}
+	song.Authors = dna.StringArray{}
 	song.Authorid = 0
 	song.Plays = 0
 	song.Duration = 0
 	song.Link = ""
-	song.Topics = StringArray{}
-	song.Category = StringArray{}
+	song.Topics = dna.StringArray{}
+	song.Category = dna.StringArray{}
 	song.Bitrate = 0
 	song.Official = 0
 	song.Islyric = 0
@@ -58,7 +58,7 @@ func NewSong() *Song {
 	return song
 }
 
-func getValueXML(data *String, tag String, position Int) String {
+func getValueXML(data *dna.String, tag dna.String, position dna.Int) dna.String {
 	v := (*data).FindAllString("<"+tag+">.+<\\/"+tag+">", -1)
 	if v.Length() > position {
 		return v[position].ReplaceWithRegexp(`\]\].+$`, "").ReplaceWithRegexp(`^.+CDATA\[`, "")
@@ -97,7 +97,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 				topics = topics.ReplaceWithRegexp("^.+\\\">|<\\/a><\\/li>", "")
 				song.Topics = topics.ToStringArray().SplitWithRegexp(" - ").SplitWithRegexp("/")
 				temp := data.FindAllString("<a.+class=\"casi\".+>(.+?)<\\/a>", 1)
-				var singer String
+				var singer dna.String
 				if temp.Length() > 0 {
 					singer = temp[0]
 				} else {
@@ -149,8 +149,8 @@ func getSongFromXML(song *Song) <-chan bool {
 
 			if song.Title != "" && song.Link != "/" {
 				ts := song.Link.FindAllString(`\/[0-9]+_`, 1)[0].ReplaceWithRegexp(`\/`, "").ReplaceWithRegexp(`_`, "")
-				unix := ts.ToInt().ToFloat() * Float(math.Pow10(13-len(ts)))
-				song.DateCreated = Int(int64(unix) / 1000).ToTime()
+				unix := ts.ToInt().ToFloat() * dna.Float(math.Pow10(13-len(ts)))
+				song.DateCreated = dna.Int(int64(unix) / 1000).ToTime()
 				song.DateUpdated = time.Now()
 			}
 		}
@@ -161,7 +161,7 @@ func getSongFromXML(song *Song) <-chan bool {
 }
 
 // GetSong returns a song or an error
-func GetSong(id Int) (*Song, error) {
+func GetSong(id dna.Int) (*Song, error) {
 	var song *Song = NewSong()
 	song.Id = id
 	c := make(chan bool, 2)
@@ -185,7 +185,7 @@ func GetSong(id Int) (*Song, error) {
 	}
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (song *Song) Fetch() error {
 	_song, err := GetSong(song.Id)
@@ -197,25 +197,30 @@ func (song *Song) Fetch() error {
 	}
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (song *Song) New() site.Item {
-	return site.Item(NewSong())
+// GetId implements GetId methods of item.Item interface
+func (song *Song) GetId() dna.Int {
+	return song.Id
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (song *Song) New() item.Item {
+	return item.Item(NewSong())
+}
+
+// Init implements item.Item interface.
 // It sets Id or key.
-// Interface v has type int or dna.Int, it calls Id field.
+// dna.Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
 func (song *Song) Init(v interface{}) {
 	switch v.(type) {
 	case int:
-		song.Id = Int(v.(int))
-	case Int:
-		song.Id = v.(Int)
+		song.Id = dna.Int(v.(int))
+	case dna.Int:
+		song.Id = v.(dna.Int)
 	// case string:
-	// 	song.Key = String(v.(string))
-	// case String:
+	// 	song.Key = dna.String(v.(string))
+	// case dna.String:
 	// 	song.Key = v.(String)
 	default:
 		panic("Interface v has to be int")

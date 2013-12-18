@@ -1,9 +1,9 @@
 package zi
 
 import (
-	. "dna"
+	"dna"
 	"dna/http"
-	"dna/site"
+	"dna/item"
 	"dna/sqlpg"
 	"errors"
 	"time"
@@ -20,23 +20,23 @@ const (
 
 // Video defines a basic video type
 type Video struct {
-	Id          Int
-	Title       String
-	Artists     StringArray
-	Topics      StringArray
-	Plays       Int
-	Thumbnail   String
-	Link        String
-	Lyric       String
+	Id          dna.Int
+	Title       dna.String
+	Artists     dna.StringArray
+	Topics      dna.StringArray
+	Plays       dna.Int
+	Thumbnail   dna.String
+	Link        dna.String
+	Lyric       dna.String
 	DateCreated time.Time
 	Checktime   time.Time
 	// add new 6 fields
-	ArtistIds       IntArray
-	Duration        Int
-	StatusId        Int
-	ResolutionFlags Int
-	Likes           Int
-	Comments        Int
+	ArtistIds       dna.IntArray
+	Duration        dna.Int
+	StatusId        dna.Int
+	ResolutionFlags dna.Int
+	Likes           dna.Int
+	Comments        dna.Int
 }
 
 // NewVideo returns a pointer to a new video
@@ -44,8 +44,8 @@ func NewVideo() *Video {
 	video := new(Video)
 	video.Id = 0
 	video.Title = ""
-	video.Artists = StringArray{}
-	video.Topics = StringArray{}
+	video.Artists = dna.StringArray{}
+	video.Topics = dna.StringArray{}
 	video.Plays = 0
 	video.Thumbnail = ""
 	video.Lyric = ""
@@ -53,7 +53,7 @@ func NewVideo() *Video {
 	video.DateCreated = time.Time{}
 	video.Checktime = time.Time{}
 	// add new 6 fields
-	video.ArtistIds = IntArray{}
+	video.ArtistIds = dna.IntArray{}
 	video.Duration = 0
 	video.StatusId = 0
 	video.Likes = 0
@@ -63,7 +63,7 @@ func NewVideo() *Video {
 }
 
 //GetVideoFromAPI gets a video from API. It does not get content from main site.
-func GetVideoFromAPI(id Int) (*Video, error) {
+func GetVideoFromAPI(id dna.Int) (*Video, error) {
 	var video *Video = NewVideo()
 	video.Id = id
 	apivideo, err := GetAPIVideo(id)
@@ -72,18 +72,18 @@ func GetVideoFromAPI(id Int) (*Video, error) {
 	} else {
 		if apivideo.Response.MsgCode == 1 {
 			video.Title = apivideo.Title
-			video.Artists = StringArray(apivideo.Artists.Split(" , ").Map(func(val String, idx Int) String {
+			video.Artists = dna.StringArray(apivideo.Artists.Split(" , ").Map(func(val dna.String, idx dna.Int) dna.String {
 				return val.Trim()
-			}).([]String)).Filter(func(v String, i Int) Bool {
+			}).([]dna.String)).Filter(func(v dna.String, i dna.Int) dna.Bool {
 				if v != "" {
 					return true
 				} else {
 					return false
 				}
 			})
-			video.Topics = StringArray(apivideo.Topics.Split(", ").Map(func(val String, idx Int) String {
+			video.Topics = dna.StringArray(apivideo.Topics.Split(", ").Map(func(val dna.String, idx dna.Int) dna.String {
 				return val.Trim()
-			}).([]String)).SplitWithRegexp(" / ").Unique().Filter(func(v String, i Int) Bool {
+			}).([]dna.String)).SplitWithRegexp(" / ").Unique().Filter(func(v dna.String, i dna.Int) dna.Bool {
 				if v != "" {
 					return true
 				} else {
@@ -125,7 +125,7 @@ func GetVideoFromAPI(id Int) (*Video, error) {
 					flags = flags | LRe1080p
 				}
 			}
-			video.ResolutionFlags = Int(flags)
+			video.ResolutionFlags = dna.Int(flags)
 			video.Duration = apivideo.Duration
 			video.Likes = apivideo.Likes
 			video.StatusId = apivideo.StatusId
@@ -148,7 +148,7 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 		// Log(link)
 		// Log(result.Data)
 		data := &result.Data
-		Log(data.Match("<title>Thông báo</title>"))
+		// dna.Log(data.Match("<title>Thông báo</title>"))
 		if err == nil && !data.Match("<title>Thông báo</title>") {
 
 			topicsArr := data.FindAllStringSubmatch(`Thể loại:(.+)\|`, -1)
@@ -168,9 +168,9 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 
 			artistsArr := data.FindAllStringSubmatch(`<h1 class="detail-title">.+(<a.+)`, -1)
 			if len(artistsArr) > 0 {
-				video.Artists = StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique().Map(func(val String, idx Int) String {
+				video.Artists = dna.StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split(" ft. ").Unique().Map(func(val dna.String, idx dna.Int) dna.String {
 					return val.Trim()
-				}).([]String))
+				}).([]dna.String))
 			}
 
 			thumbnailArr := data.FindAllString(`<meta property="og:image".+`, -1)
@@ -252,7 +252,7 @@ func getVideoFromAPI(video *Video) <-chan bool {
 }
 
 // GetVideo returns a video or an error
-func GetVideo(id Int) (*Video, error) {
+func GetVideo(id dna.Int) (*Video, error) {
 	var video *Video = NewVideo()
 	video.Id = id
 	c := make(chan bool, 2)
@@ -269,7 +269,7 @@ func GetVideo(id Int) (*Video, error) {
 	}
 
 	if video.Link == "" {
-		return nil, errors.New(Sprintf("Zing - Video %v: Link not found", video.Id).String())
+		return nil, errors.New(dna.Sprintf("Zing - Video %v: Link not found", video.Id).String())
 	} else {
 		video.Checktime = time.Now()
 		return video, nil
@@ -278,17 +278,17 @@ func GetVideo(id Int) (*Video, error) {
 }
 
 // GetEncodedKey gets a encoded key used for XML link or getting direct video url
-func (video *Video) GetEncodedKey(resolution Resolution) String {
-	tailArray := IntArray{10}.Concat(Int(resolution).ToString().Split("").ToIntArray()).Concat(IntArray{10, 2, 0, 1, 0})
+func (video *Video) GetEncodedKey(resolution Resolution) dna.String {
+	tailArray := dna.IntArray{10}.Concat(dna.Int(resolution).ToString().Split("").ToIntArray()).Concat(dna.IntArray{10, 2, 0, 1, 0})
 	return getCipherText(video.Id, tailArray)
 }
 
 // GetDirectLink gets a direct video link from the site with various qualities
-func (video *Video) GetDirectLink(resolution Resolution) String {
+func (video *Video) GetDirectLink(resolution Resolution) dna.String {
 	return VIDEO_BASE_URL.Concat(video.GetEncodedKey(resolution), "/")
 }
 
-// Fetch implements site.Item interface.
+// Fetch implements item.Item interface.
 // Returns error if can not get item
 func (video *Video) Fetch() error {
 	_video, err := GetVideo(video.Id)
@@ -300,22 +300,27 @@ func (video *Video) Fetch() error {
 	}
 }
 
-// New implements site.Item interface
-// Returns new site.Item interface
-func (video *Video) New() site.Item {
-	return site.Item(NewVideo())
+// GetId implements GetId methods of item.Item interface
+func (video *Video) GetId() dna.Int {
+	return video.Id
 }
 
-// Init implements site.Item interface.
+// New implements item.Item interface
+// Returns new item.Item interface
+func (video *Video) New() item.Item {
+	return item.Item(NewVideo())
+}
+
+// Init implements item.Item interface.
 // It sets Id or key.
-// Interface v has type int or dna.Int, it calls Id field.
+// dna.Interface v has type int or dna.Int, it calls Id field.
 // Otherwise if v has type string or dna.String, it calls Key field.
 func (video *Video) Init(v interface{}) {
 	switch v.(type) {
 	case int:
-		video.Id = Int(v.(int))
-	case Int:
-		video.Id = v.(Int)
+		video.Id = dna.Int(v.(int))
+	case dna.Int:
+		video.Id = v.(dna.Int)
 	default:
 		panic("Interface v has to be int")
 	}
