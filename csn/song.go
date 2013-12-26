@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var LastSongId dna.Int
+
 type Song struct {
 	Id            dna.Int
 	Title         dna.String
@@ -133,7 +135,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 				topics.Pop()
 				song.Topics = dna.StringArray(topics.Map(func(val dna.String, idx dna.Int) dna.String {
 					return val.Replace("...", "").Replace("Nước khác", "Nhạc Các Nước Khác").Replace("Âu, Mỹ", "Âu Mỹ").Trim().Title()
-				}).([]dna.String)).SplitWithRegexp(`, `)
+				}).([]dna.String)).SplitWithRegexp(`, `).Unique()
 			}
 
 			albumTitleArr := data.FindAllStringSubmatch(`Album:</u>(.+?)</a>`, 1)
@@ -158,7 +160,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 
 			authorArr := data.FindAllStringSubmatch(`<u>Sáng tác:(.+)`, 1)
 			if len(authorArr) > 0 {
-				song.Authors = authorArr[0][1].RemoveHtmlTags("").Trim().Split("; ")
+				song.Authors = refineAuthorsOrArtists(authorArr[0][1].RemoveHtmlTags("").Trim())
 			}
 
 			playsArr := data.FindAllStringSubmatch(`(?mis)<img src="images/bh1.gif".+?<span>(.+?)</span>`, 1)
@@ -281,7 +283,7 @@ func (song *Song) GetId() dna.Int {
 // New implements item.Item interface
 // Returns new item.Item interface
 func (song *Song) New() item.Item {
-	return item.Item(NewSong())
+	return item.Item(NewSongVideo())
 }
 
 // Init implements item.Item interface.

@@ -2,8 +2,19 @@ package cc
 
 import (
 	. "dna"
+	"testing"
 	"time"
 )
+
+func TestGetVideo(t *testing.T) {
+	_, err := GetVideo(70641)
+	if err == nil {
+		t.Error("Video 70641 has to have an error")
+	}
+	if err.Error() != "Chacha - Video 70641: Link not found" {
+		t.Errorf("Error message has to be: %v", err.Error())
+	}
+}
 
 func ExampleGetVideo() {
 	video, err := GetVideo(70370)

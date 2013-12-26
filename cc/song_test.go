@@ -2,9 +2,19 @@ package cc
 
 import (
 	. "dna"
+	"testing"
 	"time"
 )
 
+func TestGetSong(t *testing.T) {
+	_, err := GetSong(881241)
+	if err == nil {
+		t.Error("Song 881241 has to have an error")
+	}
+	if err.Error() != "Chacha - Song 881241: Mp3 link not found" {
+		t.Errorf("Error message has to be: %v", err.Error())
+	}
+}
 func ExampleGetSong() {
 	song, err := GetSong(872358)
 	PanicError(err)

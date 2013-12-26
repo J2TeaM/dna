@@ -118,9 +118,9 @@ func GetAlbum(id dna.Int) (*Album, error) {
 		<-c
 	}
 	if album.Nsongs != album.Songids.Length() {
-		return nil, errors.New(dna.Sprintf("Nhacvui - Album %v: Songids and Nsongs do not match", album.Id).String())
+		return nil, errors.New(dna.Sprintf("Chacha - Album %v: Songids and Nsongs do not match", album.Id).String())
 	} else if album.Nsongs == 0 && album.Songids.Length() == 0 {
-		return nil, errors.New(dna.Sprintf("Nhacvui - Album %v: No song found", album.Id).String())
+		return nil, errors.New(dna.Sprintf("Chacha - Album %v: No song found", album.Id).String())
 	} else {
 		album.Checktime = time.Now()
 		return album, nil

@@ -2,8 +2,19 @@ package cc
 
 import (
 	. "dna"
+	"testing"
 	"time"
 )
+
+func TestGetAlbum(t *testing.T) {
+	_, err := GetAlbum(18449)
+	if err == nil {
+		t.Error("Album 18449 has to have an error")
+	}
+	if err.Error() != "Chacha - Album 18449: No song found" {
+		t.Errorf("Error message has to be: %v", err.Error())
+	}
+}
 
 func ExampleGetAlbum() {
 	album, err := GetAlbum(18356)

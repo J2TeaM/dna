@@ -14,8 +14,8 @@ func ExampleGetSong() {
 	}
 	song.Plays = 13
 
-	if len(*RelevantSongs) != 20 {
-		panic("RelevantSongs has to be 20")
+	if len(*RelevantSongs) == 0 {
+		panic(Sprintf("RelevantSongs has to be greater than 0, but got: %v", len(*RelevantSongs)).String())
 	}
 
 	// reset to avoid conflicted testings afterwards

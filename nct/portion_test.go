@@ -11,15 +11,15 @@ func ExampleGetRelevantPortions() {
 		Log("RELEVANT PORTIONS OF THE " + portionType + ":")
 		Log("  Song - Length:", len(*RelevantSongs))
 		for _, song := range *RelevantSongs {
-			Log("\t"+song.Id.ToString(), "\t", song.Key, "\t", song.IsOfficial)
+			Log("\t"+Sprintf("%d", song.Id), "\t", song.Key, "\t", song.IsOfficial)
 		}
 		Log("  Album - Length:", len(*RelevantAlbums))
 		for _, album := range *RelevantAlbums {
-			Log("\t"+album.Id.ToString(), "\t", album.Key, "\t", album.IsOfficial)
+			Log("\t"+Sprintf("%d", album.Id), "\t", album.Key, "\t", album.IsOfficial)
 		}
 		Log("  Video - Length:", len(*RelevantVideos))
 		for _, video := range *RelevantVideos {
-			Log("\t"+video.Id.ToString(), "\t", video.Key, "\t", video.IsOfficial)
+			Log("\t"+Sprintf("%d", video.Id), "\t", video.Key, "\t", video.IsOfficial)
 		}
 		ResetRelevantPortions()
 	}
@@ -67,7 +67,7 @@ func ExampleGetRelevantPortions() {
 	// 	2806107 	 exOpJcegV6fh 	 true
 	// 	2770334 	 fnrgn0IbqQck 	 true
 	// 	2756676 	 kGTZ70xf1qLF 	 false
-	// 	2737320 	 0B3F4bkZjKqH 	 false
+	// 	2737320 	 0B3F4bkZjKqH 	 true
 	// 	2720484 	 RafDgCQWW9WV 	 true
 	// 	2719733 	 FGm2PAG00QhG 	 true
 	//   Album - Length: 5

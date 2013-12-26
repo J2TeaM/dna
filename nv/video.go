@@ -23,6 +23,7 @@ type Video struct {
 	Lyric     dna.String
 	Link      dna.String
 	Link320   dna.String
+	Thumbnail dna.String
 	Type      dna.String
 	Checktime time.Time
 }
@@ -39,6 +40,7 @@ func NewVideo() *Video {
 	video.Lyric = ""
 	video.Link = ""
 	video.Link320 = ""
+	video.Thumbnail = ""
 	video.Type = ""
 	video.Checktime = time.Time{}
 
@@ -102,6 +104,11 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 			playsArr := data.FindAllStringSubmatch(`Lượt nghe: (.+?)</div>`, 1)
 			if len(playsArr) > 0 {
 				video.Plays = playsArr[0][1].Trim().Replace(",", "").ToInt()
+			}
+
+			thumbArr := data.FindAllStringSubmatch(`(<meta property="og:image".+)`, 1)
+			if len(thumbArr) > 0 {
+				video.Thumbnail = thumbArr[0][1].GetTagAttributes("content").Trim()
 			}
 
 			lyricArr := data.FindAllString(`(?mis)<div class="nghenhac-loibaihat-cnt.+<div class="loi-bai-hat-footer">`, 1)

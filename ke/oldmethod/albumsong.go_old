@@ -1,0 +1,333 @@
+package ke
+
+import (
+	"dna"
+	"dna/http"
+	"dna/item"
+	"dna/sqlpg"
+	"errors"
+	"sync"
+	"time"
+)
+
+var (
+	AutoSongid  dna.Int = 0
+	AutoAlbumid dna.Int = 0
+	mutex               = &sync.Mutex{}
+)
+
+// GetAutoSongid returns current calculated auto songid after being increased by 1.
+// It uses mutex to avoid data race.
+func GetAutoSongid() dna.Int {
+	mutex.Lock()
+	defer mutex.Unlock()
+	AutoSongid += 1
+	return AutoSongid
+}
+
+// GetAutoAlbumid returns current calculated auto songid after being increased by 1.
+// It uses mutex to avoid data race.
+func GetAutoAlbumid() dna.Int {
+	mutex.Lock()
+	defer mutex.Unlock()
+	AutoAlbumid += 1
+	return AutoAlbumid
+}
+
+// AlbumSong defines a truct containing an album and its songs from album page.
+// Therefore song is fetched from here.
+type AlbumSong struct {
+	Id          dna.Int
+	Key         dna.String
+	Title       dna.String
+	Artists     dna.StringArray
+	Nsongs      dna.Int
+	Plays       dna.Int
+	Coverart    dna.String
+	Description dna.String
+	Songids     dna.IntArray
+	DateCreated time.Time
+	Checktime   time.Time
+	SongMap     map[dna.String]*Song
+}
+
+func NewAlbumSong() *AlbumSong {
+	albumSong := new(AlbumSong)
+	albumSong.Id = 0
+	albumSong.Key = ""
+	albumSong.Title = ""
+	albumSong.Artists = dna.StringArray{}
+	albumSong.Plays = 0
+	albumSong.Songids = dna.IntArray{}
+	albumSong.Nsongs = 0
+	albumSong.Description = ""
+	albumSong.Coverart = ""
+	albumSong.DateCreated = time.Time{}
+	albumSong.Checktime = time.Time{}
+	albumSong.SongMap = make(map[dna.String]*Song)
+	return albumSong
+}
+
+func getAlbumSongFromXML(albumSong *AlbumSong) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		link := "http://www.keeng.vn/album/get-album-xml?album_identify=" + albumSong.Key
+		// dna.Log(link)
+		result, err := http.Get(link)
+		if err == nil {
+			var data dna.String = ""
+			dataArr := result.Data.FindAllString(`(?mis)<trackList>.+</trackList>`, 1)
+			if dataArr.Length() > 0 {
+				data = dataArr[0]
+			}
+
+			titleArr := data.FindAllString(`<title>.+</title>`, -1)
+			// artistsArr := data.FindAllString(`<creator>.+</creator>`, -1)
+
+			locationArr := data.FindAllString(`<location>.+</location>`, -1)
+			keyArr := data.FindAllString(`<info>.+</info>`, -1)
+			if titleArr.Length() != locationArr.Length() || locationArr.Length() != keyArr.Length() {
+				panic("critical error, fields of songs mismatched")
+			}
+			for id, keyTag := range keyArr {
+				key := keyTag.RemoveHtmlTags("").Trim()
+				if val, ok := albumSong.SongMap[key]; ok == true {
+					val.Title = titleArr[id].RemoveHtmlTags("").Trim()
+					val.Link = locationArr[id].RemoveHtmlTags("").Trim()
+				} else {
+					song := NewSong()
+					song.Id = GetAutoSongid()
+					song.Key = key
+					song.Title = titleArr[id].RemoveHtmlTags("").Trim()
+					song.Link = locationArr[id].RemoveHtmlTags("").Trim()
+					albumSong.SongMap[key] = song
+				}
+			}
+		}
+		channel <- true
+	}()
+	return channel
+}
+
+// getAlbumSongFromMainPage returns album from main page
+func getAlbumSongFromMainPage(albumSong *AlbumSong) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		link := "http://www.keeng.vn/album/google-bot/" + albumSong.Key + ".html"
+		// dna.Log(link)
+		result, err := http.Get(link)
+		if err == nil {
+			data := &result.Data
+
+			plays := data.FindAllStringSubmatch(`([0-9]+) Lượt nghe`, 1)
+			if len(plays) > 0 {
+				albumSong.Plays = plays[0][1].ToInt()
+			}
+
+			titleArr := data.FindAllString(`(?mis)<h2 itemprop="name".+?</h2>`, 1)
+			if titleArr.Length() > 0 {
+				albumSong.Title = titleArr[0].RemoveHtmlTags("").Trim()
+			}
+
+			artistsArr := data.FindAllStringSubmatch(`<p class="name-single">(.+?)<span class="listen-album">`, 1)
+			if len(artistsArr) > 0 {
+				albumSong.Artists = dna.StringArray(artistsArr[0][1].RemoveHtmlTags("").Trim().Split("&nbsp;ft&nbsp;").Map(func(val dna.String, idx dna.Int) dna.String {
+					return val.Trim()
+				}).([]dna.String))
+			}
+
+			coverartArr := data.FindAllString(`<meta property="og:image".+`, 1)
+			if coverartArr.Length() > 0 {
+				albumSong.Coverart = coverartArr[0].GetTagAttributes("content")
+				dateCreatedArr := albumSong.Coverart.FindAllStringSubmatch(`/?(\d{4}/\d{2}/\d{2})`, -1)
+				if len(dateCreatedArr) > 0 {
+					year := dateCreatedArr[0][1].FindAllStringSubmatch(`(\d{4})/\d{2}/\d{2}`, -1)[0][1].ToInt()
+					month := dateCreatedArr[0][1].FindAllStringSubmatch(`\d{4}/(\d{2})/\d{2}`, -1)[0][1].ToInt()
+					day := dateCreatedArr[0][1].FindAllStringSubmatch(`\d{4}/\d{2}/(\d{2})`, -1)[0][1].ToInt()
+					albumSong.DateCreated = time.Date(int(year), time.Month(month), int(day), 0, 0, 0, 0, time.UTC)
+
+				}
+			}
+
+			descArr := data.FindAllStringSubmatch(`(?mis)THÔNG TIN <span class="ping">ALBUM</span>(.+?)<div class="clear">`, 1)
+			if len(descArr) > 0 {
+				albumSong.Description = descArr[0][1].RemoveHtmlTags("").DecodeHTML().Trim()
+			}
+
+			songidsArr := data.FindAllString(`playSong\('.+'\)`, -1)
+			albumSong.Nsongs += songidsArr.Length()
+
+			songlist := data.FindAllString(`(?mis)<ul class="list-song">.+?</ul>`, 1)
+			if songlist.Length() > 0 {
+				artistsArr := songlist[0].FindAllString(`<p class="name-single">.+`, -1)
+				keysArr := songlist[0].FindAllString(`playSong\('.+'\)`, -1)
+				if artistsArr.Length() != keysArr.Length() {
+					panic("Artists and keys mistmatched")
+				} else {
+					for id, keyTag := range keysArr {
+						keyArr := keyTag.FindAllStringSubmatch(`playSong\('(.+)'\)`, 1)
+
+						// Find lyrics
+						idStr := dna.Int(id).ToString()
+						regexpStr := `(?mis)<div id="change_content` + idStr
+						regexpStr += `.+onclick="changeViewLyric` + idStr + `\(\)">`
+						// dna.Log(regexpStr)
+						lyricsArr := data.FindAllString(regexpStr, 1)
+						var lyric dna.String = ""
+						if lyricsArr.Length() > 0 {
+							lyric = lyricsArr[0].Trim().RemoveHtmlTags("").DecodeHTML()
+							lyric = lyric.Replace("<br /> ", "\n").Replace("<br />", "\n").Replace("\t", "").Trim()
+							if lyric.Match("Bài hát chưa được cập nhật lời") {
+								lyric = ""
+							}
+
+						}
+						if len(keyArr) > 0 {
+							key := keyArr[0][1]
+							if val, ok := albumSong.SongMap[key]; ok == true {
+								val.Artists = artistsArr[id].RemoveHtmlTags("").Trim().Split("&nbsp;ft&nbsp;")
+								val.AlbumKey = albumSong.Key
+								val.Plays = albumSong.Plays
+								val.DateCreated = albumSong.DateCreated
+								val.Checktime = time.Now()
+								val.Lyrics.Push(lyric)
+							} else {
+								song := NewSong()
+								song.Key = key
+								song.Id = GetAutoSongid()
+								song.Artists = artistsArr[id].RemoveHtmlTags("").Trim().Split("&nbsp;ft&nbsp;")
+								song.AlbumKey = albumSong.Key
+								song.Plays = albumSong.Plays
+								song.DateCreated = albumSong.DateCreated
+								song.Checktime = time.Now()
+								song.Lyrics.Push(lyric)
+								albumSong.SongMap[key] = song
+							}
+						}
+
+					}
+				}
+			}
+
+		}
+		channel <- true
+	}()
+	return channel
+}
+
+// GetAlbumSong returns a album or an error
+// 	* key: A unique key of a album
+// 	* Official : 0 or 1, if its value is unknown, set to 0
+// 	* Returns a found album or an error
+func GetAlbumSong(key dna.String) (*AlbumSong, error) {
+	var albumSong *AlbumSong = NewAlbumSong()
+	albumSong.Key = key
+	c := make(chan bool, 2)
+	go func() {
+		c <- <-getAlbumSongFromXML(albumSong)
+	}()
+	go func() {
+		c <- <-getAlbumSongFromMainPage(albumSong)
+	}()
+	for i := 0; i < 2; i++ {
+		<-c
+	}
+	albumSong.Id = GetAutoAlbumid()
+	for _, val := range albumSong.SongMap {
+		albumSong.Songids.Push(val.Id)
+	}
+	if albumSong.Nsongs != albumSong.Songids.Length() {
+		return nil, errors.New(dna.Sprintf("Keeng - AlbumSong %v: Songids and Nsongs do not match", albumSong.Key).String())
+	} else if albumSong.Nsongs == 0 && albumSong.Songids.Length() == 0 {
+		return nil, errors.New(dna.Sprintf("Keeng - AlbumSong %v: No song found", albumSong.Key).String())
+	} else {
+		albumSong.Checktime = time.Now()
+		return albumSong, nil
+	}
+}
+
+// ToAlbum returns an album from AlbumSong
+func (albumSong *AlbumSong) ToAlbum() *Album {
+	al := NewAlbum()
+	al.Id = albumSong.Id
+	al.Key = albumSong.Key
+	al.Title = albumSong.Title
+	al.Artists = albumSong.Artists
+	al.Plays = albumSong.Plays
+	al.Songids = albumSong.Songids
+	al.Nsongs = albumSong.Nsongs
+	al.Description = albumSong.Description
+	al.Coverart = albumSong.Coverart
+	al.DateCreated = albumSong.DateCreated
+	al.Checktime = albumSong.Checktime
+	return al
+}
+
+// Fetch implements item.Item interface.
+// Returns error if can not get item
+func (albumSong *AlbumSong) Fetch() error {
+	_albumSong, err := GetAlbumSong(albumSong.Key)
+	if err != nil {
+		return err
+	} else {
+		*albumSong = *_albumSong
+		return nil
+	}
+}
+
+// GetId implements GetId methods of item.Item interface
+func (albumSong *AlbumSong) GetId() dna.Int {
+	return albumSong.Id
+}
+
+// New implements item.Item interface
+// Returns new item.Item interface
+func (albumSong *AlbumSong) New() item.Item {
+	return item.Item(NewAlbumSong())
+}
+
+// Init sets Key of AlbumSong from an index of AlbumKey
+//
+// Init implements item.Item interface.
+// It sets Id or key.
+// dna.Interface v has type int or dna.Int, it calls Id field.
+// Otherwise if v has type string or dna.String, it calls Key field.
+func (albumSong *AlbumSong) Init(v interface{}) {
+	var idx dna.Int
+	switch v.(type) {
+	case int:
+		idx = dna.Int(v.(int))
+		if idx > AlbumKeys.Length()-1 {
+			idx = AlbumKeys.Length() - 1
+		}
+		albumSong.Key = AlbumKeys[idx]
+	case dna.Int:
+		idx = v.(dna.Int)
+		if idx > AlbumKeys.Length()-1 {
+			idx = AlbumKeys.Length() - 1
+		}
+		albumSong.Key = AlbumKeys[idx]
+	default:
+		panic("Interface v has to be int")
+	}
+}
+
+func (albumSong *AlbumSong) Save(db *sqlpg.DB) error {
+	var errStr string = ""
+	album := albumSong.ToAlbum()
+	err := album.Save(db)
+	if err != nil {
+		errStr += err.Error() + "\n"
+	}
+	for _, song := range albumSong.SongMap {
+		err = song.Save(db)
+		if err != nil {
+			errStr += err.Error() + "\n"
+		}
+	}
+	if errStr != "" {
+		return errors.New(errStr)
+	} else {
+		return nil
+	}
+}

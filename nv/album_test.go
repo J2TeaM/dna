@@ -2,9 +2,19 @@ package nv
 
 import (
 	. "dna"
+	"testing"
 	"time"
 )
 
+func TestGetAlbum(t *testing.T) {
+	_, err := GetAlbum(15)
+	if err == nil {
+		t.Error("Album 15 has to have an error")
+	}
+	if err.Error() != "Nhacvui - Album 15: No song found" {
+		t.Errorf("Error message has to be: %v", err.Error())
+	}
+}
 func ExampleGetAlbum() {
 	album, err := GetAlbum(47895)
 	PanicError(err)

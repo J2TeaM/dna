@@ -4,6 +4,7 @@ import (
 	"dna"
 	"dna/item"
 	"dna/sqlpg"
+	"errors"
 	"time"
 )
 
@@ -48,6 +49,27 @@ func NewVideo() *Video {
 	video.Type = true
 	video.Checktime = time.Time{}
 	return video
+}
+
+// GetVideo is a wrapper of GetSongVideo but applied only to Video.
+func GetVideo(id dna.Int) (*Video, error) {
+	item, err := GetSongVideo(id)
+	if err != nil {
+		return nil, err
+	} else {
+		switch item.(type) {
+		case Song:
+			return nil, errors.New("It has to be video, not song")
+		case *Song:
+			return nil, errors.New("It has to be video, not song")
+		case Video:
+			return nil, errors.New("It has to be pointer")
+		case *Video:
+			return item.(*Video), nil
+		default:
+			return nil, errors.New("no type found")
+		}
+	}
 }
 
 // Fetch implements item.Item interface.

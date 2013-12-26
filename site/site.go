@@ -2,8 +2,8 @@ package site
 
 import (
 	"dna"
-	"dna/sqlpg"
 	"dna/terminal"
+	"dna/utils"
 	"io/ioutil"
 	"os"
 	// "time"
@@ -21,19 +21,6 @@ var (
 	// // ERROR is a default logger to print error message
 	// ERROR = terminal.NewLogger(terminal.Red, os.Stderr, "ERROR:", "./log/std.log", terminal.Ldate|terminal.Ltime|terminal.Lshortfile)
 )
-
-func GetMaxId(tableName dna.String, db *sqlpg.DB) (dna.Int, error) {
-	var maxid dna.Int
-	err := db.QueryRow("SELECT max(id) FROM " + tableName).Scan(&maxid)
-	switch {
-	case err == sqlpg.ErrNoRows:
-		return 0, err
-	case err != nil:
-		return 0, err
-	default:
-		return maxid, nil
-	}
-}
 
 func atomicUpdate(errChannel chan bool, state *StateHandler) {
 	it := state.GetItem().New()
@@ -90,14 +77,14 @@ func Update(state *StateHandler) {
 		bar        *terminal.ProgressBar
 		errChannel chan bool  = make(chan bool)
 		tableName  dna.String = state.GetTableName()
-		startupFmt dna.String = "Update from %v - Cid: %v - Pattern: %v - NCFail: %v - NConcurrent: %v"
+		startupFmt dna.String = "Update %v - Cid:%v - Pat:%v - Ncf:%v - NCon:%v"
 	)
 
 	if state.GetPattern() == 1 {
 		idcFormat = "  $indicator %v | cid:%v | cf:%v" // cid: current id, cf: continuous failure count
 		idc = terminal.NewIndicatorWithTheme(terminal.ThemeDefault)
 		// Getting maxid from an item's table
-		id, err := GetMaxId(tableName, state.GetDb())
+		id, err := utils.GetMaxId(tableName, state.GetDb())
 		dna.PanicError(err)
 		state.SetCid(id)
 	} else {

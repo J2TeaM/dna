@@ -1,0 +1,71 @@
+package ke
+
+import (
+	"dna"
+	"dna/item"
+	"dna/sqlpg"
+	"time"
+)
+
+type Song struct {
+	Id          dna.Int
+	Key         dna.String
+	Title       dna.String
+	Artists     dna.StringArray
+	AlbumKey    dna.String
+	Plays       dna.Int
+	Link        dna.String
+	Lyrics      dna.StringArray
+	DateCreated time.Time
+	Checktime   time.Time
+}
+
+func NewSong() *Song {
+	song := new(Song)
+	song.Id = 0
+	song.Key = ""
+	song.Title = ""
+	song.Artists = dna.StringArray{}
+	song.Plays = 0
+	song.AlbumKey = ""
+	song.Link = ""
+	song.Lyrics = dna.StringArray{}
+	song.DateCreated = time.Time{}
+	song.Checktime = time.Time{}
+	return song
+}
+
+//Do not implement
+func (song *Song) Fetch() error {
+	return nil
+}
+
+// GetId implements GetId methods of item.Item interface
+func (song *Song) GetId() dna.Int {
+	return song.Id
+}
+
+// New implements item.Item interface
+// Returns new item.Item interface
+func (song *Song) New() item.Item {
+	return item.Item(NewSong())
+}
+
+// Init implements item.Item interface.
+// It sets Id or key.
+// dna.Interface v has type int or dna.Int, it calls Id field.
+// Otherwise if v has type string or dna.String, it calls Key field.
+func (song *Song) Init(v interface{}) {
+	switch v.(type) {
+	case int:
+		song.Id = dna.Int(v.(int))
+	case dna.Int:
+		song.Id = v.(dna.Int)
+	default:
+		panic("Interface v has to be int")
+	}
+}
+
+func (song *Song) Save(db *sqlpg.DB) error {
+	return db.InsertIgnore(song)
+}

@@ -21,7 +21,7 @@ Examples:
 
 Getting a song or a video
 
-	item, err := csn.GetSongOrVideo(1186398)
+	item, err := csn.GetSongVideo(1186398)
 	if err != nil {
 		dna.Log(err.Error())
 	} else {

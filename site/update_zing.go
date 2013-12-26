@@ -30,7 +30,7 @@ func UpdateZing(sqlConfigPath, siteConfigPath dna.String) {
 	// update new songids found in albums
 	dna.Log("Update new songs from albums")
 	ids := utils.SelectNewSidsFromAlbums("zialbums", time.Now(), db)
-	nids, err := utils.SelectNonExistedIds("zisongs", ids, db)
+	nids, err := utils.SelectUnavailableIds("zisongs", ids, db)
 	if err != nil {
 		dna.Log(err.Error())
 	} else {

@@ -95,7 +95,7 @@ func (pl *Portions) FilterByIds(tblName dna.String, db *sqlpg.DB) error {
 	// mutex.Lock()
 	// defer mutex.Unlock()
 	if pl.Length() > 0 {
-		ids, err := utils.SelectNonExistedIds(tblName, pl.GetIds(), db)
+		ids, err := utils.SelectUnavailableIds(tblName, pl.GetIds(), db)
 		if err != nil {
 			return err
 		}
@@ -121,7 +121,7 @@ func (pl *Portions) FilterByKeys(tblName dna.String, db *sqlpg.DB) error {
 	// mutex.Lock()
 	// defer mutex.Unlock()
 	if pl.Length() > 0 {
-		keys, err := utils.SelectNonExistedKeys(tblName, pl.GetKeys(), db)
+		keys, err := utils.SelectUnavailableKeys(tblName, pl.GetKeys(), db)
 		if err != nil {
 			return err
 		}
