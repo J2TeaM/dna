@@ -7,10 +7,17 @@ import (
 	"time"
 )
 
-func UpdateChacha(sqlConfigPath, siteConfigPath dna.String) {
-	db, err := sqlpg.Connect(sqlpg.NewSQLConfig(sqlConfigPath))
+// UpdateChacha updates chacha.vn.
+// The update process goes through 5 steps:
+// 	Step 1: Initalizing db connection, loading site config and state handler.
+// 	Step 1: Updating new songs.
+// 	Step 3: Updating new albums.
+// 	Step 4: Updating new videos.
+// 	Step 5: Recovering failed sql statements.
+func UpdateChacha() {
+	db, err := sqlpg.Connect(sqlpg.NewSQLConfig(SqlConfigPath))
 	dna.PanicError(err)
-	siteConf, err := LoadSiteConfig("cc", siteConfigPath)
+	siteConf, err := LoadSiteConfig("cc", SiteConfigPath)
 	dna.PanicError(err)
 
 	state := NewStateHandler(new(cc.Song), siteConf, db)
@@ -22,7 +29,7 @@ func UpdateChacha(sqlConfigPath, siteConfigPath dna.String) {
 	state = NewStateHandler(new(cc.Video), siteConf, db)
 	Update(state)
 
-	RecoverErrorQueries("./log/sql_error.log", db)
+	RecoverErrorQueries(SqlErrorLogPath, db)
 
 	time.Sleep(3 * time.Second)
 	db.Close()

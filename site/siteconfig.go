@@ -64,6 +64,7 @@ func LoadSiteConfig(siteCode, filepath String) (*SiteConfig, error) {
 	return siteConfig, nil
 }
 
+// SaveSiteConfig saves site configuration to disk.
 func SaveSiteConfig(sc *SiteConfig, filepath String) error {
 	sc.src.SetValue(sc.siteCode, "nconcurrent", sc.NConcurrent.ToString())
 	sc.src.SetValue(sc.siteCode, "ncsongfail", sc.NCSongFail.ToString())
@@ -72,6 +73,7 @@ func SaveSiteConfig(sc *SiteConfig, filepath String) error {
 	return cfg.SaveConfigFile(sc.src, filepath)
 }
 
+// Save stores site configuration on disk.
 func (sc *SiteConfig) Save(filepath String) error {
 	return SaveSiteConfig(sc, filepath)
 }

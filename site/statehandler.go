@@ -23,16 +23,16 @@ func NewRange(first, last dna.Int) *Range {
 //
 // StateHandler resolves 3 common patterns to update new item from a site.
 //
-// 	* 1st general pattern: Update items from last ids of (song, album...) of a site to the newest ones.
+// 	* Pattern 1: Update items from last ids of (song, album...) of a site to the newest ones.
 // 	It will stop after N continuous failures which comes from SiteConfig. It means the newest ones are found.
 // 	The Cid is the lasted id of item in a table.
 // 	Fields used: IsOver
 //
-// 	* 2nd pattern: Update through range. Usually to fetch items from m to n.
+// 	* Pattern 2: Update through range. Usually to fetch items from m to n.
 // 	Ex: getting all songs from X with range from 1000 to 2000.
 // 	Fields used: Cid, IsOver, Range
 //
-// 	* 3rd pattern: Update through an external slice.
+// 	* Pattern 3: Update through an external slice.
 // 	Ex: Re-getting all failed ids from log file whose ids are not in order.
 // 	Or in the case of nhaccuatui, a key is encrypted and is used to display a page, so songid is hidden.
 // 	Therefore no way to loop through a range. Only list of keys is found, which is translated into ids.

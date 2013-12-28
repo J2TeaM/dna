@@ -7,11 +7,19 @@ import (
 	"time"
 )
 
-// UpdateNhacso gets lastest items from nhacso.com
-func UpdateNhacso(sqlConfigPath, siteConfigPath dna.String) {
-	db, err := sqlpg.Connect(sqlpg.NewSQLConfig(sqlConfigPath))
+// UpdateNhacso gets lastest items from nhacso.com.
+// The update process goes through 7 steps:
+// 	Step 1: Initalizing db connection, loading site config and state handler.
+// 	Step 2: Updating new songs.
+// 	Step 3: Updating new albums.
+// 	Step 4: Updating new videos.
+// 	Step 5: Updating catagories of new songs.
+// 	Step 6: Updating catagories of new albums.
+// 	Step 7: Recovering failed sql statements.
+func UpdateNhacso() {
+	db, err := sqlpg.Connect(sqlpg.NewSQLConfig(SqlConfigPath))
 	dna.PanicError(err)
-	siteConf, err := LoadSiteConfig("ns", siteConfigPath)
+	siteConf, err := LoadSiteConfig("ns", SiteConfigPath)
 	dna.PanicError(err)
 	// update song
 	state := NewStateHandler(new(ns.Song), siteConf, db)
@@ -30,8 +38,11 @@ func UpdateNhacso(sqlConfigPath, siteConfigPath dna.String) {
 	state = NewStateHandlerWithRange(new(ns.AlbumCategory), r, siteConf, db)
 	Update(state)
 
-	RecoverErrorQueries("./log/sql_error.log", db)
+	RecoverErrorQueries(SqlErrorLogPath, db)
 	time.Sleep(3 * time.Second)
+
+	CountDown(3*time.Second, QuittingMessage, EndingMessage)
+
 	db.Close()
 
 }

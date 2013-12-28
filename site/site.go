@@ -4,22 +4,7 @@ import (
 	"dna"
 	"dna/terminal"
 	"dna/utils"
-	"io/ioutil"
-	"os"
 	// "time"
-)
-
-var (
-	// SQLERROR is a default logger to print warning message
-	HTTPERROR = terminal.NewLogger(terminal.Magenta, ioutil.Discard, "", "./log/http_error.log", 0)
-	// SQLERROR is a default logger to print warning message
-	SQLERROR = terminal.NewLogger(terminal.Magenta, ioutil.Discard, "", "./log/sql_error.log", 0)
-	// INFO is a default logger to print info message
-	INFO = terminal.NewLogger(terminal.White, os.Stdout, "INFO:", "./log/std.log", terminal.Ldate|terminal.Ltime)
-	// // WARNING is a default logger to print warning message
-	// WARNING = terminal.NewLogger(terminal.Magenta, os.Stdout, "WARNING:", "./log/std.log", terminal.Ldate|terminal.Ltime|terminal.Lshortfile)
-	// // ERROR is a default logger to print error message
-	// ERROR = terminal.NewLogger(terminal.Red, os.Stderr, "ERROR:", "./log/std.log", terminal.Ldate|terminal.Ltime|terminal.Lshortfile)
 )
 
 func atomicUpdate(errChannel chan bool, state *StateHandler) {
@@ -33,7 +18,7 @@ func atomicUpdate(errChannel chan bool, state *StateHandler) {
 	// }
 	if err != nil {
 		// dna.Log(err.Error())
-		HTTPERROR.Println(err.Error())
+		HTTPERROR.Println(it.GetId(), err.Error())
 		errChannel <- true
 	} else {
 		// checking this code.Working only with 1st pattern
@@ -52,7 +37,7 @@ func atomicUpdate(errChannel chan bool, state *StateHandler) {
 
 func getUpdateProgressBar(total dna.Int, tableName dna.String) *terminal.ProgressBar {
 	var rt dna.String = "$[  " + tableName + "   $percent%   $current/$total]"
-	rt += "\nElapsed $elapsed    Remaining $eta  ($custom)  Speed $speeditems/s"
+	rt += "\nElapsed: $elapsed    ETA: $eta  ($custom)  Speed: $speeditems/s"
 	var ct dna.String = "$[  " + tableName + "  t:$elapsed    N:$total  ($custom)  ν:$speeditems/s]"
 	upbar := terminal.NewProgressBar(total, rt, ct)
 	upbar.Width = 70
@@ -66,7 +51,7 @@ func getUpdateProgressBar(total dna.Int, tableName dna.String) *terminal.Progres
 }
 
 // Update gets item from sites and save them to database
-func Update(state *StateHandler) {
+func Update(state *StateHandler) *Counter {
 
 	CheckStateHandler(state)
 	var (
@@ -130,5 +115,5 @@ func Update(state *StateHandler) {
 	INFO.Printf("[%v] %v\n", tableName, counter.FinalString())
 	// Delay 2s to ensure all the goroutines left finish it processed before sqlpg.DB closed
 	// time.Sleep(2 * time.Second)
-
+	return counter
 }

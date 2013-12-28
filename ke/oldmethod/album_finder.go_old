@@ -84,7 +84,7 @@ func (af *AlbumFinder) Init(v interface{}) {
 }
 
 func (af *AlbumFinder) Save(db *sqlpg.DB) error {
-	newKeys, err := utils.SelectUnavailableIds("kealbums", &af.Keys, db)
+	newKeys, err := utils.SelectMissingIds("kealbums", &af.Keys, db)
 	if err != nil {
 		return err
 	}

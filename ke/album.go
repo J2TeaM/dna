@@ -99,7 +99,7 @@ func (album *Album) Init(v interface{}) {
 func (album *Album) Save(db *sqlpg.DB) error {
 	var err error
 	err = db.InsertIgnore(album)
-	ids, err := utils.SelectUnavailableIds("kesongs", &album.Songids, db)
+	ids, err := utils.SelectMissingIds("kesongs", &album.Songids, db)
 	if err != nil {
 		return err
 	} else {

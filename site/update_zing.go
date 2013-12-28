@@ -8,11 +8,20 @@ import (
 	"time"
 )
 
-// UpdateZing gets lastest items from mp3.zing.vn
-func UpdateZing(sqlConfigPath, siteConfigPath dna.String) {
-	db, err := sqlpg.Connect(sqlpg.NewSQLConfig(sqlConfigPath))
+// UpdateZing gets lastest items from mp3.zing.vn.
+// The update process goes through 8 steps:
+// 	Step 1: Initalizing db connection, loading site config and state handler
+// 	Step 1: Updating new songs
+// 	Step 3: Updating new albums
+// 	Step 4: Updating new videos
+// 	Step 5: Updating new artists
+// 	Step 6: Updating new songids found in new albums
+// 	Step 7: Updating new tvs
+// 	Step 8: Recovering failed sql statements
+func UpdateZing() {
+	db, err := sqlpg.Connect(sqlpg.NewSQLConfig(SqlConfigPath))
 	dna.PanicError(err)
-	siteConf, err := LoadSiteConfig("zi", siteConfigPath)
+	siteConf, err := LoadSiteConfig("zi", SiteConfigPath)
 	dna.PanicError(err)
 	// update song
 	state := NewStateHandler(new(zi.Song), siteConf, db)
@@ -30,7 +39,7 @@ func UpdateZing(sqlConfigPath, siteConfigPath dna.String) {
 	// update new songids found in albums
 	dna.Log("Update new songs from albums")
 	ids := utils.SelectNewSidsFromAlbums("zialbums", time.Now(), db)
-	nids, err := utils.SelectUnavailableIds("zisongs", ids, db)
+	nids, err := utils.SelectMissingIds("zisongs", ids, db)
 	if err != nil {
 		dna.Log(err.Error())
 	} else {
@@ -46,7 +55,7 @@ func UpdateZing(sqlConfigPath, siteConfigPath dna.String) {
 	state = NewStateHandler(new(zi.TV), siteConf, db)
 	Update(state)
 
-	RecoverErrorQueries("./log/sql_error.log", db)
+	RecoverErrorQueries(SqlErrorLogPath, db)
 
 	time.Sleep(3 * time.Second)
 	db.Close()

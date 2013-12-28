@@ -240,7 +240,7 @@ func (album *Album) Init(v interface{}) {
 
 func (album *Album) Save(db *sqlpg.DB) error {
 	filterRelevants(db)
-	ids, err := utils.SelectUnavailableIds("nctsongs", &album.Songids, db)
+	ids, err := utils.SelectMissingIds("nctsongs", &album.Songids, db)
 	portions := &Portions{}
 	// potential data race
 	mutex.Lock()

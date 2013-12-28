@@ -21,7 +21,7 @@ func GetMaxId(tableName dna.String, db *sqlpg.DB) (dna.Int, error) {
 	}
 }
 
-// SelectUnavailableIds accepts a table name as an input and a list of ids as a source.
+// SelectMissingIds accepts a table name as an input and a list of ids as a source.
 // It returns a new list of ids that do not exist in the destination table
 //
 // 	* tblName : a table name
@@ -33,7 +33,7 @@ func GetMaxId(tableName dna.String, db *sqlpg.DB) (dna.Int, error) {
 // 	with dna (id) as (values (5),(6),(7),(8),(9))
 // 	select id from dna where id not in
 // 	(select id from ziartists where id in (5,6,7,8,9))
-func SelectUnavailableIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB) (*dna.IntArray, error) {
+func SelectMissingIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB) (*dna.IntArray, error) {
 
 	if srcIds.Length() > 0 {
 
@@ -61,7 +61,7 @@ func SelectUnavailableIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB
 
 }
 
-// SelectUnavailableKeys accepts a table name as an input and a list of keys as a source.
+// SelectMissingKeys accepts a table name as an input and a list of keys as a source.
 // It returns a new list of keys that do not exist in the destination table
 //
 // 	* tblName : a table name
@@ -76,7 +76,7 @@ func SelectUnavailableIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB
 //	with dna (key) as (values ('43f3HhhU6DGV'),('uFfgQhKbwAfN'),('RvFDlckJB5QU'),('uIF7rwd5wo4p'),('Kveukbhre1ry'),('oJ1lzAlKwJX6'),('43f3HhhU6DGV'),('uFfgQhKbwAfN'),('hfhtyMdywMau'),('PpZuccjYqy1b'))
 //	select key from dna where key not in
 //	(select key from nctalbums where key in ('43f3HhhU6DGV','uFfgQhKbwAfN','RvFDlckJB5QU','uIF7rwd5wo4p','Kveukbhre1ry','oJ1lzAlKwJX6','43f3HhhU6DGV','uFfgQhKbwAfN','hfhtyMdywMau','PpZuccjYqy1b'))
-func SelectUnavailableKeys(tblName dna.String, srcKeys *dna.StringArray, db *sqlpg.DB) (*dna.StringArray, error) {
+func SelectMissingKeys(tblName dna.String, srcKeys *dna.StringArray, db *sqlpg.DB) (*dna.StringArray, error) {
 	if srcKeys.Length() > 0 {
 		val := dna.StringArray(srcKeys.Map(func(val dna.String, idx dna.Int) dna.String {
 			return `('` + val + `')`
@@ -128,4 +128,25 @@ func SelectNewSidsFromAlbums(tblName dna.String, lastTime time.Time, db *sqlpg.D
 		return nil
 	}
 
+}
+
+// SelectLastMissingIds returns a list of ids which is missing from a table.
+// nLastIds is the total number of last ids in the table.
+//
+// Example: 3 last ids from table nssongs are 1,4,5. Therefore, the missing
+// ids whose range is from 1->5 are 2,3.
+func SelectLastMissingIds(tblName dna.String, nLastIds dna.Int, db *sqlpg.DB) (*dna.IntArray, error) {
+	var min, max dna.Int
+
+	query := dna.Sprintf("SELECT min(id), max(id) FROM (SELECT id FROM %v ORDER BY id DESC LIMIT %v) as AB", tblName, nLastIds)
+	// dna.Log(query)
+	db.QueryRow(query).Scan(&min, &max)
+	totalItem := max - min + 1
+	var ids = make(dna.IntArray, totalItem, totalItem+100)
+	var idx = 0
+	for i := min; i < max; i++ {
+		ids[idx] = i
+		idx += 1
+	}
+	return SelectMissingIds(tblName, &ids, db)
 }
