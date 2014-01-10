@@ -8,11 +8,11 @@ import (
 
 //Testing video with fail link
 func TestGetVideo(t *testing.T) {
-	_, err := GetVideo(19306)
+	_, err := GetVideo(21306)
 	if err == nil {
 		t.Error("Video has to have an error")
 	} else {
-		if err.Error() != "Nhacso - Video 19306 : Link not found" {
+		if err.Error() != "Nhacso - Video 21306 : Link not found" {
 			t.Error("Wrong error message")
 		}
 	}

@@ -339,8 +339,14 @@ func (s String) ToFormattedString(width Int) String {
 }
 
 // Repeat returns a new string repeated n times.
+// If n <= 0, then return empty string.
 func (s String) Repeat(count Int) String {
-	return String(strings.Repeat(string(s), int(count)))
+	if count > 0 {
+		return String(strings.Repeat(string(s), int(count)))
+	} else {
+		return ""
+	}
+
 }
 
 //Underscore returns converted camel cased string into a string delimited by underscores.

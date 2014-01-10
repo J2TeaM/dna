@@ -11,15 +11,18 @@ var (
 	QuittingMessage dna.String = "Quitting in"
 	EndingMessage   dna.String = "PROCESS COMPLETED!"
 	SqlConfigPath   dna.String = "./config/app.ini"
-	SiteConfigPath  dna.String = "./config/app.ini"
+	SiteConfigPath  dna.String = "./config/sites.ini"
 	SqlErrorLogPath dna.String = "./log/sql_error.log"
 )
 
 var (
 
-	// SQLERROR is a default logger to print warning message
+	// TIMEOUTERROR is a default logger to print timeout message
+	TIMEOUTERROR = terminal.NewLogger(terminal.Magenta, ioutil.Discard, "", "./log/timeout_error.log", 0)
+
+	// SQLERROR is a default logger to print http error message
 	HTTPERROR = terminal.NewLogger(terminal.Magenta, ioutil.Discard, "", "./log/http_error.log", 0)
-	// SQLERROR is a default logger to print warning message
+	// SQLERROR is a default logger to print sql error message
 	SQLERROR = terminal.NewLogger(terminal.Magenta, ioutil.Discard, "", "./log/sql_error.log", 0)
 	// INFO is a default logger to print info message
 	INFO = terminal.NewLogger(terminal.White, os.Stdout, "INFO:", "./log/std.log", terminal.Ldate|terminal.Ltime)

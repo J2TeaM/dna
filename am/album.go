@@ -15,20 +15,25 @@ type Album struct {
 	Title         dna.String
 	Artistids     dna.IntArray
 	Artists       dna.StringArray
-	Discographies dna.String // Json decoded string
+	Discographies dna.String // Json decoded string from []Discography
 	Review        dna.String
 	Coverart      dna.String
 	Duration      dna.Int
-	Ratings       dna.IntArray
-	Similars      dna.IntArray
-	Genres        dna.String // Json decoded string
-	Styles        dna.String // Json decoded string
-	Moods         dna.String // Json decoded string
-	Themes        dna.String // Json decoded string
-	Songs         dna.String // Json decoded string
-	// Releases Add later
+	// Ratings contains 3 elements:
+	// 	1st is site rating (0 : no rating, 1 the worst, 10 the best)
+	// 	2nd is average rating
+	// 	3rd is average count
+	Ratings      dna.IntArray
+	Similars     dna.IntArray
+	Genres       dna.String // Json decoded string from []Category
+	Styles       dna.String // Json decoded string from []Category
+	Moods        dna.String // Json decoded string from []Category
+	Themes       dna.String // Json decoded string from []Category
+	Songs        dna.String // Json decoded string from []Song
+	Releases     dna.String // Json decoded string from []Released
+	Awards       dna.String // Json decoded string from []Award
 	DateReleased time.Time
-	Credits      dna.String // Json decoded string
+	Credits      dna.String // Json decoded string from []Credit
 	Checktime    time.Time
 }
 
@@ -49,12 +54,14 @@ func NewAlbum() *Album {
 	album.Moods = "[]"
 	album.Themes = "[]"
 	album.Songs = "[]"
+	album.Releases = "[]"
 	album.DateReleased = time.Time{}
 	album.Credits = "[]"
 	album.Checktime = time.Time{}
 	return album
 }
 
+// ToSeconds returns total seconds from the time format "01:02:03"
 func ToSeconds(str dna.String) dna.Int {
 	if str == "" {
 		return 0
@@ -122,6 +129,7 @@ func getTSGM(data *dna.String, kind dna.String) dna.String {
 
 }
 
+// getAlbumCredit fetches album's credits
 func getAlbumCredit(album *Album) <-chan bool {
 	channel := make(chan bool, 1)
 	go func() {
@@ -143,7 +151,7 @@ func getAlbumCredit(album *Album) <-chan bool {
 				if creditArr.Length() > 0 {
 					credit = creditArr[0].RemoveHtmlTags("").Trim()
 				}
-				return Credit{id, name, credit}
+				return Credit{Id: id, Artist: name, Job: credit}
 			}).([]Credit)
 
 			if len(credits) > 0 {
@@ -160,6 +168,7 @@ func getAlbumCredit(album *Album) <-chan bool {
 
 }
 
+// getAlbumAverageRating fetches average ratings has the following format
 // [{"average":81.428571428571,"count":7,"itemId":"MW0002585207"}]
 func getAlbumAverageRating(album *Album) <-chan bool {
 	channel := make(chan bool, 1)
@@ -173,6 +182,304 @@ func getAlbumAverageRating(album *Album) <-chan bool {
 			if umerr == nil {
 				album.Ratings[1] = dna.Int(avgRatings[0].Average / 10)
 				album.Ratings[2] = avgRatings[0].Count
+			}
+		}
+
+		channel <- true
+	}()
+	return channel
+
+}
+
+// getAlbumSimilars fetches album's similars
+// with the following url format:
+// http://www.allmusic.com/album/google-bot-mw0002585207/similar/mobile
+func getAlbumSimilars(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		link := "http://www.allmusic.com/album/google-bot-mw" + album.Id.ToFormattedString(10, true) + "/similar/mobile"
+		result, err := http.Get(link)
+		if err == nil {
+			data := &result.Data
+			idsArr := data.FindAllString(`<a href=".+`, -1)
+			ids := dna.IntArray(idsArr.Map(func(val dna.String, idx dna.Int) dna.Int {
+				idArr := val.FindAllStringSubmatch(`mw([0-9]+)`, -1)
+				if len(idArr) > 0 {
+					return idArr[0][1].ToInt()
+				} else {
+					return 0
+				}
+			}).([]dna.Int)).Filter(func(val dna.Int, idx dna.Int) dna.Bool {
+				if val > 0 {
+					return true
+				} else {
+					return false
+				}
+			})
+
+			if ids.Length() > 0 {
+				album.Similars = ids
+			}
+		}
+
+		channel <- true
+	}()
+	return channel
+
+}
+
+// getAlbumReleases fetches album's releases
+// with the following url format:
+// http://www.allmusic.com/album/google-bot-mw0002585207/similar/mobile
+func getAlbumReleases(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		link := "http://www.allmusic.com/album/google-bot-mw" + album.Id.ToFormattedString(10, true) + "/releases/mobile"
+		result, err := http.Get(link)
+		if err == nil {
+			data := &result.Data
+			rows := data.FindAllString(`(?mis)<tr>.+?</tr>`, -1)
+			releases := rows.Map(func(row dna.String, idx dna.Int) Release {
+				var (
+					id     dna.Int    = 0
+					year   dna.Int    = 0
+					format dna.String = ""
+					title  dna.String = ""
+					label  dna.String = ""
+				)
+
+				formatArr := row.FindAllString(`(?mis)<div class="format">.+?</div>`, 1)
+				if formatArr.Length() > 0 {
+					format = formatArr[0].RemoveHtmlTags("").Trim()
+				}
+
+				yearArr := row.FindAllString(`(?mis)<div class="year">.+?</div>`, 1)
+				if yearArr.Length() > 0 {
+					year = yearArr[0].RemoveHtmlTags("").Trim().ToInt()
+				}
+
+				labelArr := row.FindAllString(`(?mis)<div class="label">.+?</div>`, 1)
+				if labelArr.Length() > 0 {
+					label = labelArr[0].RemoveHtmlTags("").DecodeHTML().Trim()
+				}
+
+				titleArr := row.FindAllString(`(?mis)<div class="title">.+?</div>`, 1)
+				if titleArr.Length() > 0 {
+					title = titleArr[0].RemoveHtmlTags("").DecodeHTML().Trim()
+				}
+
+				idArr := row.FindAllStringSubmatch(`<a href=.+mr([0-9]+)"`, 1)
+				if len(idArr) > 0 {
+					id = idArr[0][1].ToInt()
+				}
+
+				return Release{
+					Id:     id,
+					Title:  title,
+					Format: format,
+					Year:   year,
+					Label:  label,
+				}
+			}).([]Release)
+
+			if len(releases) > 0 {
+				bRelease, derr := json.Marshal(releases)
+				if derr == nil {
+					album.Releases = dna.String(string(bRelease))
+				}
+			}
+
+		}
+
+		channel <- true
+	}()
+	return channel
+
+}
+
+func getGrammyAwardSection(section dna.String) AwardSection {
+	var awards = []Award{}
+	tbody := section.FindAllString(`(?mis)<tbody>.+?</tbody>`, -1)
+	if tbody.Length() > 0 {
+		rows := tbody[0].FindAllString(`(?mis)<tr>.+?</tr>`, -1)
+		awards = rows.Map(func(row dna.String, idx dna.Int) Award {
+			var (
+				id      dna.Int    = 0
+				year    dna.Int    = 0
+				chart   dna.String = ""
+				title   dna.String = ""
+				peak    dna.Int    = 0
+				winners            = []Person{}
+				award   dna.String = ""
+				atype   dna.Int    = 0
+			)
+
+			yearArr := row.FindAllString(`(?mis)<div class="year">.+?</div>`, 1)
+			if yearArr.Length() > 0 {
+				year = yearArr[0].RemoveHtmlTags("").Trim().ToInt()
+			}
+
+			atypeArr := row.FindAllString(`(?mis)<div class="type">.+?</div>`, 1)
+			if atypeArr.Length() > 0 {
+				switch atypeArr[0].RemoveHtmlTags("").Trim() {
+				case "T":
+					atype = 2
+				case "A":
+					atype = 1
+				default:
+					atype = 0
+				}
+			}
+
+			awardArr := row.FindAllString(`(?mis)<div class="award-name">.+?</div>`, 1)
+			if awardArr.Length() > 0 {
+				award = awardArr[0].RemoveHtmlTags("").Trim()
+			}
+
+			titleArr := row.FindAllString(`(?mis)<td class="title".+?</div>`, 1)
+			if titleArr.Length() > 0 {
+				title = titleArr[0].RemoveHtmlTags("").Trim()
+			}
+
+			winnerArr := row.FindAllString(`<a href=".+?</a>`, -1)
+			winners = winnerArr.Map(func(winner dna.String, idx dna.Int) Person {
+				var winnerName dna.String = ""
+				var winnerId dna.Int = 0
+				winnerName = winner.RemoveHtmlTags("").Trim()
+				winnerIdArr := winner.FindAllStringSubmatch(`<a href=.+mn([0-9]+)`, 1)
+				if len(winnerIdArr) > 0 {
+					winnerId = winnerIdArr[0][1].ToInt()
+				}
+				return Person{Id: winnerId, Name: winnerName}
+			}).([]Person)
+
+			return Award{
+				Id:      id,
+				Title:   title,
+				Year:    year,
+				Chart:   chart,
+				Peak:    peak,
+				Type:    atype,
+				Winners: winners,
+				Award:   award,
+			}
+		}).([]Award)
+		return AwardSection{Name: "Grammy Awards", Type: "ALBUMs & SONGS", Awards: awards}
+	} else {
+		return AwardSection{}
+	}
+
+}
+
+func getSection(section dna.String) AwardSection {
+	var awards = []Award{}
+	var name dna.String = ""
+	var sectionType dna.String = ""
+	var awardType dna.Int = 0
+
+	nameArr := section.FindAllString(`(?mis)<h2 class="headline">.+?</h2>`, -1)
+	if nameArr.Length() > 0 {
+		name = nameArr[0].RemoveHtmlTags("").Trim()
+		switch {
+		case name.Match("Singles") == true:
+			sectionType = "SINGLE"
+			awardType = 2
+		case name.Match("Albums") == true:
+			sectionType = "ALBUM"
+			awardType = 1
+
+		}
+	}
+
+	if name.Match("Grammy Awards") == true {
+		return getGrammyAwardSection(section)
+	}
+
+	tbody := section.FindAllString(`(?mis)<tbody>.+?</tbody>`, -1)
+	if tbody.Length() > 0 {
+		rows := tbody[0].FindAllString(`(?mis)<tr>.+?</tr>`, -1)
+		awards = rows.Map(func(row dna.String, idx dna.Int) Award {
+			var (
+				id      dna.Int    = 0
+				year    dna.Int    = 0
+				chart   dna.String = ""
+				title   dna.String = ""
+				peak    dna.Int    = 0
+				winners            = []Person{}
+				award   dna.String = ""
+			)
+
+			yearArr := row.FindAllString(`(?mis)<td class="year".+?</div>`, 1)
+			if yearArr.Length() > 0 {
+				year = yearArr[0].RemoveHtmlTags("").Trim().ToInt()
+			}
+
+			peakArr := row.FindAllString(`(?mis)<td class="peak".+?</td>`, 1)
+			if peakArr.Length() > 0 {
+				peak = peakArr[0].RemoveHtmlTags("").Trim().ToInt()
+			}
+
+			charArr := row.FindAllString(`(?mis)<div class="chart-name">.+?</div>`, 1)
+			if charArr.Length() > 0 {
+				chart = charArr[0].RemoveHtmlTags("").DecodeHTML().Trim()
+			}
+
+			titleArr := row.FindAllString(`<a href=".+</a>`, 1)
+			if titleArr.Length() > 0 {
+				title = titleArr[0].RemoveHtmlTags("").DecodeHTML().Trim()
+			}
+
+			var match dna.String = ""
+			switch sectionType {
+			case "SINGLE":
+				match = `<a href=.+mt([0-9]+)"`
+			case "ALBUM":
+				match = `<a href=.+mw([0-9]+)"`
+			default:
+				match = `<a href=.+mw([0-9]+)"`
+			}
+			idArr := row.FindAllStringSubmatch(match, 1)
+			if len(idArr) > 0 {
+				id = idArr[0][1].ToInt()
+			}
+
+			return Award{
+				Id:      id,
+				Title:   title,
+				Year:    year,
+				Chart:   chart,
+				Peak:    peak,
+				Type:    awardType,
+				Winners: winners,
+				Award:   award,
+			}
+		}).([]Award)
+	}
+	return AwardSection{Name: name, Type: sectionType, Awards: awards}
+}
+
+// getAlbumAwards fetches album's awards
+// with the following url format:
+// http://www.allmusic.com/album/google-bot-mw0002585207/similar/mobile
+func getAlbumAwards(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		link := "http://www.allmusic.com/album/google-bot-mw" + album.Id.ToFormattedString(10, true) + "/awards/mobile"
+		result, err := http.Get(link)
+		if err == nil {
+			data := &result.Data
+			var awardSections = []AwardSection{}
+
+			sectionsArr := data.FindAllString(`(?mis)<section class=.+?</section>`, -1)
+			sectionsArr.ForEach(func(section dna.String, idx dna.Int) {
+				awardSections = append(awardSections, getSection(section))
+			})
+
+			if len(awardSections) > 0 {
+				bAwards, derr := json.Marshal(awardSections)
+				if derr == nil {
+					album.Awards = dna.String(string(bAwards))
+				}
 			}
 		}
 
@@ -218,6 +525,15 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 			reviewArr := data.FindAllStringSubmatch(`(?mis)<div class="text" itemprop="reviewBody">(.+?)</div>`, 1)
 			if len(reviewArr) > 0 {
 				album.Review = reviewArr[0][1].Trim().ReplaceWithRegexp(`^<p>`, ``).ReplaceWithRegexp(`</p>$`, ``).Trim()
+			}
+
+			// Getting site rating
+			ratingArr := data.FindAllStringSubmatch(`<div class="allmusic-rating.+([0-9]+)"`, 1)
+			if len(ratingArr) > 0 {
+				siteRating := ratingArr[0][1].ToInt()
+				if siteRating > 0 {
+					album.Ratings[0] = siteRating + 1
+				}
 			}
 
 			// Getting Duration
@@ -341,7 +657,7 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 func GetAlbum(id dna.Int) (*Album, error) {
 	var album *Album = NewAlbum()
 	album.Id = id
-	c := make(chan bool, 3)
+	c := make(chan bool, 6)
 	go func() {
 		c <- <-getAlbumFromMainPage(album)
 	}()
@@ -354,7 +670,19 @@ func GetAlbum(id dna.Int) (*Album, error) {
 		c <- <-getAlbumCredit(album)
 	}()
 
-	for i := 0; i < 3; i++ {
+	go func() {
+		c <- <-getAlbumSimilars(album)
+	}()
+
+	go func() {
+		c <- <-getAlbumReleases(album)
+	}()
+
+	go func() {
+		c <- <-getAlbumAwards(album)
+	}()
+
+	for i := 0; i < 6; i++ {
 		<-c
 	}
 	return album, nil

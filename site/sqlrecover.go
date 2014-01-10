@@ -27,7 +27,7 @@ func RecoverSQLLogError(sqlErrFilePath dna.String, db *sqlpg.DB) dna.Int {
 		if len(sqlStmtArr) > 0 {
 			_, err := db.Exec(sqlStmtArr[0][1].String())
 			if err != nil {
-				if !dna.String(err.Error()).Contains(`duplicate key value violates unique constraint`) {
+				if dna.String(err.Error()).Contains(`duplicate key value violates unique constraint`) == false {
 					errCount += 1
 					errStrings.Push("$$$error$$$" + sqlStmtArr[0][1] + "$$$error$$$")
 				}

@@ -108,8 +108,10 @@ func ExampleString_SplitWithRegexp() {
 	var y String = "Một   hai     ba   bốn     năm"
 	Logv(y.SplitWithRegexp("\\s+", -1))
 	Logv(y.SplitWithRegexp("\\s+", 3))
+	Logv(y.SplitWithRegexp("\\sddd+", 3))
 	// Output: dna.StringArray{"Một", "hai", "ba", "bốn", "năm"}
 	// dna.StringArray{"Một", "hai", "ba   bốn     năm"}
+	// dna.StringArray{"Một   hai     ba   bốn     năm"}
 }
 
 func ExampleString_Substring() {

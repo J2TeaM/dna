@@ -30,7 +30,7 @@ func ExampleGetSong() {
 	// Plays : 13
 	// Type : "song"
 	// Bitrate : 128
-	// Official : 1
+	// Official : 0
 	// LinkKey : "f27678b52583250ee3e67b13f9e795f5"
 	// Lyric : ""
 	// Checktime : "2013-11-21 00:00:00"

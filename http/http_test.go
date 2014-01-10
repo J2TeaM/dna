@@ -14,7 +14,7 @@ func ExampleGet() {
 	Logv(result.Header.Get("Content-Type"))
 	Logv(result.Header.Get("Content-Encoding"))
 	Logv(result.Data.Contains("Chỉ Là Em Giấu Đi, Bích Phương"))
-	Log(result.Header)
+	// Log(result.Header)
 	//Output:
 	// "200 OK"
 	// 200

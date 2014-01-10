@@ -19,6 +19,10 @@ func NewRange(first, last dna.Int) *Range {
 	return &Range{first, last, total}
 }
 
+func (r Range) String() string {
+	return dna.Sprintf("[%v=>%v] - %v", r.First, r.Last, r.Total).String()
+}
+
 // StateHandler defines the state of Update(). It ensures its fields are only called once.
 //
 // StateHandler resolves 3 common patterns to update new item from a site.
@@ -49,6 +53,7 @@ type StateHandler struct {
 	IsOver     dna.Bool      // IsOver is true when nothing to be updated
 	Item       item.Item
 	TableName  dna.String
+	NcCount    dna.Int // The number of concurrency count
 }
 
 // CheckStateHandler panics if StateHandler is not in proper format.
@@ -84,6 +89,7 @@ func NewStateHandler(itm item.Item, config *SiteConfig, db *sqlpg.DB) *StateHand
 		IsOver:     false,
 		Item:       itm,
 		TableName:  tableName,
+		NcCount:    0,
 	}
 }
 
@@ -100,6 +106,7 @@ func NewStateHandlerWithRange(itm item.Item, r *Range, config *SiteConfig, db *s
 		IsOver:     false,
 		Item:       itm,
 		TableName:  tableName,
+		NcCount:    0,
 	}
 }
 
@@ -116,6 +123,7 @@ func NewStateHandlerWithExtSlice(itm item.Item, extSlice *dna.IntArray, config *
 		IsOver:     false,
 		Item:       itm,
 		TableName:  tableName,
+		NcCount:    0,
 	}
 }
 
@@ -160,6 +168,20 @@ func (sh *StateHandler) SetCompletion() {
 	sh.mu.Lock()
 	sh.IsOver = true
 	sh.mu.Unlock()
+}
+
+// AddNcCount adds n to NcCount
+func (sh *StateHandler) AddNcCount(n dna.Int) {
+	sh.mu.Lock()
+	sh.NcCount += n
+	sh.mu.Unlock()
+}
+
+// AddNcCount adds n to NcCount
+func (sh *StateHandler) GetNcCount() dna.Int {
+	sh.mu.RLock()
+	defer sh.mu.RUnlock()
+	return sh.NcCount
 }
 
 func (sh *StateHandler) GetRange() *Range {

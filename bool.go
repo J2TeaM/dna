@@ -12,6 +12,10 @@ func (b Bool) Value() (driver.Value, error) {
 	return driver.Value(bool(b)), nil
 }
 
+func (b Bool) String() string {
+	return Sprintf("%v", bool(b)).String()
+}
+
 // Scan implements the Scanner interface in database/sql package.
 // Default value for nil is false
 func (b *Bool) Scan(src interface{}) error {

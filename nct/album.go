@@ -50,14 +50,15 @@ func NewAlbum() *Album {
 	return album
 }
 
-// getAlbumPlays returns album plays
-func getAlbumPlays(album *Album) {
-	link := "http://www.nhaccuatui.com/wg/get-counter?listPlaylistIds=" + album.Id.ToString()
-	result, err := http.Get(link)
-	// dna.Log(link)
+// getAlbumPlays returns song plays
+func getAlbumPlays(album *Album, body dna.String) {
+	link := "http://www.nhaccuatui.com/interaction/api/hit-counter?jsoncallback=nct"
+	http.DefaulHeader.Set("Content-Type", "application/x-www-form-urlencoded ")
+	result, err := http.Post(dna.String(link), body)
+	// Log(link)
 	if err == nil {
 		data := &result.Data
-		tpl := dna.Sprintf(`{"%v":([0-9]+)}`, album.Id)
+		tpl := dna.String(`{"counter":([0-9]+)}`)
 		playsArr := data.FindAllStringSubmatch(tpl, -1)
 		if len(playsArr) > 0 {
 			album.Plays = playsArr[0][1].ToInt()
@@ -79,12 +80,12 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 				album.Id = idArr[0][1].ToInt()
 			}
 
-			topicArr := data.FindAllStringSubmatch(`Thể loại: (<a.+?)\|`, 1)
-			if len(topicArr) > 0 {
-				album.Topics = topicArr[0][1].RemoveHtmlTags("").Trim().Split("/")
+			topicsArr := data.FindAllStringSubmatch(`<strong>Thể loại</strong></p>[\n\t\r]+(.+)`, 1)
+			if len(topicsArr) > 0 {
+				album.Topics = topicsArr[0][1].RemoveHtmlTags("").Trim().Split(", ")
 			}
 
-			nsongArr := data.FindAllStringSubmatch(`Số bài:(.+)</div>`, 1)
+			nsongArr := data.FindAllStringSubmatch(`<span class="tag black">(.+)bài hát</span>`, 1)
 			if len(nsongArr) > 0 {
 				album.Nsongs = nsongArr[0][1].Trim().ToInt()
 			}
@@ -94,24 +95,33 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 				album.LinkKey = linkkeyArr[0][1].Trim()
 			}
 
-			titleArr := data.FindAllStringSubmatch(`(?mis)<div class="songname">.+<h1>(.+?)</h1>`, 1)
+			titleArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
 			if len(titleArr) > 0 {
-				album.Title = titleArr[0][1].Trim()
+				album.Title = titleArr[0][1].Trim().SplitWithRegexp(" - ", 2)[0].Trim()
 			}
 
-			artistArr := data.FindAllStringSubmatch(`(?mis)<div class="songname">.+<h2>(.+?)</h2>`, 1)
-			if len(artistArr) > 0 {
-				album.Artists = artistArr[0][1].RemoveHtmlTags("").Trim().Split(", ")
+			artistsArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			if len(artistsArr) > 0 {
+				artists := artistsArr[0][1].RemoveHtmlTags("").SplitWithRegexp(" - ", 2)
+				if artists.Length() == 2 {
+					album.Artists = artists[1].Split(", ").Filter(func(v dna.String, i dna.Int) dna.Bool {
+						if v != "" {
+							return true
+						} else {
+							return false
+						}
+					})
+				}
 			}
 
-			descArr := data.FindAllString(`(?mis)<div class="about">.+?<br class="clr" />`, 1)
+			descArr := data.FindAllString(`(?mis)<p id="shortPlDesc">.+?</p>`, 1)
 			if descArr.Length() > 0 {
 				album.Description = descArr[0].RemoveHtmlTags("").Trim()
 			}
 
-			coverartArr := data.FindAllString(`<img.+img152.+`, 1)
+			coverartArr := data.FindAllString(`<meta property="og:image".+`, 1)
 			if coverartArr.Length() > 0 {
-				album.Coverart = coverartArr[0].GetTagAttributes("src")
+				album.Coverart = coverartArr[0].GetTagAttributes("content")
 				datecreatedArr := album.Coverart.FindAllStringSubmatch(`/([0-9]+)\..+$`, -1)
 				if len(datecreatedArr) > 0 {
 					// Log(int64(datecreatedArr[0][1].ToInt()))
@@ -128,9 +138,21 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 				}
 			}
 
-			songidsArr := data.FindAllString(`<div class="add-s"><a href="javascript:;" id="btnAddListPlaylist_.+`, -1)
-			songkeysArr := data.FindAllString(`<div class="play-s">.+`, -1)
-			isOfficial := data.Match(`Đăng bởi:.+nct_official`)
+			// Find params for the number of album plays
+			itemIdArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('(.+?)'.+`, 1)
+			timeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '(.+?)'.+\);`, 1)
+			signArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '(.+?)'.+;`, 1)
+			typeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '.+?', "(.+?)"\);`, 1)
+			if len(itemIdArr) > 0 && len(timeArr) > 0 && len(signArr) > 0 && len(typeArr) > 0 {
+				// boday has post form:
+				// item_id=2870710&time=1389009424631&sign=2499ab08f6662842a02b06aad603d8ab&type=playlist
+				body := dna.Sprintf(`item_id=%v&time=%v&sign=%v&type=%v`, itemIdArr[0][1], timeArr[0][1], signArr[0][1], typeArr[0][1])
+				getAlbumPlays(album, body)
+				album.Id = itemIdArr[0][1].ToInt()
+			}
+
+			songidsArr := data.FindAllString(`<a href="javascript:;" class="button_download".+`, -1)
+			songkeysArr := data.FindAllString(`<a href="javascript:;" class="button_add_playlist".+`, -1)
 			if songidsArr.Length() == songkeysArr.Length() {
 				// Getting error when album key is "rwwC6U1wow3X"
 				// panic(`Song ids and keys do not match. Album key: ` + album.Key.String())
@@ -141,11 +163,9 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 						album.Songids.Push(id)
 						portion := NewPortion()
 						portion.Id = int32(id)
-						href := songkeysArr[idx].GetTagAttributes("href")
-						tmpKeys := href.FindAllStringSubmatch(`\.([a-zA-Z0-9]+)\.html`, 1)
+						tmpKeys := songkeysArr[idx].FindAllStringSubmatch(`btnShowBoxPlaylist_([a-zA-Z0-9]+)"`, 1)
 						if len(tmpKeys) > 0 {
 							portion.Key = string(tmpKeys[0][1])
-							portion.IsOfficial = bool(isOfficial)
 							SongsInAlbums.Push(portion)
 						}
 
@@ -174,7 +194,6 @@ func GetAlbum(key dna.String) (*Album, error) {
 	for i := 0; i < 1; i++ {
 		<-c
 	}
-	getAlbumPlays(album)
 	if album.Nsongs != album.Songids.Length() {
 		return nil, errors.New(dna.Sprintf("Nhaccuatui - Album %v: - Key: %v Songids and Nsongs do not match", album.Id, album.Key).String())
 	} else if album.Nsongs == 0 && album.Songids.Length() == 0 {

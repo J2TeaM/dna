@@ -7,6 +7,36 @@ import (
 	"time"
 )
 
+func IsValidTable(tblName dna.String, db *sqlpg.DB) dna.Bool {
+	_, err := db.Exec("select * from " + tblName.String() + " limit 0")
+	if err == nil {
+		return true
+	} else {
+		return false
+	}
+}
+
+// ToSeconds returns total seconds from the time format "01:02:03"
+func ToSeconds(str dna.String) dna.Int {
+	if str == "" {
+		return 0
+	} else {
+		intervals := dna.IntArray(str.Split(":").Map(func(val dna.String, idx dna.Int) dna.Int {
+			return val.ToInt()
+		}).([]dna.Int))
+		switch intervals.Length() {
+		case 3:
+			return intervals[0]*3600 + intervals[1]*60 + intervals[2]
+		case 2:
+			return intervals[0]*60 + intervals[1]
+		case 1:
+			return intervals[0]
+		default:
+			return 0
+		}
+	}
+}
+
 // GetMaxId returns max id of a specified table.
 func GetMaxId(tableName dna.String, db *sqlpg.DB) (dna.Int, error) {
 	var maxid dna.Int

@@ -44,13 +44,14 @@ func NewVideo() *Video {
 }
 
 // getVideoPlays returns video plays
-func getVideoPlays(video *Video) {
-	link := "http://www.nhaccuatui.com/wg/get-counter?listVideoIds=" + video.Id.ToString()
-	result, err := http.Get(link)
-	// dna.Log(link)
+func getVideoPlays(video *Video, body dna.String) {
+	link := "http://www.nhaccuatui.com/interaction/api/hit-counter?jsoncallback=nct"
+	http.DefaulHeader.Set("Content-Type", "application/x-www-form-urlencoded ")
+	result, err := http.Post(dna.String(link), body)
+	// Log(link)
 	if err == nil {
 		data := &result.Data
-		tpl := dna.Sprintf(`{"%v":([0-9]+)}`, video.Id)
+		tpl := dna.String(`{"counter":([0-9]+)}`)
 		playsArr := data.FindAllStringSubmatch(tpl, -1)
 		if len(playsArr) > 0 {
 			video.Plays = playsArr[0][1].ToInt()
@@ -73,19 +74,38 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 				video.Id = idArr[0][1].ToInt()
 			}
 
-			titleArr := data.FindAllStringSubmatch(`(?mis)<h1 class="songname">(.+?)- <a`, 1)
+			titleArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
 			if len(titleArr) > 0 {
-				video.Title = titleArr[0][1].Trim()
+				video.Title = titleArr[0][1].Trim().SplitWithRegexp(" - ", 2)[0].Trim()
 			}
 
-			artistArr := data.FindAllStringSubmatch(`(?mis)<h1 class="songname">.+(<a.+?)</h1>`, 1)
-			if len(artistArr) > 0 {
-				video.Artists = artistArr[0][1].RemoveHtmlTags("").Trim().Split(", ")
+			artistsArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			if len(artistsArr) > 0 {
+				artists := artistsArr[0][1].RemoveHtmlTags("").SplitWithRegexp(" - ", 2)
+				if artists.Length() == 2 {
+					video.Artists = artists[1].Split(", ").Filter(func(v dna.String, i dna.Int) dna.Bool {
+						if v != "" {
+							return true
+						} else {
+							return false
+						}
+					})
+				}
 			}
 
-			topicArr := data.FindAllStringSubmatch(`Thể loại: (<a.+?</a></p>)`, 1)
-			if len(topicArr) > 0 {
-				video.Topics = topicArr[0][1].RemoveHtmlTags("").Trim().Split(",&nbsp;")
+			durationArr := data.FindAllStringSubmatch(`<meta itemprop="duration" content="(.+)" />`, 1)
+			if len(durationArr) > 0 {
+				durationF := durationArr[0][1].Replace("T", "").Replace("H", "h").Replace("M", "m").Replace("S", "s")
+				duration, perr := time.ParseDuration(durationF.String())
+				if perr == nil {
+					video.Duration = dna.Float(duration.Seconds()).Round()
+				}
+
+			}
+
+			topicsArr := data.FindAllStringSubmatch(`<strong>Thể loại</strong></p>[\n\t\r]+(.+)`, 1)
+			if len(topicsArr) > 0 {
+				video.Topics = topicsArr[0][1].RemoveHtmlTags("").Trim().Split(", ")
 			}
 
 			thumbArr := data.FindAllString(`<link rel="image_src".+`, 1)
@@ -106,9 +126,21 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 				}
 			}
 
-			typeArr := data.FindAllStringSubmatch(`value="(.+)" id="inpHiddenType"`, -1)
-			if len(typeArr) > 0 {
+			// Find params for the number of video plays
+			itemIdArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('(.+?)'.+`, 1)
+			timeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '(.+?)'.+\);`, 1)
+			signArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '(.+?)'.+;`, 1)
+			typeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '.+?', "(.+?)"\);`, 1)
+			if len(itemIdArr) > 0 && len(timeArr) > 0 && len(signArr) > 0 && len(typeArr) > 0 {
+				// boday has post form:
+				// item_id=2870710&time=1389009424631&sign=2499ab08f6662842a02b06aad603d8ab&type=video
+				body := dna.Sprintf(`item_id=%v&time=%v&sign=%v&type=%v`, itemIdArr[0][1], timeArr[0][1], signArr[0][1], typeArr[0][1])
+				getVideoPlays(video, body)
 				video.Type = typeArr[0][1].Trim()
+				if video.Type == "video" {
+					video.Type = "mv"
+				}
+				video.Id = itemIdArr[0][1].ToInt()
 			}
 
 			linkkeyArr := data.FindAllStringSubmatch(`"flashPlayer", ".+", "(.+?)"`, 1)
@@ -137,7 +169,6 @@ func GetVideo(key dna.String) (*Video, error) {
 	for i := 0; i < 1; i++ {
 		<-c
 	}
-	getVideoPlays(video)
 
 	if video.LinkKey == "" {
 		return nil, errors.New(dna.Sprintf("Nhaccuatui - Video id:%v, key:%v Link key not found", video.Id, video.Key).String())

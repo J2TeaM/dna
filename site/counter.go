@@ -21,7 +21,7 @@ type Counter struct {
 	startingTime time.Time
 }
 
-func NewCounter(state *StateHandler) *Counter {
+func NewCounterWithStateHandler(state *StateHandler) *Counter {
 	var total dna.Int = 0
 	switch state.GetPattern() {
 	case 2:
@@ -29,6 +29,19 @@ func NewCounter(state *StateHandler) *Counter {
 	case 3:
 		total = state.GetExtSlice().Length()
 	}
+	return &Counter{
+		Total:        total,
+		Count:        0,
+		Fail:         0,
+		CFail:        0,
+		Pass:         0,
+		Speed:        0,
+		ElapsedTime:  0,
+		startingTime: time.Now(),
+	}
+}
+
+func NewCounter(total dna.Int) *Counter {
 	return &Counter{
 		Total:        total,
 		Count:        0,
@@ -80,13 +93,19 @@ func (c *Counter) GetCFail() dna.Int {
 	return c.CFail
 }
 
+func (c *Counter) GetStartingTime() time.Time {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.startingTime
+}
+
 func (c Counter) String() string {
 	c.mu.RLock()
 	if c.Total > 0 {
 		format := dna.String("%v✘ | %v✔")
 		return string(dna.Sprintf(format, c.Fail, c.Pass))
 	} else {
-		format := dna.String("t:%v | n:%v | fail:%v | pass:%v | speed:%v")
+		format := dna.String("t:%v|n:%v|f:%v✘|p:%v✔|v:%v")
 		return string(dna.Sprintf(format, getTimeFmt(c.ElapsedTime), c.Count, c.Fail, c.Pass, c.Speed))
 	}
 	c.mu.RUnlock()

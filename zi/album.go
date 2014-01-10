@@ -72,8 +72,9 @@ func GetAlbumFromAPI(id dna.Int) (*Album, error) {
 		return nil, err
 	} else {
 		if apialbum.Response.MsgCode == 1 {
-			if GetKey(apialbum.Id+307843200) != GetKey(album.Id) {
-				panic("Resulted key and computed key are not match.")
+			if GetKey(apialbum.Id) != GetKey(album.Id) {
+				errMes := dna.Sprintf("Resulted key and computed key are not match. %v =/= %v , id: %v =/= %v", GetKey(apialbum.Id), GetKey(album.Id), id, apialbum.Id)
+				panic(errMes.String())
 			}
 
 			album.Title = apialbum.Title

@@ -28,7 +28,7 @@ func ExampleGetVideo() {
 	// Artists : dna.StringArray{"Khởi My"}
 	// Topics : dna.StringArray{"Âm Nhạc", "Việt Nam", "Nhạc Trẻ"}
 	// Plays : 104632
-	// Duration : 0
+	// Duration : 2768
 	// Thumbnail : "http://m.img.nct.nixcdn.com/mv/2013/12/10/e/0/5/3/1386640122904_640.jpg"
 	// Type : "mv"
 	// LinkKey : "f9652760275d5777e5516f812b840097"

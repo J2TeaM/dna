@@ -4,15 +4,33 @@ import (
 	"dna"
 	"dna/terminal"
 	"dna/utils"
-	// "time"
+	"errors"
+	"time"
 )
 
+// TIMEOUT_SECS defines the total seconds before timeout.
+const TIMEOUT_SECS = 8
+
 func atomicUpdate(errChannel chan bool, state *StateHandler) {
+	var err error
+	var c1 = make(chan error, 1)
+
 	it := state.GetItem().New()
 	state.IncreaseCid()
 	n := state.GetCid()
 	it.Init(n)
-	err := it.Fetch()
+	go func() {
+		c1 <- it.Fetch()
+	}()
+
+	select {
+	case err = <-c1:
+		// do nothing
+	case <-time.After(time.Second * TIMEOUT_SECS):
+		strErr := dna.Sprintf("%v - Timeout after %vs at id :%v", state.GetTableName(), TIMEOUT_SECS, it.GetId())
+		err = errors.New(strErr.String())
+	}
+	state.AddNcCount(1)
 	// if it != nil {
 	// 	dna.LogStruct(it)
 	// }
@@ -30,14 +48,24 @@ func atomicUpdate(errChannel chan bool, state *StateHandler) {
 		}
 		errChannel <- false
 	}
+	state.AddNcCount(-1)
 	if state.IsComplete() == false {
-		go atomicUpdate(errChannel, state)
+		switch state.GetPattern() {
+		case 2:
+			if state.GetCid() < state.GetRange().Last {
+				go atomicUpdate(errChannel, state)
+			}
+		default:
+			go atomicUpdate(errChannel, state)
+		}
+
 	}
 }
 
 func getUpdateProgressBar(total dna.Int, tableName dna.String) *terminal.ProgressBar {
-	var rt dna.String = "$[  " + tableName + "   $percent%   $current/$total]"
-	rt += "\nElapsed: $elapsed    ETA: $eta  ($custom)  Speed: $speeditems/s"
+	var rt dna.String = "$[ " + tableName + " $percent% $current/$total]"
+	rt += "\nElapsed: $elapsed    ETA: $eta   Speed: $speeditems/s"
+	rt += "\nStats: $custom"
 	var ct dna.String = "$[  " + tableName + "  t:$elapsed    N:$total  ($custom)  ν:$speeditems/s]"
 	upbar := terminal.NewProgressBar(total, rt, ct)
 	upbar.Width = 70
@@ -55,7 +83,7 @@ func Update(state *StateHandler) *Counter {
 
 	CheckStateHandler(state)
 	var (
-		counter    *Counter = NewCounter(state)
+		counter    *Counter = NewCounterWithStateHandler(state)
 		idcFormat  dna.String
 		cData      dna.String
 		idc        *terminal.Indicator
@@ -65,8 +93,15 @@ func Update(state *StateHandler) *Counter {
 		startupFmt dna.String = "Update %v - Cid:%v - Pat:%v - Ncf:%v - NCon:%v"
 	)
 
+	// 3rd pattern: callind GetCid() wil invoke error
+	INFO.Println(dna.Sprintf(startupFmt, tableName, state.Cid, state.GetPattern(), state.GetNCFail(), state.SiteConfig.NConcurrent))
+
+	if utils.IsValidTable(tableName, state.GetDb()) == false {
+		tableName = ""
+	}
+
 	if state.GetPattern() == 1 {
-		idcFormat = "  $indicator %v | cid:%v | cf:%v" // cid: current id, cf: continuous failure count
+		idcFormat = " $indicator %v|cid:%v|cf:%v" // cid: current id, cf: continuous failure count
 		idc = terminal.NewIndicatorWithTheme(terminal.ThemeDefault)
 		// Getting maxid from an item's table
 		id, err := utils.GetMaxId(tableName, state.GetDb())
@@ -75,9 +110,6 @@ func Update(state *StateHandler) *Counter {
 	} else {
 		bar = getUpdateProgressBar(counter.Total, tableName)
 	}
-
-	// 3rd pattern: callind GetCid() wil invoke error
-	INFO.Println(dna.Sprintf(startupFmt, tableName, state.Cid, state.GetPattern(), state.GetNCFail(), state.SiteConfig.NConcurrent))
 
 	// Config.NConcurrent
 	for i := dna.Int(0); i < state.SiteConfig.NConcurrent; i++ {
@@ -97,13 +129,13 @@ func Update(state *StateHandler) *Counter {
 			if counter.GetCount() == state.GetRange().Total {
 				state.SetCompletion()
 			}
-			cData = dna.Sprintf("%v", counter)
+			cData = dna.Sprintf("%v | Ncc:%v | Cid:%v", counter, state.GetNcCount(), state.GetCid())
 			bar.Show(counter.GetCount(), cData, cData.Replace("|", "-"))
 		case 3:
 			if counter.GetCount() == state.GetExtSlice().Length() {
 				state.SetCompletion()
 			}
-			cData = dna.Sprintf("%v", counter)
+			cData = dna.Sprintf("%v | Ncc:%v | Cid:%v", counter, state.GetNcCount(), state.GetCid())
 			bar.Show(counter.GetCount(), cData, cData.Replace("|", "-"))
 		}
 

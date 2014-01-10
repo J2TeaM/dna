@@ -109,7 +109,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 			data := &result.Data
 			titleArr := data.FindAllStringSubmatch(`<h1 class="name">(.+)</h1>`, 1)
 			if len(titleArr) > 0 {
-				song.Title = titleArr[0][1].Trim()
+				song.Title = titleArr[0][1].Trim().DecodeHTML()
 			}
 
 			artistArr := data.FindAllStringSubmatch(`(?mis)<li>Nghệ sĩ:(.+?)</li>`, 1)

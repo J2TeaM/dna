@@ -12,9 +12,8 @@ import (
 // It is a subset of basic typse but it is a result when getting relevant or similar songs, albums or videos
 // from a page.
 type Portion struct {
-	Id         int32
-	Key        string
-	IsOfficial bool
+	Id  int32
+	Key string
 }
 
 //NewPortion returns a new portion
@@ -22,7 +21,6 @@ func NewPortion() *Portion {
 	portion := new(Portion)
 	portion.Id = 0
 	portion.Key = ""
-	portion.IsOfficial = false
 	return portion
 }
 
@@ -179,61 +177,97 @@ func (pl *Portions) Length() dna.Int {
 // GetRelevantPortions returns relevant songs, albums or videos
 func GetRelevantPortions(data *dna.String) {
 	if EnableRelevantPortionsMode {
-		// This is is supposed to get relevant or similar songs
-		similarKeysArr := data.FindAllString(`(?mis)<span class="rel">.+?</span>`, -1)
-		trunData := data.FindAllString(`(?mis)^.+Top 20 Bài Hát`, -1)
-		var similarIdsArr dna.StringArray
-		if len(trunData) > 0 {
-			similarIdsArr = trunData[0].FindAllString(`<div class="num">.+?</div>`, -1)
+		var body *dna.String
+		// This is is supposed to get relevant or similar songs'
+		// var body *dna.String
+		songPart := data.FindAllString(`(?mis)^.+BXH Bài Hát`, 1)
+		if songPart.Length() > 0 {
+			body = &songPart[0]
+		} else {
+			body = data
 		}
-		// if similarIdsArr.Length() != similarKeysArr.Length() {
-		// 	panic("CRITICAL ERROR: Lengths of id and key list do not match")
-		// } else {
-		similarKeysArr.ForEach(func(val dna.String, idx dna.Int) {
+		similarSongs := body.FindAllString(`(?mis)<div class="info_data">.+?0</span>`, -1)
+		similarSongs.ForEach(func(val dna.String, idx dna.Int) {
 			portion := NewPortion()
-			officialArr := val.FindAllString(`<a.+href.+">.+</a>`, -1)
-			if officialArr.Length() > 0 {
-				keyArr := officialArr[0].GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
-				if len(keyArr) > 0 {
-					portion.Key = string(keyArr[0][1])
-				}
-				if officialArr[0].GetTagAttributes("class") == "mof" {
-					portion.IsOfficial = true
-				}
+			keyArr := val.FindAllStringSubmatch(`\.([0-9a-zA-Z]+)\.html" class="name_song"`, 1)
+			idArr := val.FindAllStringSubmatch(`"NCTCounter_sg_([0-9]+)`, 1)
+			if len(keyArr) > 0 {
+				portion.Key = keyArr[0][1].String()
 			}
-			idArr := similarIdsArr[idx].FindAllStringSubmatch(`NCTCounter_sg_([0-9]+)`, -1)
 			if len(idArr) > 0 {
 				portion.Id = int32(idArr[0][1].ToInt())
 			}
 			RelevantSongs.Push(portion)
 		})
+
+		similarSongs = data.FindAllString(`(?mis)<div class="info_song">.+?0</span>`, -1)
+		similarSongs.ForEach(func(val dna.String, idx dna.Int) {
+			portion := NewPortion()
+			keyArr := val.FindAllStringSubmatch(`\.([0-9a-zA-Z]+)\.html" class="name_song"`, 1)
+			idArr := val.FindAllStringSubmatch(`"NCTCounter_sg_([0-9]+)`, 1)
+			if len(keyArr) > 0 {
+				portion.Key = keyArr[0][1].String()
+			}
+			if len(idArr) > 0 {
+				portion.Id = int32(idArr[0][1].ToInt())
+			}
+			RelevantSongs.Push(portion)
+		})
+
+		RelevantSongs.UniqueByIds()
 		// }
 
 		// This part to find similar albums
-		albumKeyArr := data.FindAllString(`<a rel="nofollow" href="http://www\.nhaccuatui.com/playlist.+?">`, -1)
-		if albumKeyArr.Length() > 0 {
-			albumKeyArr.ForEach(func(val dna.String, idx dna.Int) {
-				portion := NewPortion()
-				keyArr := val.GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
-				if len(keyArr) > 0 {
-					portion.Key = string(keyArr[0][1])
-					RelevantAlbums.Push(portion)
-				}
-			})
+
+		albumPart := data.FindAllString(`(?mis)^.+BXH Playlist`, 1)
+		if albumPart.Length() > 0 {
+			body = &albumPart[0]
+		} else {
+			body = data
+		}
+		albumKeyArr := body.FindAllString(`<a href="http://www.nhaccuatui.com/playlist/.+html.+`, -1)
+		albumKeys := dna.StringArray(albumKeyArr.Map(func(val dna.String, idx dna.Int) dna.String {
+			keyArr := val.GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
+			if len(keyArr) > 0 {
+				return keyArr[0][1]
+			} else {
+				return ""
+			}
+		}).([]dna.String)).Unique()
+		for _, key := range albumKeys {
+			portion := NewPortion()
+			portion.Key = key.String()
+			RelevantAlbums.Push(portion)
 		}
 
 		// This part to find similar videos
-		videoKeyArr := data.FindAllString(`<a rel="nofollow" href="http://www\.nhaccuatui.com/video.+?">`, -1)
-		if videoKeyArr.Length() > 0 {
-			videoKeyArr.ForEach(func(val dna.String, idx dna.Int) {
-				portion := NewPortion()
-				keyArr := val.GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
-				if len(keyArr) > 0 {
-					portion.Key = string(keyArr[0][1])
-					RelevantVideos.Push(portion)
-				}
-			})
+		videoPart := data.FindAllString(`(?mis)^.+BXH Video`, 1)
+		if videoPart.Length() > 0 {
+			body = &videoPart[0]
+		} else {
+			body = data
 		}
+		videoKeyArr := body.FindAllString(`<a href="http://www.nhaccuatui.com/video/.+html.+`, -1)
+		videoKeys := dna.StringArray(videoKeyArr.Map(func(val dna.String, idx dna.Int) dna.String {
+			keyArr := val.GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
+			if len(keyArr) > 0 {
+				return keyArr[0][1]
+			} else {
+				return ""
+			}
+		}).([]dna.String)).Unique().Filter(func(val dna.String, idx dna.Int) dna.Bool {
+			if val != "com/video/top-20" {
+				return true
+			} else {
+				return false
+			}
+		})
+		for _, key := range videoKeys {
+			portion := NewPortion()
+			portion.Key = key.String()
+			RelevantVideos.Push(portion)
+		}
+
 	}
 
 }

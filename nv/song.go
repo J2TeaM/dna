@@ -114,7 +114,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 				}
 			}
 
-			topicsArr := data.FindAllStringSubmatch(`Thể loại: (<a.+?)\|`, 1)
+			topicsArr := data.FindAllStringSubmatch(`Thể loại: (<a.+?)</a>`, 1)
 			if len(topicsArr) > 0 {
 				song.Topics = topicsArr[0][1].RemoveHtmlTags("").Trim().ToStringArray().SplitWithRegexp(` / `).SplitWithRegexp(`/`)
 			}

@@ -19,12 +19,13 @@ var DefaulHeader = http.Header{
 	"Cookie":          []string{""},
 }
 
+var client = &http.Client{}
+
 // Get impliments getting site with basic properties.
 // Enable gzip, deflat by default to reduce  network data, redirect to new location from response.
 // It returns data (String type) and error
 // if err is nil then data is "" (empty).
 func Get(url dna.String) (*Result, error) {
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", url.ToPrimitiveValue(), nil)
 	req.Header = DefaulHeader
 	// req.Header.Add("Accept-Encoding", "gzip,deflate")

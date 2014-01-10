@@ -40,10 +40,10 @@ func ExampleGetAPISong() {
 	// Authors : ""
 	// GenreId : "4,33"
 	// Zaloid : 0
-	// Username : "buzzed"
+	// Username : "mp3"
 	// IsHit : 0
 	// IsOfficial : 1
-	// DownloadStatus : 1
+	// DownloadStatus : 0
 	// Copyright : ""
 	// Thumbnail : "avatars/f/3/f3ccdd27d2000e3f9255a7e3e2c48800_1291614343.jpg"
 	// Plays : 2000
@@ -92,7 +92,7 @@ func ExampleGetAPIAlbum() {
 	apiAlbum.Comments = 0
 	LogStruct(apiAlbum)
 	// Output:
-	// Id : 1073840968
+	// Id : 1381684168
 	// Title : "Good Bye..."
 	// ArtistIds : "37831"
 	// Artists : "C.S.C→luv"
@@ -145,7 +145,7 @@ func ExampleGetAPIVideo() {
 	// Artists : "Lâm Hùng"
 	// GenreId : "1,8"
 	// Thumbnail : "thumb_video/d/e/deb452e41ec76fa05cc12710981a6380_1340686117.jpg"
-	// Duration : 0
+	// Duration : 311
 	// StatusId : 1
 	// Link : "/video-clip/Nguoi-La-Niem-Dau-Lam-Hung/ZWZ9ZO0A.html"
 	// Source : map[dna.String]dna.String{"480":"http://api.mp3.zing.vn/api/mobile/source/video/LncmtZnsBalvzNlTzxnTvHkH"}

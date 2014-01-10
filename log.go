@@ -27,6 +27,12 @@ func Log(a ...interface{}) {
 	fmt.Printf(format, a...)
 }
 
+// LogDump just does nothing. For testing purpose
+func LogDump(a ...interface{}) {
+
+	// do nothing
+}
+
 // Log prints an variable with full format: "%#v". Only accept one variable
 func Logv(a interface{}) {
 	fmt.Printf("%#v\n", a)

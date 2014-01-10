@@ -47,15 +47,12 @@ func GetNewestSongPortions(pathIndex, page dna.Int) (*Portions, error) {
 					if len(keyArr) > 0 {
 						key = string(keyArr[0][1])
 					}
-					if officialArr[0].GetTagAttributes("class") == "mof" {
-						portion.IsOfficial = true
-					}
 				}
 				idArr := similarIdsArr[idx].FindAllStringSubmatch(`NCTCounter_sg_([0-9]+)`, -1)
 				if len(idArr) > 0 {
 					portion.Id = int32(idArr[0][1].ToInt())
 				}
-				ret.Push(&Portion{int32(idArr[0][1].ToInt()), key, false})
+				ret.Push(&Portion{int32(idArr[0][1].ToInt()), key})
 			}
 		}
 

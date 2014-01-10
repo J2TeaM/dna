@@ -13,5 +13,8 @@ func CountDown(duration time.Duration, message, endingMess dna.String) {
 		time.Sleep(time.Millisecond * 500)
 		hourGlass.Show(message)
 	}
-	dna.Log("\n" + endingMess)
+	console := terminal.NewConsole()
+	console.Erase(terminal.Line).Column(0)
+	console.Write(endingMess)
+	console.Write("\n")
 }

@@ -48,7 +48,7 @@ func (i Int) ToPrimitiveValue() int {
 
 // Value implements the Valuer interface in database/sql/driver package.
 func (i Int) Value() (driver.Value, error) {
-	return driver.Value(int(i)), nil
+	return driver.Value(int64(i.ToPrimitiveValue())), nil
 }
 
 // Scan implements the Scanner interface in database/sql package.

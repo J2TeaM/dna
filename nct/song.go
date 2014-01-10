@@ -44,13 +44,14 @@ func NewSong() *Song {
 }
 
 // getSongPlays returns song plays
-func getSongPlays(song *Song) {
-	link := "http://www.nhaccuatui.com/wg/get-counter?listSongIds=" + song.Id.ToString()
-	result, err := http.Get(link)
+func getSongPlays(song *Song, body dna.String) {
+	link := "http://www.nhaccuatui.com/interaction/api/hit-counter?jsoncallback=nct"
+	http.DefaulHeader.Set("Content-Type", "application/x-www-form-urlencoded ")
+	result, err := http.Post(dna.String(link), body)
 	// Log(link)
 	if err == nil {
 		data := &result.Data
-		tpl := dna.Sprintf(`{"%v":([0-9]+)}`, song.Id)
+		tpl := dna.String(`{"counter":([0-9]+)}`)
 		playsArr := data.FindAllStringSubmatch(tpl, -1)
 		if len(playsArr) > 0 {
 			song.Plays = playsArr[0][1].ToInt()
@@ -68,30 +69,29 @@ func getSongFromMainPage(song *Song) <-chan bool {
 		// Log(result.Data)
 		if err == nil {
 			data := &result.Data
-			idArr := data.FindAllStringSubmatch(`value="(.+)" id="inpHiddenId"`, -1)
-			if len(idArr) > 0 {
-				song.Id = idArr[0][1].ToInt()
-			}
 
-			topicsArr := data.FindAllStringSubmatch(`inpHiddenGenre" value="(.+)"`, -1)
+			topicsArr := data.FindAllStringSubmatch(`<strong>Thể loại</strong></p>[\n\t\r]+(.+)`, 1)
 			if len(topicsArr) > 0 {
-				song.Topics = topicsArr[0][1].Split("/")
+				song.Topics = topicsArr[0][1].RemoveHtmlTags("").Trim().Split(", ")
 			}
 
-			titleArr := data.FindAllStringSubmatch(`(?mis)<div class="songname">.+<h1>(.+?)</h1>`, -1)
+			titleArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
 			if len(titleArr) > 0 {
-				song.Title = titleArr[0][1].Trim()
+				song.Title = titleArr[0][1].Trim().SplitWithRegexp(" - ", 2)[0].Trim()
 			}
 
-			artistsArr := data.FindAllStringSubmatch(`(?mis)<div class="songname">.+<h2>(.+?)</h2>`, -1)
+			artistsArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
 			if len(artistsArr) > 0 {
-				song.Artists = artistsArr[0][1].RemoveHtmlTags("").Split(", ").Filter(func(v dna.String, i dna.Int) dna.Bool {
-					if v != "" {
-						return true
-					} else {
-						return false
-					}
-				})
+				artists := artistsArr[0][1].RemoveHtmlTags("").SplitWithRegexp(" - ", 2)
+				if artists.Length() == 2 {
+					song.Artists = artists[1].Split(", ").Filter(func(v dna.String, i dna.Int) dna.Bool {
+						if v != "" {
+							return true
+						} else {
+							return false
+						}
+					})
+				}
 			}
 
 			linkKeyArr := data.FindAllStringSubmatch(`file=http://www.nhaccuatui.com/flash/xml\?key1=(.+?)"`, -1)
@@ -99,19 +99,28 @@ func getSongFromMainPage(song *Song) <-chan bool {
 				song.LinkKey = linkKeyArr[0][1].Trim()
 			}
 
-			typeArr := data.FindAllStringSubmatch(`value="(.+)" id="inpHiddenType"`, -1)
-			if len(typeArr) > 0 {
-				song.Type = typeArr[0][1].Trim()
-			}
-
-			lyricArr := data.FindAllStringSubmatch(`(?mis)<div id="divLyric".+?>(.+?)<input.+inpLyricId.+/>`, -1)
+			lyricArr := data.FindAllStringSubmatch(`(?mis)<div id="divLyric".+?>(.+?)<div class="more_add".+?/>`, -1)
 			if len(lyricArr) > 0 {
 				song.Lyric = lyricArr[0][1].DecodeHTML().Trim().ReplaceWithRegexp(`</div>$`, "")
 			}
 
-			bitrate := data.FindAllStringSubmatch(`<title>.+\s([0-9]+)( Kb|kbps)`, -1)
+			bitrate := data.FindAllStringSubmatch(`<span class="tag orange">(.+?)k</span>`, -1)
 			if len(bitrate) > 0 {
 				song.Bitrate = bitrate[0][1].ToInt()
+			}
+
+			// Find params for the number of song plays
+			itemIdArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('(.+?)'.+`, 1)
+			timeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '(.+?)'.+\);`, 1)
+			signArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '(.+?)'.+;`, 1)
+			typeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '.+?', "(.+?)"\);`, 1)
+			if len(itemIdArr) > 0 && len(timeArr) > 0 && len(signArr) > 0 && len(typeArr) > 0 {
+				// boday has post form:
+				// item_id=2870710&time=1389009424631&sign=2499ab08f6662842a02b06aad603d8ab&type=song
+				body := dna.Sprintf(`item_id=%v&time=%v&sign=%v&type=%v`, itemIdArr[0][1], timeArr[0][1], signArr[0][1], typeArr[0][1])
+				getSongPlays(song, body)
+				song.Type = typeArr[0][1].Trim()
+				song.Id = itemIdArr[0][1].ToInt()
 			}
 
 			GetRelevantPortions(&result.Data)
@@ -128,7 +137,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 func GetSong(key dna.String, Official dna.Int) (*Song, error) {
 	var song *Song = NewSong()
 	song.Key = key
-	song.Official = 1
+	song.Official = Official
 	c := make(chan bool, 1)
 	go func() {
 		c <- <-getSongFromMainPage(song)
@@ -136,7 +145,7 @@ func GetSong(key dna.String, Official dna.Int) (*Song, error) {
 	for i := 0; i < 1; i++ {
 		<-c
 	}
-	getSongPlays(song)
+	// getSongPlays(song)
 	if song.LinkKey == "" {
 		return nil, errors.New(dna.Sprintf("Nhaccuatui - Song id %v:  - Key: %v  Link key not found", song.Id, song.Key).String())
 	} else {
@@ -182,9 +191,6 @@ func (song *Song) Init(v interface{}) {
 		}
 		if length > 0 {
 			song.Key = dna.String((*NewestSongPortions)[idx].Key)
-			if (*NewestSongPortions)[idx].IsOfficial {
-				song.Official = 1
-			}
 		}
 
 	case dna.Int:
@@ -195,9 +201,6 @@ func (song *Song) Init(v interface{}) {
 		}
 		if length > 0 {
 			song.Key = dna.String((*NewestSongPortions)[idx].Key)
-			if (*NewestSongPortions)[idx].IsOfficial {
-				song.Official = 1
-			}
 		}
 
 	default:

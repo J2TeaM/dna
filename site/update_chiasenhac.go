@@ -45,7 +45,7 @@ func updateCSNError(db *sqlpg.DB, siteConf *SiteConfig) bool {
 	if ids.Length() > 0 {
 		state := NewStateHandlerWithExtSlice(new(csn.SongVideoUpdater), &ids, siteConf, db)
 		Update(state)
-		RecoverErrorQueries("./log/sql_error.log", db)
+		RecoverErrorQueries(SqlErrorLogPath, db)
 		return false
 	} else {
 		// dna.Log("No record needs to be updated.")
@@ -103,7 +103,7 @@ func UpdateChiasenhac() {
 
 	// Step 4: Re-fetching err songs
 	db.Ping()
-	dna.Log("Re-fetching err songs")
+	dna.Log("Re-fetching err songs: Empty titles")
 	for false == updateCSNError(db, siteConf) && errCount < 10 {
 		db.Ping()
 		errCount += 1
@@ -117,6 +117,7 @@ func UpdateChiasenhac() {
 	// Step 6: Saving new abums
 	// csn.LastSongId = 1172666 first
 	// csn.LastSongId = 1186637
+	csn.LastSongId = 1172666
 	dna.Log("Finding and saving new albums from last songid:", csn.LastSongId)
 	nAlbums, err := csn.SaveNewAlbums(db)
 	if err != nil {
