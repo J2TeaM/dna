@@ -74,12 +74,12 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 				video.Id = idArr[0][1].ToInt()
 			}
 
-			titleArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			titleArr := data.FindAllStringSubmatch(`<h1 itemprop="name">(.+?)</h1>`, 1)
 			if len(titleArr) > 0 {
 				video.Title = titleArr[0][1].Trim().SplitWithRegexp(" - ", 2)[0].Trim()
 			}
 
-			artistsArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			artistsArr := data.FindAllStringSubmatch(`<h1 itemprop="name">(.+?)</h1>`, 1)
 			if len(artistsArr) > 0 {
 				artists := artistsArr[0][1].RemoveHtmlTags("").SplitWithRegexp(" - ", 2)
 				if artists.Length() == 2 {
@@ -95,7 +95,7 @@ func getVideoFromMainPage(video *Video) <-chan bool {
 
 			durationArr := data.FindAllStringSubmatch(`<meta itemprop="duration" content="(.+)" />`, 1)
 			if len(durationArr) > 0 {
-				durationF := durationArr[0][1].Replace("T", "").Replace("H", "h").Replace("M", "m").Replace("S", "s")
+				durationF := durationArr[0][1].Replace("PT", "").Replace("H", "h").Replace("M", "m").Replace("S", "s")
 				duration, perr := time.ParseDuration(durationF.String())
 				if perr == nil {
 					video.Duration = dna.Float(duration.Seconds()).Round()
@@ -209,21 +209,21 @@ func (video *Video) Init(v interface{}) {
 	switch v.(type) {
 	case int:
 		idx := dna.Int(v.(int))
-		length := (*NewestVideoPortions).Length()
+		length := NewestVideoPortions.Length()
 		if idx >= length {
 			idx = length - 1
 		}
 		if length > 0 {
-			video.Key = dna.String((*NewestVideoPortions)[idx].Key)
+			video.Key = NewestVideoPortions[idx]
 		}
 	case dna.Int:
 		idx := v.(dna.Int)
-		length := (*NewestVideoPortions).Length()
+		length := NewestVideoPortions.Length()
 		if idx >= length {
 			idx = length - 1
 		}
 		if length > 0 {
-			video.Key = dna.String((*NewestVideoPortions)[idx].Key)
+			video.Key = NewestVideoPortions[idx]
 		}
 
 	default:
@@ -232,6 +232,6 @@ func (video *Video) Init(v interface{}) {
 }
 
 func (video *Video) Save(db *sqlpg.DB) error {
-	filterRelevants(db)
+	FilterRelevants(db)
 	return db.InsertIgnore(video)
 }

@@ -65,7 +65,7 @@ func ExampleGetSong() {
 	// DownloadStatus : 1
 	// Copyright : ""
 	// BitrateFlags : 3
-	// Likes : 0
+	// Likes : 1
 	// Comments : 0
 	// Thumbnail : "avatars/9/5/95d241f273be66577c7fe267dbb31d75_1351440915.png"
 }

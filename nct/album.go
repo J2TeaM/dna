@@ -6,6 +6,7 @@ import (
 	"dna/item"
 	"dna/sqlpg"
 	"dna/utils"
+	"encoding/json"
 	"errors"
 	"sync"
 	"time"
@@ -14,7 +15,7 @@ import (
 var mutex = &sync.Mutex{}
 
 // SongsInAlbums stores all song portions found in albums
-var SongsInAlbums = &Portions{}
+var SongsInAlbums = dna.StringArray{}
 
 type Album struct {
 	Id          dna.Int
@@ -50,20 +51,59 @@ func NewAlbum() *Album {
 	return album
 }
 
+type AlbumDesc struct {
+	ErrorMessage dna.String `json:"error_message"`
+	Data         dna.String `json:"data"`
+	ErrorCode    dna.Int    `json:"error_code"`
+}
+
 // getAlbumPlays returns song plays
 func getAlbumPlays(album *Album, body dna.String) {
-	link := "http://www.nhaccuatui.com/interaction/api/hit-counter?jsoncallback=nct"
-	http.DefaulHeader.Set("Content-Type", "application/x-www-form-urlencoded ")
-	result, err := http.Post(dna.String(link), body)
-	// Log(link)
+
+	// FIRST METHOD
+	// link := "http://www.nhaccuatui.com/interaction/api/hit-counter?jsoncallback=nct"
+	// http.DefaulHeader.Set("Content-Type", "application/x-www-form-urlencoded ")
+	// result, err := http.Post(dna.String(link), body)
+	// // Log(link)
+	// if err == nil {
+	// 	data := &result.Data
+	// 	tpl := dna.String(`{"counter":([0-9]+)}`)
+	// 	playsArr := data.FindAllStringSubmatch(tpl, -1)
+	// 	if len(playsArr) > 0 {
+	// 		album.Plays = playsArr[0][1].ToInt()
+	// 	}
+	// }
+
+	// SECOND METHOD
+	link := "http://www.nhaccuatui.com/interaction/api/counter?jsoncallback=&listPlaylistIds=" + album.Id.ToString()
+	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
-		tpl := dna.String(`{"counter":([0-9]+)}`)
+		tpl := dna.Sprintf(`{"%v":([0-9]+)}`, album.Id)
 		playsArr := data.FindAllStringSubmatch(tpl, -1)
 		if len(playsArr) > 0 {
 			album.Plays = playsArr[0][1].ToInt()
 		}
 	}
+}
+
+func getAlbumDesc(album *Album) <-chan bool {
+	channel := make(chan bool, 1)
+	go func() {
+		link := "http://www.nhaccuatui.com/ajax/get-description?key=" + album.Key
+		result, err := http.Get(dna.String(link))
+		// Log(link)
+		if err == nil {
+			data := &result.Data
+			albumDesc := &AlbumDesc{}
+			errJson := json.Unmarshal([]byte(data.String()), albumDesc)
+			if errJson == nil {
+				album.Description = albumDesc.Data
+			}
+		}
+		channel <- true
+	}()
+	return channel
 }
 
 // getAlbumFromMainPage returns album from main page
@@ -95,12 +135,12 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 				album.LinkKey = linkkeyArr[0][1].Trim()
 			}
 
-			titleArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			titleArr := data.FindAllStringSubmatch(`<h1 itemprop="name">(.+?)</h1>`, 1)
 			if len(titleArr) > 0 {
 				album.Title = titleArr[0][1].Trim().SplitWithRegexp(" - ", 2)[0].Trim()
 			}
 
-			artistsArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			artistsArr := data.FindAllStringSubmatch(`<h1 itemprop="name">(.+?)</h1>`, 1)
 			if len(artistsArr) > 0 {
 				artists := artistsArr[0][1].RemoveHtmlTags("").SplitWithRegexp(" - ", 2)
 				if artists.Length() == 2 {
@@ -114,15 +154,15 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 				}
 			}
 
-			descArr := data.FindAllString(`(?mis)<p id="shortPlDesc">.+?</p>`, 1)
-			if descArr.Length() > 0 {
-				album.Description = descArr[0].RemoveHtmlTags("").Trim()
-			}
+			// descArr := data.FindAllString(`(?mis)<p id="shortPlDesc">.+?</p>`, 1)
+			// if descArr.Length() > 0 {
+			// 	album.Description = descArr[0].RemoveHtmlTags("").Trim()
+			// }
 
 			coverartArr := data.FindAllString(`<meta property="og:image".+`, 1)
 			if coverartArr.Length() > 0 {
 				album.Coverart = coverartArr[0].GetTagAttributes("content")
-				datecreatedArr := album.Coverart.FindAllStringSubmatch(`/([0-9]+)\..+$`, -1)
+				datecreatedArr := album.Coverart.FindAllStringSubmatch(`/([0-9]+)[_500]*\..+$`, -1)
 				if len(datecreatedArr) > 0 {
 					// Log(int64(datecreatedArr[0][1].ToInt()))
 					album.DateCreated = time.Unix(int64(datecreatedArr[0][1].ToInt()/1000), 0)
@@ -139,16 +179,24 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 			}
 
 			// Find params for the number of album plays
+			// FISRT METHOD: Uusing POST
+			// itemIdArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('(.+?)'.+`, 1)
+			// timeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '(.+?)'.+\);`, 1)
+			// signArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '(.+?)'.+;`, 1)
+			// typeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '.+?', "(.+?)"\);`, 1)
+			// if len(itemIdArr) > 0 && len(timeArr) > 0 && len(signArr) > 0 && len(typeArr) > 0 {
+			// 	// boday has post form:
+			// 	// item_id=2870710&time=1389009424631&sign=2499ab08f6662842a02b06aad603d8ab&type=playlist
+			// 	album.Id = itemIdArr[0][1].ToInt()
+			// 	// FIRST METHOD: Using POST
+			// 	body := dna.Sprintf(`item_id=%v&time=%v&sign=%v&type=%v`, itemIdArr[0][1], timeArr[0][1], signArr[0][1], typeArr[0][1])
+			// 	getAlbumPlays(album, body)
+			// }
+			// SECCOND METHOD: Using GET
 			itemIdArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('(.+?)'.+`, 1)
-			timeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '(.+?)'.+\);`, 1)
-			signArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '(.+?)'.+;`, 1)
-			typeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '.+?', "(.+?)"\);`, 1)
-			if len(itemIdArr) > 0 && len(timeArr) > 0 && len(signArr) > 0 && len(typeArr) > 0 {
-				// boday has post form:
-				// item_id=2870710&time=1389009424631&sign=2499ab08f6662842a02b06aad603d8ab&type=playlist
-				body := dna.Sprintf(`item_id=%v&time=%v&sign=%v&type=%v`, itemIdArr[0][1], timeArr[0][1], signArr[0][1], typeArr[0][1])
-				getAlbumPlays(album, body)
+			if len(itemIdArr) > 0 {
 				album.Id = itemIdArr[0][1].ToInt()
+				getAlbumPlays(album, "")
 			}
 
 			songidsArr := data.FindAllString(`<a href="javascript:;" class="button_download".+`, -1)
@@ -161,12 +209,9 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 					if len(tmp) > 0 {
 						id := tmp[0][1].Trim().ToInt()
 						album.Songids.Push(id)
-						portion := NewPortion()
-						portion.Id = int32(id)
 						tmpKeys := songkeysArr[idx].FindAllStringSubmatch(`btnShowBoxPlaylist_([a-zA-Z0-9]+)"`, 1)
 						if len(tmpKeys) > 0 {
-							portion.Key = string(tmpKeys[0][1])
-							SongsInAlbums.Push(portion)
+							SongsInAlbums.Push(tmpKeys[0][1])
 						}
 
 					}
@@ -187,11 +232,15 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 func GetAlbum(key dna.String) (*Album, error) {
 	var album *Album = NewAlbum()
 	album.Key = key
-	c := make(chan bool, 1)
+	c := make(chan bool, 2)
 	go func() {
 		c <- <-getAlbumFromMainPage(album)
 	}()
-	for i := 0; i < 1; i++ {
+
+	go func() {
+		c <- <-getAlbumDesc(album)
+	}()
+	for i := 0; i < 2; i++ {
 		<-c
 	}
 	if album.Nsongs != album.Songids.Length() {
@@ -235,21 +284,21 @@ func (album *Album) Init(v interface{}) {
 	switch v.(type) {
 	case int:
 		idx := dna.Int(v.(int))
-		length := (*NewestAlbumPortions).Length()
+		length := NewestAlbumPortions.Length()
 		if idx >= length {
 			idx = length - 1
 		}
 		if length > 0 {
-			album.Key = dna.String((*NewestAlbumPortions)[idx].Key)
+			album.Key = NewestAlbumPortions[idx]
 		}
 	case dna.Int:
 		idx := v.(dna.Int)
-		length := (*NewestAlbumPortions).Length()
+		length := NewestAlbumPortions.Length()
 		if idx >= length {
 			idx = length - 1
 		}
 		if length > 0 {
-			album.Key = dna.String((*NewestAlbumPortions)[idx].Key)
+			album.Key = NewestAlbumPortions[idx]
 		}
 
 	default:
@@ -258,24 +307,24 @@ func (album *Album) Init(v interface{}) {
 }
 
 func (album *Album) Save(db *sqlpg.DB) error {
-	filterRelevants(db)
-	ids, err := utils.SelectMissingIds("nctsongs", &album.Songids, db)
-	portions := &Portions{}
+	FilterRelevants(db)
+	keys, err := utils.SelectMissingKeys("nctsongs", &SongsInAlbums, db)
+	portions := dna.StringArray{}
 	// potential data race
 	mutex.Lock()
 	if err == nil {
-		for _, portion := range *SongsInAlbums {
-			// 1st condition: if portion id is in ids result. It means that portion is new
+		for _, portion := range SongsInAlbums {
+			// 1st condition: if portion id is in keys result. It means that portion is new
 			// then it has to be added to SongsInAlbums
 			//
-			// 2nd condition: if portion id is not in abum songids,
+			// 2nd condition: if portion id is not in abum songkeys,
 			// it means it has no relation to select statement, add it back
-			if ids.IndexOf(dna.Int(portion.Id)) > -1 || album.Songids.IndexOf(dna.Int(portion.Id)) == -1 {
-				portions.Push(&portion)
+			if keys.IndexOf(portion) > -1 || SongsInAlbums.IndexOf(portion) == -1 {
+				portions.Push(portion)
 			}
 		}
 	}
-	*SongsInAlbums = *portions
+	SongsInAlbums = portions
 	mutex.Unlock()
 	return db.InsertIgnore(album)
 }

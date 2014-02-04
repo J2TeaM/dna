@@ -230,7 +230,7 @@ func (b *ProgressBar) calculateRemainingTime() {
 }
 
 func (b *ProgressBar) isComplete() Bool {
-	if b.TotalItems == b.CurrentItemsCount {
+	if b.TotalItems <= b.CurrentItemsCount {
 		return true
 	} else {
 		return false
@@ -285,6 +285,10 @@ func (b *ProgressBar) getDrawingBar(overlayedString String) String {
 		right := barLeft / 2
 		finalString := String(" ").Repeat(left) + overlayedString + String(" ").Repeat(right)
 		bgBarWidth := Float(b.percent.ToPrimitiveValue() / 100 * float64(b.Width.ToPrimitiveType())).Floor()
+		if bgBarWidth > b.Width {
+			bgBarWidth = b.Width
+		}
+		// Log(bgBarWidth)
 		completePart = NewColorString(finalString.Substring(0, bgBarWidth))
 		incompletePart = NewColorString(finalString.Substring(bgBarWidth, b.Width))
 	}

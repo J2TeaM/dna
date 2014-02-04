@@ -32,6 +32,7 @@ func UpdateNhacso() {
 	Update(state)
 
 	r := NewRange(0, 209)
+	siteConf.NConcurrent = 10
 	state = NewStateHandlerWithRange(new(ns.SongCategory), r, siteConf, db)
 	Update(state)
 

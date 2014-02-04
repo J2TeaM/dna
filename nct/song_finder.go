@@ -5,54 +5,41 @@ import (
 	"dna/http"
 	"dna/item"
 	"dna/sqlpg"
-	"errors"
 )
 
 // SongFinder defines a new song page
 type SongFinder struct {
 	PathIndex    dna.Int
 	Page         dna.Int
-	SongPortions *Portions
+	SongPortions dna.StringArray
 }
 
 func NewSongFinder() *SongFinder {
 	sf := new(SongFinder)
 	sf.PathIndex = 0
 	sf.Page = 0
-	sf.SongPortions = &Portions{}
+	sf.SongPortions = dna.StringArray{}
 	return sf
 }
 
-func GetNewestSongPortions(pathIndex, page dna.Int) (*Portions, error) {
+func GetNewestSongPortions(pathIndex, page dna.Int) (dna.StringArray, error) {
 	var baseUrl = dna.String("http://www.nhaccuatui.com")
-	var similarIdsArr dna.StringArray
-	var portion *Portion = NewPortion()
 	var officialArr dna.StringArray
 	var keyArr []dna.StringArray
-	var key string
-	var ret = &Portions{}
+	var ret = dna.StringArray{}
 	link := baseUrl + NewestSongPaths[pathIndex].Replace(`.html`, "."+page.ToString()+".html")
+	// dna.Log(link)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
-		similarKeysArr := data.FindAllString(`(?mis)<span class="rel">.+?</span>`, -1)
-		similarIdsArr = data.FindAllString(`<div class="num">.+?</div>`, -1)
-		if similarIdsArr.Length() != similarKeysArr.Length() {
-			return nil, errors.New("CRITICAL ERROR: Lengths of id and key list do not match")
-		} else {
-			for idx, val := range similarKeysArr {
-				officialArr = val.FindAllString(`<a.+href.+">.+</a>`, -1)
-				if officialArr.Length() > 0 {
-					keyArr = officialArr[0].GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
-					if len(keyArr) > 0 {
-						key = string(keyArr[0][1])
-					}
+		similarKeysArr := data.FindAllString(`(?mis)<div class="info_song">.+?</div>`, -1)
+		for _, val := range similarKeysArr {
+			officialArr = val.FindAllString(`<a.+href.+">.+</a>`, -1)
+			if officialArr.Length() > 0 {
+				keyArr = officialArr[0].GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
+				if len(keyArr) > 0 {
+					ret.Push(keyArr[0][1])
 				}
-				idArr := similarIdsArr[idx].FindAllStringSubmatch(`NCTCounter_sg_([0-9]+)`, -1)
-				if len(idArr) > 0 {
-					portion.Id = int32(idArr[0][1].ToInt())
-				}
-				ret.Push(&Portion{int32(idArr[0][1].ToInt()), key})
 			}
 		}
 
@@ -91,7 +78,7 @@ func (sf *SongFinder) New() item.Item {
 // Otherwise if v has type string or dna.String, it calls Key field.
 func (sf *SongFinder) Init(v interface{}) {
 	var n dna.Int
-	var NSongPaths dna.Int = dna.Int(NewestSongPaths.Length()) // The total of song paths
+	var NSongPaths dna.Int = NewestSongPaths.Length() // The total of song paths
 	switch v.(type) {
 	case int:
 		n = dna.Int(v.(int))
@@ -111,13 +98,15 @@ func (sf *SongFinder) Init(v interface{}) {
 func (sf *SongFinder) Save(db *sqlpg.DB) error {
 
 	// dna.Log(sf.SongPortions)
-	sf.SongPortions.UniqueByIds()
-	err := sf.SongPortions.FilterByIds("nctsongs", db)
+	sf.SongPortions = sf.SongPortions.Unique()
+	err := FilterKeys(&sf.SongPortions, "nctsongs", db)
+	// err := sf.SongPortions.FilterByIds("nctsongs", db)
 	if err != nil {
 		return err
 	} else {
 		mutex.Lock()
-		*NewestSongPortions = append(*NewestSongPortions, *sf.SongPortions...)
+		NewestSongPortions = NewestSongPortions.Concat(sf.SongPortions)
+		// *NewestSongPortions = append(*NewestSongPortions, *sf.SongPortions...)
 		mutex.Unlock()
 		return nil
 	}

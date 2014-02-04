@@ -140,7 +140,7 @@ func getSongFromMainPage(song *Song) <-chan bool {
 
 			albumTitleArr := data.FindAllStringSubmatch(`Album:</u>(.+?)</a>`, 1)
 			if len(albumTitleArr) > 0 {
-				song.AlbumTitle = albumTitleArr[0][1].RemoveHtmlTags("").Trim()
+				song.AlbumTitle = albumTitleArr[0][1].RemoveHtmlTags("").Trim().DecodeHTML()
 			}
 
 			albumHrefArr := data.FindAllStringSubmatch(`Album:</u>.+?</a>(.+)`, 1)

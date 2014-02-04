@@ -135,15 +135,19 @@ func (alca *AlbumCategory) Save(db *sqlpg.DB) error {
 				foundIndex = j
 			}
 		}
-		cat := album.Category.Concat((*albums)[foundIndex].Topics).Concat((*albums)[foundIndex].Genres).Unique()
-		album.Category = cat.Filter(func(v dna.String, i dna.Int) dna.Bool {
-			if v != "" {
-				return true
-			} else {
-				return false
-			}
-		})
+		if foundIndex < len(*albums) {
+			cat := album.Category.Concat((*albums)[foundIndex].Topics).Concat((*albums)[foundIndex].Genres).Unique()
+			album.Category = cat.Filter(func(v dna.String, i dna.Int) dna.Bool {
+				if v != "" {
+					return true
+				} else {
+					return false
+				}
+			})
+
+		}
 		last = db.Update(album, "id", "category")
+
 	}
 
 	return last

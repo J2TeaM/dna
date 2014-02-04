@@ -6,7 +6,7 @@ import (
 )
 
 func ExampleGetSong() {
-	song, err := GetSong("WviZ6aais76C", 0)
+	song, err := GetSong("WviZ6aais76C")
 	PanicError(err)
 	song.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
 	if song.Plays < 13 {
@@ -14,8 +14,8 @@ func ExampleGetSong() {
 	}
 	song.Plays = 13
 
-	if len(*RelevantSongs) == 0 {
-		panic(Sprintf("RelevantSongs has to be greater than 0, but got: %v", len(*RelevantSongs)).String())
+	if len(RelevantSongs) == 0 {
+		panic(Sprintf("RelevantSongs has to be greater than 0, but got: %v", len(RelevantSongs)).String())
 	}
 
 	// reset to avoid conflicted testings afterwards
@@ -33,5 +33,8 @@ func ExampleGetSong() {
 	// Official : 0
 	// LinkKey : "f27678b52583250ee3e67b13f9e795f5"
 	// Lyric : ""
+	// HasLrc : false
+	// LrcUrl : ""
+	// Lrc : ""
 	// Checktime : "2013-11-21 00:00:00"
 }

@@ -151,9 +151,13 @@ func (a IntArray) Value() (driver.Value, error) {
 // parseStringArray returns dna.IntArray-typed array from postgresql-array-typed int
 // Ex: {123,456} => dna.IntArray{123, 456}
 func ParseIntArray(str String) IntArray {
+	if str == "{}" {
+		return IntArray{}
+	}
 	if str.Match(`^{[0-9,]+}$`) == true {
 		return str.Replace("{", "").Replace("}", "").Split(",").ToIntArray()
 	} else {
+		Log(str)
 		panic("Int array from sql is not in correct format!")
 	}
 }

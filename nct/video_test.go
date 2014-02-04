@@ -14,8 +14,8 @@ func ExampleGetVideo() {
 	}
 	video.Plays = 104632
 
-	if len(*RelevantSongs) != 10 {
-		panic("RelevantSongs has to be 10")
+	if len(RelevantSongs) < 10 {
+		panic("RelevantSongs has to be greater than 10")
 	}
 
 	// reset to avoid conflicted testings afterwards
@@ -26,7 +26,7 @@ func ExampleGetVideo() {
 	// Key : "N5QeESGm7ICBt"
 	// Title : "Gửi Cho Anh (Phần 2)"
 	// Artists : dna.StringArray{"Khởi My"}
-	// Topics : dna.StringArray{"Âm Nhạc", "Việt Nam", "Nhạc Trẻ"}
+	// Topics : dna.StringArray{"Việt Nam", "Nhạc Trẻ"}
 	// Plays : 104632
 	// Duration : 2768
 	// Thumbnail : "http://m.img.nct.nixcdn.com/mv/2013/12/10/e/0/5/3/1386640122904_640.jpg"

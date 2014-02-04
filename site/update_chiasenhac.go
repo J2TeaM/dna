@@ -23,21 +23,14 @@ func updateMissingIds(db *sqlpg.DB, siteConf *SiteConfig, nLastIds dna.Int) (tot
 
 // updateCSNError returns an error if there is no missing titles
 // of songs or videos.
-func updateCSNError(db *sqlpg.DB, siteConf *SiteConfig) bool {
-	var queryPat dna.String = "select id from %v where checktime >'%v' and title = ''"
-	// var don ec = make(chan bool)
-	// Find current checktime
-	now := time.Now()
-	year := dna.Sprintf("%v", now.Year())
-	month := dna.Sprintf("%d", now.Month())
-	day := dna.Sprintf("%v", now.Day())
-	checktime := dna.Sprintf("'%v-%v-%v'", year, month, day)
+func updateCSNError(db *sqlpg.DB, siteConf *SiteConfig, lastId dna.Int) bool {
+	var queryPat dna.String = "select id from %v where id > %v and title = ''"
 
 	songids := &[]dna.Int{}
-	songQuery := dna.Sprintf(queryPat, "csnsongs", checktime)
+	songQuery := dna.Sprintf(queryPat, "csnsongs", lastId)
 	db.Select(songids, songQuery)
 
-	videoQuery := dna.Sprintf(queryPat, "csnvideos", checktime)
+	videoQuery := dna.Sprintf(queryPat, "csnvideos", lastId)
 	videoids := &[]dna.Int{}
 	db.Select(videoids, videoQuery)
 
@@ -91,7 +84,7 @@ func UpdateChiasenhac() {
 
 	// Step 3: Fetching missing ids.
 	// It stops when total loop is 3 or the last total ids equals new total ones
-	dna.Log("Getting missing ids from last 20000 songids")
+	dna.Log(dna.String("\nGetting missing ids from last 20000 songids").ToUpperCase())
 	for missingCount < 3 && done == false {
 		temp := updateMissingIds(db, siteConf, 20000)
 		if temp == lastTotalMissing {
@@ -101,10 +94,13 @@ func UpdateChiasenhac() {
 		missingCount += 1
 	}
 
+	// SET LAST SONGID
+	// csn.LastSongId = 1172666
+
 	// Step 4: Re-fetching err songs
 	db.Ping()
-	dna.Log("Re-fetching err songs: Empty titles")
-	for false == updateCSNError(db, siteConf) && errCount < 10 {
+	dna.Log(dna.String("\nRe-fetching err from last 20000 songs having EMPTY titles").ToUpperCase())
+	for false == updateCSNError(db, siteConf, csn.LastSongId) && errCount < 10 {
 		db.Ping()
 		errCount += 1
 		dna.Log("RE-FETCHING ROUND:", errCount)
@@ -115,9 +111,6 @@ func UpdateChiasenhac() {
 	RecoverErrorQueries(SqlErrorLogPath, db)
 
 	// Step 6: Saving new abums
-	// csn.LastSongId = 1172666 first
-	// csn.LastSongId = 1186637
-	csn.LastSongId = 1172666
 	dna.Log("Finding and saving new albums from last songid:", csn.LastSongId)
 	nAlbums, err := csn.SaveNewAlbums(db)
 	if err != nil {

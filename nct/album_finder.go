@@ -11,32 +11,33 @@ import (
 type AlbumFinder struct {
 	PathIndex     dna.Int
 	Page          dna.Int
-	AlbumPortions *Portions
+	AlbumPortions dna.StringArray
 }
 
 func NewAlbumFinder() *AlbumFinder {
 	af := new(AlbumFinder)
 	af.PathIndex = 0
 	af.Page = 0
-	af.AlbumPortions = &Portions{}
+	af.AlbumPortions = dna.StringArray{}
 	return af
 }
 
-func GetNewestAlbumPortions(pathIndex, page dna.Int) (*Portions, error) {
+func GetNewestAlbumPortions(pathIndex, page dna.Int) (dna.StringArray, error) {
 	var baseUrl = dna.String("http://www.nhaccuatui.com")
-	var ret = &Portions{}
+	var ret = dna.StringArray{}
 	link := baseUrl + NewestAlbumPaths[pathIndex].Replace(`.html`, "."+page.ToString()+".html")
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
-		albumKeyArr := data.FindAllString(`<a rel="nofollow" href="http://www\.nhaccuatui.com/playlist.+?">`, -1)
+		albumKeyArr := data.FindAllString(`(?mis)<div class="box_left">.+?</div>`, -1)
 		if albumKeyArr.Length() > 0 {
 			albumKeyArr.ForEach(func(val dna.String, idx dna.Int) {
-				portion := NewPortion()
 				keyArr := val.GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
 				if len(keyArr) > 0 {
-					portion.Key = string(keyArr[0][1])
-					ret.Push(portion)
+					if !keyArr[0][1].Contains("-") {
+						ret.Push(keyArr[0][1])
+					}
+
 				}
 			})
 		}
@@ -93,13 +94,14 @@ func (af *AlbumFinder) Init(v interface{}) {
 }
 
 func (af *AlbumFinder) Save(db *sqlpg.DB) error {
-	af.AlbumPortions.UniqueByKeys()
-	err := af.AlbumPortions.FilterByKeys("nctalbums", db)
+	af.AlbumPortions = af.AlbumPortions.Unique()
+	err := FilterKeys(&af.AlbumPortions, "nctalbums", db)
+	// err := af.AlbumPortions.FilterByKeys("nctalbums", db)
 	if err != nil {
 		return err
 	} else {
 		mutex.Lock()
-		*NewestAlbumPortions = append(*NewestAlbumPortions, *af.AlbumPortions...)
+		NewestAlbumPortions = NewestAlbumPortions.Concat(af.AlbumPortions)
 		mutex.Unlock()
 		return nil
 	}

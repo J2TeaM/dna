@@ -10,7 +10,7 @@ func ExampleGetAlbum() {
 	PanicError(err)
 	album.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
 	if album.Plays < 340 {
-		panic("Plays has to be greater than 340")
+		panic("Plays has to be greater than 340" + " GET:" + album.Plays.ToString().String())
 	}
 	album.Plays = 350
 	album.EncodedKey = "" // Set to empty to prevent getting error because EncodedKey is changing every time

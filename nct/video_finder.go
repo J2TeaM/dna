@@ -11,33 +11,31 @@ import (
 type VideoFinder struct {
 	PathIndex     dna.Int
 	Page          dna.Int
-	VideoPortions *Portions
+	VideoPortions dna.StringArray
 }
 
 func NewVideoFinder() *VideoFinder {
 	vf := new(VideoFinder)
 	vf.PathIndex = 0
 	vf.Page = 0
-	vf.VideoPortions = &Portions{}
+	vf.VideoPortions = dna.StringArray{}
 	return vf
 }
 
-func GetNewestVideoPortions(pathIndex, page dna.Int) (*Portions, error) {
+func GetNewestVideoPortions(pathIndex, page dna.Int) (dna.StringArray, error) {
 	var baseUrl = dna.String("http://www.nhaccuatui.com")
-	var ret = &Portions{}
+	var ret = dna.StringArray{}
 	link := baseUrl + NewestVideoPaths[pathIndex].Replace(`.html`, "."+page.ToString()+".html")
 	// dna.Log(link)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
-		albumKeyArr := data.FindAllString(`<a rel="nofollow" href="http://www\.nhaccuatui.com/video.+?">`, -1)
+		albumKeyArr := data.FindAllString(`(?mis)<div class="box_absolute">.+?</div>`, -1)
 		if albumKeyArr.Length() > 0 {
 			albumKeyArr.ForEach(func(val dna.String, idx dna.Int) {
-				portion := NewPortion()
 				keyArr := val.GetTagAttributes("href").FindAllStringSubmatch(`/.+\.(.+)\.html`, -1)
 				if len(keyArr) > 0 {
-					portion.Key = string(keyArr[0][1])
-					ret.Push(portion)
+					ret.Push(keyArr[0][1])
 				}
 			})
 		}
@@ -94,13 +92,14 @@ func (vf *VideoFinder) Init(v interface{}) {
 }
 
 func (vf *VideoFinder) Save(db *sqlpg.DB) error {
-	vf.VideoPortions.UniqueByKeys()
-	err := vf.VideoPortions.FilterByKeys("nctvideos", db)
+	vf.VideoPortions = vf.VideoPortions.Unique()
+	err := FilterKeys(&vf.VideoPortions, "nctvideos", db)
+	// err := vf.VideoPortions.FilterByKeys("nctvideos", db)
 	if err != nil {
 		return err
 	} else {
 		mutex.Lock()
-		*NewestVideoPortions = append(*NewestVideoPortions, *vf.VideoPortions...)
+		NewestVideoPortions = NewestVideoPortions.Concat(vf.VideoPortions)
 		mutex.Unlock()
 		return nil
 	}

@@ -3,66 +3,35 @@ package nct
 import (
 	"dna"
 	"dna/sqlpg"
+	"dna/utils"
 )
 
 const (
 	// TotalSongPages defines the number of pages for each path in NewestSongPaths
-	TotalSongPages dna.Int = 50
+	TotalSongPages dna.Int = 25
 	// TotalAlbumPages defines the number of pages for each path in NewestAlbumPaths
-	TotalAlbumPages dna.Int = 34
+	TotalAlbumPages dna.Int = 28
 	// TotalVideoPages defines the number of pages for each path in NewestVideoPaths
-	TotalVideoPages dna.Int = 34
+	TotalVideoPages dna.Int = 23
 )
 
 // Defines resutls of keys, ids when getting latest songs, albums or videos
 var (
 	// NewestSongPortions defines the total newest song portions getting from topic paths
-	NewestSongPortions = &Portions{}
+	NewestSongPortions = dna.StringArray{}
 	// NewestSongPortions defines the total newest album portions getting from topic paths
-	NewestAlbumPortions = &Portions{}
+	NewestAlbumPortions = dna.StringArray{}
 	// NewestSongPortions defines the total newest video portions getting from topic paths
-	NewestVideoPortions = &Portions{}
+	NewestVideoPortions = dna.StringArray{}
 )
-
-func filterRelevants(db *sqlpg.DB) {
-	go func() {
-		if RelevantSongs.Length() > 100 {
-			RelevantSongs.UniqueByIds()
-			RelevantSongs.FilterByIds("nctsongs", db)
-		}
-	}()
-
-	go func() {
-		if RelevantAlbums.Length() > 100 {
-			RelevantAlbums.UniqueByKeys()
-			RelevantAlbums.FilterByKeys("nctalbums", db)
-		}
-	}()
-
-	go func() {
-		if RelevantVideos.Length() > 100 {
-			RelevantVideos.UniqueByKeys()
-			RelevantVideos.FilterByKeys("nctvideos", db)
-		}
-	}()
-
-}
 
 // Defines relevant songs, albums and videos
 var (
 	EnableRelevantPortionsMode = true
-	RelevantSongs              = &Portions{}
-	RelevantAlbums             = &Portions{}
-	RelevantVideos             = &Portions{}
+	RelevantSongs              = dna.StringArray{}
+	RelevantAlbums             = dna.StringArray{}
+	RelevantVideos             = dna.StringArray{}
 )
-
-// ResetRelevantPortions sets RelevantSongs, RelevantAlbums and
-// RelevantVideos to &Portions{}
-func ResetRelevantPortions() {
-	RelevantSongs = &Portions{}
-	RelevantAlbums = &Portions{}
-	RelevantVideos = &Portions{}
-}
 
 // NewestSongPaths defines the newest song paths
 var NewestSongPaths = dna.StringArray{
@@ -111,7 +80,6 @@ var NewestAlbumPaths = dna.StringArray{
 
 // NewestVideoPaths defines the newest video paths
 var NewestVideoPaths = dna.StringArray{
-	"/video-moi-nhat.html",
 	"/video-am-nhac-viet-nam-nhac-tre-moi-nhat.html",
 	"/video-am-nhac-viet-nam-tru-tinh-moi-nhat.html",
 	"/video-am-nhac-viet-nam-que-huong-moi-nhat.html",
@@ -134,4 +102,58 @@ var NewestVideoPaths = dna.StringArray{
 	"/video-giai-tri-funny-clip-moi-nhat.html",
 	"/video-giai-tri-hai-kich-moi-nhat.html",
 	"/video-giai-tri-phim-moi-nhat.html",
-	"/video-giai-tri-khac-moi-nhat.html"}
+	"/video-giai-tri-khac-moi-nhat.html",
+	"/video-moi-nhat.html", // Only get first page
+}
+
+// ResetRelevantPortions sets RelevantSongs, RelevantAlbums and
+// RelevantVideos to &Portions{}
+func ResetRelevantPortions() {
+	RelevantSongs = dna.StringArray{}
+	RelevantAlbums = dna.StringArray{}
+	RelevantVideos = dna.StringArray{}
+}
+
+func FilterRelevants(db *sqlpg.DB) {
+	func() {
+		if RelevantSongs.Length() > 100 {
+			RelevantSongs = RelevantSongs.Unique()
+			FilterKeys(&RelevantSongs, "nctsongs", db)
+		}
+	}()
+
+	func() {
+		if RelevantAlbums.Length() > 100 {
+			RelevantAlbums = RelevantAlbums.Unique()
+			FilterKeys(&RelevantAlbums, "nctalbums", db)
+		}
+	}()
+
+	func() {
+		if RelevantVideos.Length() > 100 {
+			RelevantVideos = RelevantVideos.Unique()
+			FilterKeys(&RelevantVideos, "nctvideos", db)
+		}
+	}()
+
+}
+
+// FilterKeys gets a new portion list that keys are not in a specified table.
+func FilterKeys(keys *dna.StringArray, tblName dna.String, db *sqlpg.DB) error {
+	// mutex.Lock()
+	// defer mutex.Unlock()
+	if keys.Length() > 0 {
+		missingKeys, err := utils.SelectMissingKeys(tblName, keys, db)
+		if err != nil {
+			return err
+		} else {
+			if missingKeys != nil {
+				*keys = *missingKeys
+				return nil
+			}
+		}
+	} else {
+		return nil
+	}
+	return nil
+}

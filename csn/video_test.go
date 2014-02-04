@@ -7,9 +7,9 @@ import (
 )
 
 func TestGetVideo(t *testing.T) {
-	_, err := GetVideo(1172637)
+	_, err := GetVideo(1190840)
 	if err == nil {
-		t.Error("Video 1172637 has to have an error")
+		t.Error("Video 1190840 has to have an error")
 	}
 	if err.Error() != "It has to be video, not song" {
 		t.Errorf("Error message has to be: %v", err.Error())

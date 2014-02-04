@@ -2,8 +2,6 @@ package sf
 
 import (
 	"dna"
-	"dna/item"
-	"dna/sqlpg"
 	"time"
 )
 
@@ -42,31 +40,6 @@ func (video *Video) CSVRecord() []string {
 		video.Description.String(),
 		video.Duration.ToString().String(),
 		video.Thumbnail.String(),
-		video.Checktime.Format("2006-02-01 15:04:05"),
+		video.Checktime.Format("2006-01-02 15:04:05"),
 	}
-}
-
-// Fetch implements item.Item interface.
-// Returns error if can not get item
-func (video *Video) Fetch() error {
-	return nil
-}
-
-// GetId implements GetId methods of item.Item interface
-func (video *Video) GetId() dna.Int {
-	return 0
-}
-
-// New implements item.Item interface
-// Returns new item.Item interface
-func (video *Video) New() item.Item {
-	return item.Item(NewVideo())
-}
-
-func (video *Video) Init(v interface{}) {
-	// do nothing
-}
-
-func (video *Video) Save(db *sqlpg.DB) error {
-	return db.InsertIgnore(video)
 }

@@ -2,6 +2,7 @@ package sqlpg
 
 import (
 	"dna"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -178,4 +179,55 @@ func GetUpdateStatement(tbName dna.String, structValue interface{}, conditionCol
 	}
 	conditionRet := "\nWHERE " + getPairValue(structValue, conditionColumn)
 	return query + result.Join(",\n") + conditionRet, nil
+}
+
+var globalSqlTransactoNo = 0
+
+// ExecQueriesInTransaction executes queries in a transaction.
+// If one statement fails, the whole queries cannot commit.
+//
+// The returned error is nil if there is no error.
+// If an error occurs, each statement will be enclosed in
+// format $$$error$$$.
+// 	$$$error$$$ Your Custom Query $$$error$$$
+//
+// This function is seen in songfreaks and allmusic sites.
+func ExecQueriesInTransaction(db *DB, queries *dna.StringArray) error {
+	var err error
+	globalSqlTransactoNo += 1
+	tx, err := db.Begin()
+	if err != nil {
+		dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not create transaction\n")
+	}
+
+	for idx, query := range *queries {
+		stmt, err := tx.Prepare(query.String())
+		if err != nil {
+			dna.Log(dna.Sprintf("DNAError Transaction No: %v - %v - %v - %v \n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not prepare"))
+		} else {
+			_, err = stmt.Exec()
+			if err != nil {
+				dna.Log(dna.Sprintf("DNAError: Transaction No: %v - %v - %v - %v\n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not execute the prepared statement"))
+			}
+
+			err = stmt.Close()
+			if err != nil {
+				dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not close\n")
+			}
+		}
+
+	}
+	err = tx.Commit()
+	if err != nil {
+		dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not commit transaction\n")
+	}
+
+	if err != nil {
+		errQueries := dna.StringArray(queries.Map(func(val dna.String, idx dna.Int) dna.String {
+			return "Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo) + " $$$error$$$" + val + "$$$error$$$"
+		}).([]dna.String))
+		return errors.New(err.Error() + errQueries.Join("\n").String())
+	} else {
+		return nil
+	}
 }

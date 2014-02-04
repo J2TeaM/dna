@@ -22,6 +22,9 @@ type Song struct {
 	Official  dna.Int
 	LinkKey   dna.String
 	Lyric     dna.String
+	HasLrc    dna.Bool
+	LrcUrl    dna.String
+	Lrc       dna.String
 	Checktime time.Time
 }
 
@@ -39,19 +42,63 @@ func NewSong() *Song {
 	song.Official = 0
 	song.LinkKey = ""
 	song.Lyric = ""
+	song.HasLrc = false
+	song.LrcUrl = ""
+	song.Lrc = ""
 	song.Checktime = time.Time{}
 	return song
 }
 
-// getSongPlays returns song plays
-func getSongPlays(song *Song, body dna.String) {
-	link := "http://www.nhaccuatui.com/interaction/api/hit-counter?jsoncallback=nct"
-	http.DefaulHeader.Set("Content-Type", "application/x-www-form-urlencoded ")
-	result, err := http.Post(dna.String(link), body)
-	// Log(link)
+func getSongLrc(song *Song) {
+	result, err := http.Get(song.LrcUrl)
+	if err == nil {
+		lrc, derr := DecryptLRC(result.Data)
+		if derr == nil {
+			song.Lrc = lrc
+		} else {
+			dna.Log("ERR WHILE DECRYPT SONG ", song.Id)
+			dna.Log("-----\n")
+		}
+	}
+}
+
+func getSongLrcUrl(song *Song) {
+
+	link := "http://www.nhaccuatui.com/flash/xml?key1=" + song.LinkKey
+	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
-		tpl := dna.String(`{"counter":([0-9]+)}`)
+		lrcArr := data.FindAllStringSubmatch(`<lyric><\!\[CDATA\[(.+)\]\]></lyric>`, 1)
+		if len(lrcArr) > 0 {
+			song.LrcUrl = lrcArr[0][1].Trim()
+			getSongLrc(song)
+		}
+	}
+
+}
+
+// getSongPlays returns song plays
+func getSongPlays(song *Song, body dna.String) {
+	// POST METHOD
+	// link := "http://www.nhaccuatui.com/interaction/api/hit-counter?jsoncallback=nct"
+	// http.DefaulHeader.Set("Content-Type", "application/x-www-form-urlencoded ")
+	// result, err := http.Post(dna.String(link), body)
+	// // Log(link)
+	// if err == nil {
+	// 	data := &result.Data
+	// 	tpl := dna.String(`{"counter":([0-9]+)}`)
+	// 	playsArr := data.FindAllStringSubmatch(tpl, -1)
+	// 	if len(playsArr) > 0 {
+	// 		song.Plays = playsArr[0][1].ToInt()
+	// 	}
+	// }
+	// GET METHOD
+	link := "http://www.nhaccuatui.com/interaction/api/counter?jsoncallback=nct&listSongIds=" + song.Id.ToString()
+	result, err := http.Get(link)
+	if err == nil {
+		data := &result.Data
+		tpl := dna.Sprintf(`{"%v":([0-9]+)}`, song.Id)
+		// dna.Log(data)
 		playsArr := data.FindAllStringSubmatch(tpl, -1)
 		if len(playsArr) > 0 {
 			song.Plays = playsArr[0][1].ToInt()
@@ -75,12 +122,16 @@ func getSongFromMainPage(song *Song) <-chan bool {
 				song.Topics = topicsArr[0][1].RemoveHtmlTags("").Trim().Split(", ")
 			}
 
-			titleArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			if data.Match(`<span class="tag.+official`) == true {
+				song.Official = 1
+			}
+
+			titleArr := data.FindAllStringSubmatch(`<h1 itemprop="name">(.+?)</h1>`, 1)
 			if len(titleArr) > 0 {
 				song.Title = titleArr[0][1].Trim().SplitWithRegexp(" - ", 2)[0].Trim()
 			}
 
-			artistsArr := data.FindAllStringSubmatch(`<h1>(.+?)</h1>`, 1)
+			artistsArr := data.FindAllStringSubmatch(`<h1 itemprop="name">(.+?)</h1>`, 1)
 			if len(artistsArr) > 0 {
 				artists := artistsArr[0][1].RemoveHtmlTags("").SplitWithRegexp(" - ", 2)
 				if artists.Length() == 2 {
@@ -110,20 +161,38 @@ func getSongFromMainPage(song *Song) <-chan bool {
 			}
 
 			// Find params for the number of song plays
+			// POST METHOD
+			// itemIdArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('(.+?)'.+`, 1)
+			// timeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '(.+?)'.+\);`, 1)
+			// signArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '(.+?)'.+;`, 1)
+			// typeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '.+?', "(.+?)"\);`, 1)
+			// if len(itemIdArr) > 0 && len(timeArr) > 0 && len(signArr) > 0 && len(typeArr) > 0 {
+			// 	// boday has post form:
+			// 	// item_id=2870710&time=1389009424631&sign=2499ab08f6662842a02b06aad603d8ab&type=song
+			// 	body := dna.Sprintf(`item_id=%v&time=%v&sign=%v&type=%v`, itemIdArr[0][1], timeArr[0][1], signArr[0][1], typeArr[0][1])
+			// 	song.Type = typeArr[0][1].Trim()
+			// 	song.Id = itemIdArr[0][1].ToInt()
+			// 	getSongPlays(song, body)
+			// }
+			// GET METHOD
 			itemIdArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('(.+?)'.+`, 1)
-			timeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '(.+?)'.+\);`, 1)
-			signArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '(.+?)'.+;`, 1)
 			typeArr := data.FindAllStringSubmatch(`NCTWidget.hitCounter\('.+?', '.+?', '.+?', "(.+?)"\);`, 1)
-			if len(itemIdArr) > 0 && len(timeArr) > 0 && len(signArr) > 0 && len(typeArr) > 0 {
+			if len(itemIdArr) > 0 && len(typeArr) > 0 {
 				// boday has post form:
 				// item_id=2870710&time=1389009424631&sign=2499ab08f6662842a02b06aad603d8ab&type=song
-				body := dna.Sprintf(`item_id=%v&time=%v&sign=%v&type=%v`, itemIdArr[0][1], timeArr[0][1], signArr[0][1], typeArr[0][1])
-				getSongPlays(song, body)
 				song.Type = typeArr[0][1].Trim()
 				song.Id = itemIdArr[0][1].ToInt()
+				getSongPlays(song, "")
 			}
 
 			GetRelevantPortions(&result.Data)
+
+			// Getting LRC
+			if data.Match(`<span class="tag.+KARAOKE`) == true {
+				song.HasLrc = true
+				getSongLrcUrl(song)
+			}
+
 		}
 		channel <- true
 	}()
@@ -134,10 +203,9 @@ func getSongFromMainPage(song *Song) <-chan bool {
 // 	* key: A unique key of a song
 // 	* Official : 0 or 1, if its value is unknown, set to 0
 // 	* Returns a found song or an error
-func GetSong(key dna.String, Official dna.Int) (*Song, error) {
+func GetSong(key dna.String) (*Song, error) {
 	var song *Song = NewSong()
 	song.Key = key
-	song.Official = Official
 	c := make(chan bool, 1)
 	go func() {
 		c <- <-getSongFromMainPage(song)
@@ -157,7 +225,7 @@ func GetSong(key dna.String, Official dna.Int) (*Song, error) {
 // Fetch implements item.Item interface.
 // Returns error if can not get item
 func (song *Song) Fetch() error {
-	_song, err := GetSong(song.Key, song.Official)
+	_song, err := GetSong(song.Key)
 	if err != nil {
 		return err
 	} else {
@@ -185,22 +253,22 @@ func (song *Song) Init(v interface{}) {
 	switch v.(type) {
 	case int:
 		idx := dna.Int(v.(int))
-		length := (*NewestSongPortions).Length()
+		length := NewestSongPortions.Length()
 		if idx >= length {
 			idx = length - 1
 		}
 		if length > 0 {
-			song.Key = dna.String((*NewestSongPortions)[idx].Key)
+			song.Key = NewestSongPortions[idx]
 		}
 
 	case dna.Int:
 		idx := v.(dna.Int)
-		length := (*NewestSongPortions).Length()
+		length := NewestSongPortions.Length()
 		if idx >= length {
 			idx = length - 1
 		}
 		if length > 0 {
-			song.Key = dna.String((*NewestSongPortions)[idx].Key)
+			song.Key = NewestSongPortions[idx]
 		}
 
 	default:
@@ -209,6 +277,6 @@ func (song *Song) Init(v interface{}) {
 }
 
 func (song *Song) Save(db *sqlpg.DB) error {
-	filterRelevants(db)
+	FilterRelevants(db)
 	return db.InsertIgnore(song)
 }

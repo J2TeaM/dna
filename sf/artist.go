@@ -2,8 +2,6 @@ package sf
 
 import (
 	"dna"
-	"dna/item"
-	"dna/sqlpg"
 	"time"
 )
 
@@ -48,31 +46,6 @@ func (artist *Artist) CSVRecord() []string {
 		artist.Image.String(),
 		dna.Sprintf("%#v", artist.Rating).Replace("dna.IntArray", "").String(),
 		artist.Bio.String(),
-		artist.Checktime.Format("2006-02-01 15:04:05"),
+		artist.Checktime.Format("2006-01-02 15:04:05"),
 	}
-}
-
-// Fetch implements item.Item interface.
-// Returns error if can not get item
-func (artist *Artist) Fetch() error {
-	return nil
-}
-
-// GetId implements GetId methods of item.Item interface
-func (artist *Artist) GetId() dna.Int {
-	return 0
-}
-
-// New implements item.Item interface
-// Returns new item.Item interface
-func (artist *Artist) New() item.Item {
-	return item.Item(NewArtist())
-}
-
-func (artist *Artist) Init(v interface{}) {
-	// do nothing
-}
-
-func (artist *Artist) Save(db *sqlpg.DB) error {
-	return db.InsertIgnore(artist)
 }

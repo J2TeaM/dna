@@ -2,8 +2,6 @@ package sf
 
 import (
 	"dna"
-	"dna/item"
-	"dna/sqlpg"
 	"time"
 )
 
@@ -92,42 +90,6 @@ func (song *Song) CSVRecord() []string {
 		song.Copyright.String(),
 		song.Writer.String(),
 		song.SubmittedLyric.String(),
-		song.Checktime.Format("2006-02-01 15:04:05"),
+		song.Checktime.Format("2006-01-02 15:04:05"),
 	}
-}
-
-// Fetch implements item.Item interface.
-// Returns error if can not get item
-func (song *Song) Fetch() error {
-	return nil
-}
-
-// GetId implements GetId methods of item.Item interface
-func (song *Song) GetId() dna.Int {
-	return song.Id
-}
-
-// New implements item.Item interface
-// Returns new item.Item interface
-func (song *Song) New() item.Item {
-	return item.Item(NewSong())
-}
-
-// Init implements item.Item interface.
-// It sets Id or key.
-// dna.Interface v has type int or dna.Int, it calls Id field.
-// Otherwise if v has type string or dna.String, it calls Key field.
-func (song *Song) Init(v interface{}) {
-	switch v.(type) {
-	case int:
-		song.Id = dna.Int(v.(int))
-	case dna.Int:
-		song.Id = v.(dna.Int)
-	default:
-		panic("Interface v has to be int")
-	}
-}
-
-func (song *Song) Save(db *sqlpg.DB) error {
-	return db.InsertIgnore(song)
 }

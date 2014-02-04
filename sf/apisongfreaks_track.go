@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	VideosEnable   = false
+	VideosEnable   = true
 	CommentsEnable = false
 	SQLERROR       = terminal.NewLogger(terminal.Magenta, ioutil.Discard, "", "./log/sql_error.log", 0)
 )
@@ -275,52 +275,52 @@ func (sf *APISongFreaksTrack) Init(v interface{}) {
 	}
 }
 
-func (sf *APISongFreaksTrack) Save(db *sqlpg.DB) error {
-
-	sofre, err := sf.ToSongFreak()
-	if err == nil {
-		return db.InsertIgnore(sofre)
-	} else {
-		return err
+func (sf *APISongFreaksTrack) Convert() (*Album, *Artist, *Song, []*Video) {
+	album, err := sf.ToAlbum()
+	if err != nil {
+		// dna.Log(err.Error() + " while coverting to Album\n")
 	}
 
-	// var rerr error = nil
+	artist, err := sf.ToAlbumArtist()
+	if err != nil {
+		// dna.Log(err.Error() + " while coverting to Artist\n")
+	}
 
-	// err := db.Ping()
+	song, err := sf.ToSong()
+	if err != nil {
+		// dna.Log(err.Error() + " while coverting to Song\n")
+	}
 
-	// artist, err := sf.ToAlbumArtist()
-	// if err == nil {
-	// 	rerr = artist.Save(db)
-	// 	if rerr != nil {
-	// 		SQLERROR.Println("SF-ERROR: " + rerr.Error())
-	// 	}
-	// }
+	videos, err := sf.ToVideos()
+	if err != nil {
+		// dna.Log(err.Error() + " while coverting to Videos\n")
+	}
 
-	// album, err := sf.ToAlbum()
-	// if err == nil {
-	// 	rerr = album.Save(db)
-	// 	if rerr != nil {
-	// 		SQLERROR.Println("SF-ERROR: " + rerr.Error())
-	// 	}
-	// }
+	return album, artist, song, videos
 
-	// song, err := sf.ToSong()
-	// if err == nil {
-	// 	rerr = song.Save(db)
-	// 	if rerr != nil {
-	// 		SQLERROR.Println("SF-ERROR: " + rerr.Error())
-	// 	}
-	// }
+}
 
-	// videos, err := sf.ToVideos()
-	// if err == nil {
-	// 	for _, video := range videos {
-	// 		rerr = video.Save(db)
-	// 		if rerr != nil {
-	// 			SQLERROR.Println("SF-ERROR: " + rerr.Error())
-	// 		}
-	// 	}
-	// }
+func (sf *APISongFreaksTrack) Save(db *sqlpg.DB) error {
+	var queries = dna.StringArray{}
+	album, artist, song, videos := sf.Convert()
+
+	if artist != nil {
+		queries.Push(getInsertStmt(artist, dna.Sprintf("WHERE NOT EXISTS (SELECT 1 FROM %v WHERE id=%v)", getTableName(artist), artist.Id)))
+	}
+
+	if album != nil {
+		queries.Push(getInsertStmt(album, dna.Sprintf("WHERE NOT EXISTS (SELECT 1 FROM %v WHERE id=%v)", getTableName(album), album.Id)))
+	}
+
+	if song != nil {
+		queries.Push(getInsertStmt(song, dna.Sprintf("WHERE NOT EXISTS (SELECT 1 FROM %v WHERE id=%v)", getTableName(song), song.Id)))
+	}
+
+	for _, video := range videos {
+		queries.Push(getInsertStmt(video, dna.Sprintf("WHERE NOT EXISTS (SELECT 1 FROM %v WHERE songid=%v AND youtube_id='%v')", getTableName(video), video.Songid, video.YoutubeId)))
+	}
+	// dna.Log(queries.Join("\n"))
+	// dna.Log(queries.Join("\n"))
 	// return nil
-	// return db.InsertIgnore(sf)
+	return sqlpg.ExecQueriesInTransaction(db, &queries)
 }

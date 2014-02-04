@@ -142,6 +142,7 @@ func GetAPIAlbum(id Int) (*APIAlbum, error) {
 	apialbum.Id = id
 	baseURL := "http://api.mp3.zing.vn/api/mobile/playlist/getplaylistinfo?"
 	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, apialbum.Id-ID_DIFFERENCE)
+	// Log(link)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data

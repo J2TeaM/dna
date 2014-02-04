@@ -9,18 +9,14 @@ func ExampleGetRelevantPortions() {
 	// UTIL FUNC
 	showRelevantPortions := func(portionType String) {
 		Log("RELEVANT PORTIONS OF THE " + portionType + ":")
-		Log("  Song - Length:", len(*RelevantSongs))
-		for _, song := range *RelevantSongs {
-			Log("\t"+Sprintf("%d", song.Id), "\t", song.Key, "\t", song.IsOfficial)
-		}
-		Log("  Album - Length:", len(*RelevantAlbums))
-		for _, album := range *RelevantAlbums {
-			Log("\t"+Sprintf("%d", album.Id), "\t", album.Key, "\t", album.IsOfficial)
-		}
-		Log("  Video - Length:", len(*RelevantVideos))
-		for _, video := range *RelevantVideos {
-			Log("\t"+Sprintf("%d", video.Id), "\t", video.Key, "\t", video.IsOfficial)
-		}
+		Log("Song - Length:", len(RelevantSongs))
+		Log(RelevantSongs)
+
+		Log("Album - Length:", len(RelevantAlbums))
+		Log(RelevantAlbums)
+
+		Log("Video - Length:", len(RelevantVideos))
+		Log(RelevantVideos)
 		ResetRelevantPortions()
 	}
 	// GET FROM SONG URL
@@ -49,113 +45,24 @@ func ExampleGetRelevantPortions() {
 
 	// Output:
 	// RELEVANT PORTIONS OF THE SONG:
-	//   Song - Length: 20
-	// 	2859006 	 osLtFpjkWVvd 	 false
-	// 	2806107 	 exOpJcegV6fh 	 true
-	// 	2656589 	 nlYH0vDr6CrO 	 true
-	// 	2845588 	 KkrxgB3uYPcT 	 false
-	// 	2847425 	 MJJGf1ljOt2s 	 false
-	// 	2853789 	 L6obM08S8KDN 	 true
-	// 	2844828 	 cCb4mCOkn0u8 	 true
-	// 	2846976 	 RWoQqEhD1pnP 	 false
-	// 	2844817 	 xnfUAYYISpOW 	 false
-	// 	2851771 	 fZ6X19zJQFFi 	 false
-	// 	2840770 	 en4BhuBUvOHa 	 true
-	// 	2825261 	 vyToJbwcCX8s 	 false
-	// 	2825255 	 CJUEGOTSQN5B 	 false
-	// 	2811987 	 sW9f0HhLsL8G 	 false
-	// 	2806107 	 exOpJcegV6fh 	 true
-	// 	2770334 	 fnrgn0IbqQck 	 true
-	// 	2756676 	 kGTZ70xf1qLF 	 false
-	// 	2737320 	 0B3F4bkZjKqH 	 true
-	// 	2720484 	 RafDgCQWW9WV 	 true
-	// 	2719733 	 FGm2PAG00QhG 	 true
-	//   Album - Length: 5
-	// 	0 	 7jJ8ENXZaIAj 	 false
-	// 	0 	 L3hQwc8CKsp0 	 false
-	// 	0 	 Cvs5CotFG3aL 	 false
-	// 	0 	 72jnPpGC2B8A 	 false
-	// 	0 	 3iwQqVXdrnV8 	 false
-	//   Video - Length: 8
-	// 	0 	 ADvjp29fT0YCg 	 false
-	// 	0 	 k6ajH4XdUbQWf 	 false
-	// 	0 	 jlHXXPXcv87EV 	 false
-	// 	0 	 t33pNi4Lbsnv6 	 false
-	// 	0 	 FYecuJYX1Hjx2 	 false
-	// 	0 	 VWcmlySL3RN8o 	 false
-	// 	0 	 vjDnW86LDygux 	 false
-	// 	0 	 NsXhF3dP5TK4W 	 false
+	// Song - Length: 20
+	// dna.StringArray{"en4BhuBUvOHa", "vyToJbwcCX8s", "CJUEGOTSQN5B", "sW9f0HhLsL8G", "exOpJcegV6fh", "fnrgn0IbqQck", "kGTZ70xf1qLF", "0B3F4bkZjKqH", "RafDgCQWW9WV", "FGm2PAG00QhG", "Rw3XKvgMrSlS", "iE3mwAlhOk9v", "KNwtyyzfUQRt", "uPA2X5F5Hjvm", "8DhMQyHGw7UN", "KkrxgB3uYPcT", "MJJGf1ljOt2s", "L6obM08S8KDN", "xnfUAYYISpOW", "RWoQqEhD1pnP"}
+	// Album - Length: 10
+	// dna.StringArray{"Qror45VOSaE0", "7jJ8ENXZaIAj", "L3hQwc8CKsp0", "uIF7rwd5wo4p", "zOxw7Ayj0ToA", "qG3V4fq8zMbA", "XiSkxJkknVXe", "uhyJJvkle0vK", "KxlCrvAdoK9d", "3Bt7GLRy46MD"}
+	// Video - Length: 9
+	// dna.StringArray{"I5auynRU3g7A2", "CEJbI0MI20yWQ", "ADvjp29fT0YCg", "t33pNi4Lbsnv6", "FYecuJYX1Hjx2", "VWcmlySL3RN8o", "vjDnW86LDygux", "NsXhF3dP5TK4W", "JkjveHzMmkiG"}
 	// RELEVANT PORTIONS OF THE ALBUM:
-	//   Song - Length: 10
-	// 	2828667 	 1B1TCkm3OfBw 	 false
-	// 	2843037 	 lHn3Ds5glpmG 	 true
-	// 	2805977 	 7VZkL4MFGP2Y 	 true
-	// 	2699925 	 z314XhINPC0m 	 true
-	// 	2693887 	 weeqLryzPzQ8 	 true
-	// 	2692367 	 TBxX7vbGskLp 	 true
-	// 	2696332 	 3iI8wN1Flo7s 	 true
-	// 	2701099 	 cbYGMMdxQLhI 	 true
-	// 	2693876 	 vDpb0RQHD9R9 	 true
-	// 	2699904 	 JmtFIzf59VfB 	 true
-	//   Album - Length: 15
-	// 	0 	 kmjgSOyykjeR 	 false
-	// 	0 	 IGT9vP48AtQk 	 false
-	// 	0 	 L3hQwc8CKsp0 	 false
-	// 	0 	 uIF7rwd5wo4p 	 false
-	// 	0 	 mUClTWrdHZdH 	 false
-	// 	0 	 VR4u9fQJ6K4B 	 false
-	// 	0 	 wwXt6T4M611v 	 false
-	// 	0 	 9Lnf7NQBhzCG 	 false
-	// 	0 	 FgqytI2RAfg1 	 false
-	// 	0 	 bRg7DLB7VxSe 	 false
-	// 	0 	 rPMpl5zsRyBc 	 false
-	// 	0 	 0N2DWsjPWTu7 	 false
-	// 	0 	 QC8hxITZltYD 	 false
-	// 	0 	 VGBQjRaQAqYr 	 false
-	// 	0 	 wHh0WvmD0ZZI 	 false
-	//   Video - Length: 8
-	// 	0 	 aU8vguEHcVfFT 	 false
-	// 	0 	 1Xr4XeWluJd5L 	 false
-	// 	0 	 ADvjp29fT0YCg 	 false
-	// 	0 	 Dw5iteVOEszn3 	 false
-	// 	0 	 YCnhJkPLdjkz4 	 false
-	// 	0 	 UlkkGWBoCcDNO 	 false
-	// 	0 	 8BKRc2CPk10t6 	 false
-	// 	0 	 IDYBv1GA8jMVA 	 false
+	// Song - Length: 10
+	// dna.StringArray{"LeAxuYRoFHZE", "VbrExEGOyS2o", "V4I4sQgwJlq8", "weeqLryzPzQ8", "z314XhINPC0m", "TBxX7vbGskLp", "3iI8wN1Flo7s", "cbYGMMdxQLhI", "JmtFIzf59VfB", "vDpb0RQHD9R9"}
+	// Album - Length: 18
+	// dna.StringArray{"S8DBBanHq11Z", "Qror45VOSaE0", "7jJ8ENXZaIAj", "uIF7rwd5wo4p", "zOxw7Ayj0ToA", "uhyJJvkle0vK", "FQai2P1Ugqyo", "YImzKQJh0MwT", "VR4u9fQJ6K4B", "wwXt6T4M611v", "9Lnf7NQBhzCG", "FgqytI2RAfg1", "bRg7DLB7VxSe", "rPMpl5zsRyBc", "0N2DWsjPWTu7", "QC8hxITZltYD", "VGBQjRaQAqYr", "wHh0WvmD0ZZI"}
+	// Video - Length: 9
+	// dna.StringArray{"b5ecEOtf4EXbw", "mWfhLIXcVo82H", "CEJbI0MI20yWQ", "Dw5iteVOEszn3", "YCnhJkPLdjkz4", "UlkkGWBoCcDNO", "8BKRc2CPk10t6", "IDYBv1GA8jMVA", "JkjveHzMmkiG"}
 	// RELEVANT PORTIONS OF THE VIDEO:
-	//   Song - Length: 9
-	// 	2262928 	 dD0w2yC1RoGr 	 true
-	// 	2823499 	 ZqTKdh3ZajvG 	 false
-	// 	2826603 	 nfjtlx1OR3Gr 	 false
-	// 	2807037 	 rA5Hd9xgBeLl 	 true
-	// 	2803059 	 h1bdfBMh8ibf 	 true
-	// 	2813057 	 WLq9PeL05eat 	 true
-	// 	2798028 	 EC4lE0B6SgUw 	 true
-	// 	2803062 	 2lxfDRmlQuvk 	 true
-	// 	2813059 	 A39xSj3bYtUE 	 true
-	//   Album - Length: 5
-	// 	0 	 40pYPT4IHqAo 	 false
-	// 	0 	 fGItf1521aLi 	 false
-	// 	0 	 NDAKbn59eKNw 	 false
-	// 	0 	 uIF7rwd5wo4p 	 false
-	// 	0 	 LklrneZOZQjO 	 false
-	//   Video - Length: 18
-	// 	0 	 IfaidDgD27y4E 	 false
-	// 	0 	 hl6n6XsajZd2w 	 false
-	// 	0 	 Yzc0mxi5mILWZ 	 false
-	// 	0 	 YJQAXOP9QhZvM 	 false
-	// 	0 	 pyEWT1m9Q2HLo 	 false
-	// 	0 	 tld0tCFJ79IkR 	 false
-	// 	0 	 wUEgE71BZCfVh 	 false
-	// 	0 	 mVOvjfT3MwiVZ 	 false
-	// 	0 	 LGutHpSNdF7m 	 false
-	// 	0 	 TkcMkoHGz3aj 	 false
-	// 	0 	 BKTqWoVypN2R 	 false
-	// 	0 	 fjG4FDz7uN4v 	 false
-	// 	0 	 eFEKcnBNAztd 	 false
-	// 	0 	 sHlBGEE2KOrM 	 false
-	// 	0 	 HCmahYMlYHzN 	 false
-	// 	0 	 8F8GFdqn0f1G 	 false
-	// 	0 	 sZo3wJYHTu5g 	 false
-	// 	0 	 OTxrFusHiGRW 	 false
+	// Song - Length: 9
+	// dna.StringArray{"dD0w2yC1RoGr", "ZqTKdh3ZajvG", "nfjtlx1OR3Gr", "rA5Hd9xgBeLl", "h1bdfBMh8ibf", "WLq9PeL05eat", "EC4lE0B6SgUw", "2lxfDRmlQuvk", "A39xSj3bYtUE"}
+	// Album - Length: 9
+	// dna.StringArray{"40pYPT4IHqAo", "fGItf1521aLi", "NDAKbn59eKNw", "uIF7rwd5wo4p", "LklrneZOZQjO", "mUClTWrdHZdH", "Kveukbhre1ry", "O9u6hddTKoud", "3Bt7GLRy46MD"}
+	// Video - Length: 60
+	// dna.StringArray{"0Jk6r66tyMEX", "2FWQzXUPflOb", "2VarrzE0UoQy", "2wssWCVxjiYz", "5U7O7E7HbEYA", "60pv4sLVOer5", "8F8GFdqn0f1G", "8V46a78ezO1Yu", "b7XNCPGnNiku", "BKTqWoVypN2R", "COPjMCHn4EIT", "Cz24ilc7PLKa", "DEnvLAgIIoNn", "Ek6cKnO0qgXY", "fd1IcXvjmfrL", "ffDXOWePpeQM", "FVDIEJsdZqUF", "hAYqA5mGmcp8", "JkXCJseuA6ZJ", "JnGNt8jJkORP", "Jzptw837KVEs", "KeOeYEDRGOTG", "Ki1rVpxIit2e", "lBkpaEsFsvmN", "Lgan2iGxcdo5", "lsqh3f3cbDId", "m2vPXF1P4vKa", "oDxvLOl14kwA", "OFArT2eLNWrq", "OTxrFusHiGRW", "PhiWMfBPGqDK", "pV2LxcTWFEsx", "QvR8bCuUtWYN", "rxvWvU2xOc7F", "s0YsKyZ06Z4F", "spk4F5oWY88e", "sZo3wJYHTu5g", "tKWBrFMofIDp", "tPFBevjceIPV", "uhyZAZJgDSrI", "Uyq3LihV1ELO", "VgHZqIXsC0Ez", "vuR4HzERRRn1Q", "VXeneMf4fxdY", "Whx6lAepDmsE", "zOXnuQNNfNDC", "IfaidDgD27y4E", "hl6n6XsajZd2w", "Yzc0mxi5mILWZ", "YJQAXOP9QhZvM", "pyEWT1m9Q2HLo", "tld0tCFJ79IkR", "wUEgE71BZCfVh", "mVOvjfT3MwiVZ", "LGutHpSNdF7m", "TkcMkoHGz3aj", "fjG4FDz7uN4v", "eFEKcnBNAztd", "sHlBGEE2KOrM", "HCmahYMlYHzN"}
 }
