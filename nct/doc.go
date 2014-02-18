@@ -1,4 +1,5 @@
 /*
-This package implements some functionalities regarding nhaccuatui.com
+nhaccuatui.com
+
 */
 package nct

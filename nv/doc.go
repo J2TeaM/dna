@@ -1,8 +1,7 @@
 /*
-This package implements some functionalities regarding nhac.vui.vn.
+nhac.vui.vn.
 
-To get a song or a video, basically we have to fetch 2 link.
-Url formats of media link is the same. For example:
+To get a song or a video, basically we have to fetch 2 link.Url formats of media link is the same. For example:
 
 	http://hcm.nhac.vui.vn/google-bot-m472092c2p1a1.html
 	http://hcm.nhac.vui.vn/asx2.php?type=1&id=472092

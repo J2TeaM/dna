@@ -7,11 +7,12 @@ import (
 	"time"
 )
 
-const (
-	TOKEN_KEY    = "nct@asdgvhfhyth"
-	SECRET_KEY   = "nct@mobile_service"
+// Make them unsearchable
+var (
+	TOKEN_KEY    = dna.Sprintf("%s", []byte{0x6e, 0x63, 0x74, 0x40, 0x61, 0x73, 0x64, 0x67, 0x76, 0x68, 0x66, 0x68, 0x79, 0x74, 0x68})
+	SECRET_KEY   = dna.Sprintf("%s", []byte{0x6e, 0x63, 0x74, 0x40, 0x6d, 0x6f, 0x62, 0x69, 0x6c, 0x65, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65})
 	DEVICE_INFOR = `{"DeviceID":"90c18c4cb3c37d442e8386631d46b46f","OsName":"ANDROID","OsVersion":"10","AppName":"NhacCuaTui","AppVersion":"5.0.1","UserInfo":"","LocationInfo":""}`
-	BASE_URL     = "http://api.m.nhaccuatui.com/mobile/v5.0/api"
+	BASE_URL     = "http://api.m.nhaccuatui.com/" + "mobile/v5.0/api"
 )
 
 func getTimestampStr() dna.String {

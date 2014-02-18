@@ -21,7 +21,9 @@ func RecoverSQLLogError(sqlErrFilePath dna.String, db *sqlpg.DB) dna.Int {
 		panic(err)
 	}
 	data := dna.String(string(b))
+	// dna.Log("\n", data.Length())
 	sqlArr := data.FindAllString(`(?mis)\$\$\$error\$\$\$.+?\$\$\$error\$\$\$`, -1)
+	// dna.Log("\nTOTAL SQL STATEMENTS FOUND:", sqlArr.Length())
 	for _, val := range sqlArr {
 		sqlStmtArr := val.FindAllStringSubmatch(`(?mis)\$\$\$error\$\$\$(.+?)\$\$\$error\$\$\$`, -1)
 		if len(sqlStmtArr) > 0 {

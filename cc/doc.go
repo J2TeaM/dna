@@ -1,4 +1,4 @@
 /*
-This package implements some functionalities regarding chacha.vn.
+chacha.vn.
 */
 package cc

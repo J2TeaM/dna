@@ -1,11 +1,36 @@
 package utils
 
 import (
+	"bufio"
 	"dna"
 	"dna/sqlpg"
 	"errors"
+	"os"
 	"time"
 )
+
+// ForeachLine loops through every line a file.
+// An anynomous input function has line, index as params
+func ForeachLine(filePath dna.String, lineFunc func(dna.String, dna.Int)) {
+
+	var err error
+	var line []byte
+	f, err := os.Open(filePath.String())
+	if err != nil {
+		dna.Log("error opening file: %v\n", err)
+		os.Exit(1)
+	}
+	defer f.Close()
+	r := bufio.NewReaderSize(f, 4*1024)
+
+	i := 0
+	err = nil
+	for err == nil {
+		i += 1
+		line, _, err = r.ReadLine()
+		lineFunc(dna.String(string(line)), dna.Int(i))
+	}
+}
 
 func IsValidTable(tblName dna.String, db *sqlpg.DB) dna.Bool {
 	_, err := db.Exec("select * from " + tblName.String() + " limit 0")
@@ -60,9 +85,9 @@ func GetMaxId(tableName dna.String, db *sqlpg.DB) (dna.Int, error) {
 // 	* Returns a new list of ids which are not from the specified table
 //
 // The format of sql statement is:
-// 	with dna (id) as (values (5),(6),(7),(8),(9))
-// 	select id from dna where id not in
-// 	(select id from ziartists where id in (5,6,7,8,9))
+// 	WITH dna (id) AS (VALUES (5),(6),(7),(8),(9))
+// 	SELECT id FROM dna WHERE NOT EXISTS
+// 	(SELECT 1 from ziartists WHERE id=dna.id)
 func SelectMissingIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB) (*dna.IntArray, error) {
 
 	if srcIds.Length() > 0 {
@@ -71,7 +96,7 @@ func SelectMissingIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB) (*
 			return "(" + val.ToString() + ")"
 		}).([]dna.String))
 		selectStmt := "with dna (id) as (values " + val.Join(",") + ") \n"
-		selectStmt += "select id from dna where id not in \n(select id from " + tblName + " where id in (" + srcIds.Join(",") + "))"
+		selectStmt += "SELECT id FROM dna WHERE NOT EXISTS\n (SELECT 1 from " + tblName + "  WHERE id=dna.id)"
 		ids := &[]dna.Int{}
 		err := db.Select(ids, selectStmt)
 		switch {
@@ -87,6 +112,41 @@ func SelectMissingIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB) (*
 		}
 	} else {
 		return nil, errors.New("Empty input array")
+	}
+
+}
+
+// SelectMissingIds accepts a table name as an input and a range as a source.
+// It returns a new list of ids that do not exist in the destination table
+//
+// 	* tblName : a table name
+// 	* head, tail : first and last number defines a range
+// 	* db : a pointer to connected databased
+// 	* Returns a new list of ids which are not from the specified table
+//
+// The format of sql statement is:
+// 	SELECT id FROM generate_series(5,9) id
+// 	WHERE NOT EXISTS (SELECT 1 from ziartists where id = id.id)
+func SelectMissingIdsWithRange(tblName dna.String, head, tail dna.Int, db *sqlpg.DB) (*dna.IntArray, error) {
+
+	if head > tail {
+		panic("Cannot create range: head has to be less than tail")
+	}
+
+	selectStmt := dna.Sprintf("SELECT id FROM generate_series(%v,%v) id \n", head, tail)
+	selectStmt += "WHERE NOT EXISTS (SELECT 1 from " + tblName + " where id = id.id)"
+	ids := &[]dna.Int{}
+	err := db.Select(ids, selectStmt)
+	switch {
+	case err != nil:
+		return nil, err
+	case err == nil && ids != nil:
+		slice := dna.IntArray(*ids)
+		return &slice, nil
+	case err == nil && ids == nil:
+		return &dna.IntArray{}, nil
+	default:
+		panic("Default case triggered. Case is not expected. Cannot select non existed ids")
 	}
 
 }
@@ -171,12 +231,12 @@ func SelectLastMissingIds(tblName dna.String, nLastIds dna.Int, db *sqlpg.DB) (*
 	query := dna.Sprintf("SELECT min(id), max(id) FROM (SELECT id FROM %v ORDER BY id DESC LIMIT %v) as AB", tblName, nLastIds)
 	// dna.Log(query)
 	db.QueryRow(query).Scan(&min, &max)
-	totalItem := max - min + 1
-	var ids = make(dna.IntArray, totalItem, totalItem+100)
-	var idx = 0
-	for i := min; i < max; i++ {
-		ids[idx] = i
-		idx += 1
-	}
-	return SelectMissingIds(tblName, &ids, db)
+	// totalItem := max - min + 1
+	// var ids = make(dna.IntArray, totalItem, totalItem+100)
+	// var idx = 0
+	// for i := min; i < max; i++ {
+	// 	ids[idx] = i
+	// 	idx += 1
+	// }
+	return SelectMissingIdsWithRange(tblName, min, max, db)
 }

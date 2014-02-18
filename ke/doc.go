@@ -1,5 +1,5 @@
 /*
-This package implements some functionalities regarding keeng.vn
+keeng.vn.
 
 This package uses 2 methods to get info.
 

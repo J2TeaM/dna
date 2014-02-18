@@ -232,7 +232,7 @@ func (s String) GetTagAttributes(att String) String {
 
 // GetTags returns tags of HTML-like string. NOTE: this method does not resolve the nested tags.
 func (s String) GetTags(tag String) StringArray {
-	return s.FindAllString(String(fmt.Sprintf("<%v[^>]*>?(.*?)(<\\/%v>|\\/>)", tag, tag)), -1)
+	return s.FindAllString(String(fmt.Sprintf("(?mis)<%v[^>]*>?(.*?)(<\\/%v>|\\/>)", tag, tag)), -1)
 
 }
 
@@ -427,4 +427,9 @@ func (s String) Between(left, right String) String {
 	} else {
 		return ""
 	}
+}
+
+// ToBytes returns a byte array from a string.
+func (s String) ToBytes() []byte {
+	return []byte(s.String())
 }

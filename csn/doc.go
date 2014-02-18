@@ -1,5 +1,5 @@
 /*
-This package implements some functionalities regarding chiasenhac.com.
+chiasenhac.com.
 
 Given an example link such as http://chiasenhac.com/google-bot~1184919.html,
 we can not be sure whether it is a song or a video link based on an id input.

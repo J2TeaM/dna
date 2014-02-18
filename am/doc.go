@@ -1,5 +1,5 @@
 /*
-This package implements some functionalities regarding allmusic.com.
+allmusic.com.
 
 Notice: This step is deprecated!
 

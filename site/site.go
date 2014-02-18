@@ -9,7 +9,7 @@ import (
 )
 
 // TIMEOUT_SECS defines the total seconds before timeout.
-const TIMEOUT_SECS = 8
+var TIMEOUT_SECS int64 = 8
 
 func atomicUpdate(errChannel chan bool, state *StateHandler) {
 	var err error
@@ -26,7 +26,7 @@ func atomicUpdate(errChannel chan bool, state *StateHandler) {
 	select {
 	case err = <-c1:
 		// do nothing
-	case <-time.After(time.Second * TIMEOUT_SECS):
+	case <-time.After(time.Second * time.Duration(TIMEOUT_SECS)):
 		strErr := dna.Sprintf("%v - Timeout after %vs at id :%v", state.GetTableName(), TIMEOUT_SECS, it.GetId())
 		err = errors.New(strErr.String())
 	}

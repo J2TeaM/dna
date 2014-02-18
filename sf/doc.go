@@ -1,4 +1,4 @@
 /*
-This package implements some functionalities regarding songfreaks.com.
+songfreaks.com.
 */
 package sf

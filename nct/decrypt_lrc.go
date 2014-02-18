@@ -43,19 +43,18 @@ func irrcrpt(_arg1 dna.String, _arg2 dna.Int) dna.String {
 
 //DecryptLRC returns LRC string from encrypted string.
 func DecryptLRC(data dna.String) (dna.String, error) {
-	keyStr := irrcrpt("Mzs2dkvtu5odu", 1).String()
-	keyStrInHex := hex.EncodeToString([]byte(keyStr))
+	// CODE_SPECIAL "M z s 2 d k v t u 5 o d u" separated by space
+	keyStr := irrcrpt(dna.Sprintf("%s", []byte{0x4d, 0x7a, 0x73, 0x32, 0x64, 0x6b, 0x76, 0x74, 0x75, 0x35, 0x6f, 0x64, 0x75}), 1)
+	keyStrInHex := hex.EncodeToString(keyStr.ToBytes())
 
 	keyStrInBytes, err := hex.DecodeString(keyStrInHex)
 	if err != nil {
 		return "", err
 	}
-
 	ret, err := hex.DecodeString(data.String())
 	if err != nil {
 		return "", err
 	}
-
 	cipher, err := rc4.NewCipher(keyStrInBytes)
 	if err != nil {
 		return "", err

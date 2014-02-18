@@ -1,5 +1,5 @@
 /*
-This package implements some functionalities regarding mp3.zing.vn.
+mp3.zing.vn.
 
 It downloads metadata from the site using 2 methods:
 Getting content from main site by filtering HTML tags or from API. The API is default setting.
