@@ -37,6 +37,12 @@ type APIStatusSong struct {
 	Data   APISongEntry `json:"data"`
 }
 
+// APIStatusAlbum defines a struct of status album from API.
+type APIStatusVideo struct {
+	Status dna.Int  `json:"status"`
+	Data   APIVideo `json:"data"`
+}
+
 // APISongEntry defines a struct of sing from API.
 // When a song is fetched, all of its similar songs are fetched as well.
 type APISongEntry struct {
@@ -64,7 +70,7 @@ func (apiAlbum *APIAlbum) ToAlbum() *Album {
 		album.Key = keyArr[0][1]
 	}
 	album.Title = apiAlbum.Title
-	album.Artists = apiAlbum.Artists.Split(" ft ")
+	album.Artists = apiAlbum.Artists.Split(" ft ").FilterEmpty()
 	album.Plays = apiAlbum.Plays
 	songids := dna.IntArray{}
 	for _, song := range apiAlbum.SongList {
@@ -118,10 +124,13 @@ func (apiSong *APISong) ToSong() *Song {
 		song.Key = keyArr[0][1]
 	}
 	song.Title = apiSong.Title
-	song.Artists = apiSong.Artists.Split(" ft ")
+	song.Artists = apiSong.Artists.Split(" ft ").FilterEmpty()
 	song.Plays = apiSong.Plays
 	song.ListenType = apiSong.ListenType
 	song.Lyric = apiSong.Lyric
+	if song.Lyric != "" {
+		song.HasLyric = true
+	}
 	song.Link = apiSong.Link
 	song.MediaUrlMono = apiSong.MediaUrlMono
 	song.MediaUrlPre = apiSong.MediaUrlPre
@@ -227,7 +236,7 @@ func (apiVideo *APIVideo) ToVideo() *Video {
 		video.Key = keyArr[0][1]
 	}
 	video.Title = apiVideo.Title
-	video.Artists = apiVideo.Artists.Split(" ft ")
+	video.Artists = apiVideo.Artists.Split(" ft ").FilterEmpty()
 	video.Plays = apiVideo.Plays
 	video.ListenType = apiVideo.ListenType
 	video.Link = apiVideo.Link

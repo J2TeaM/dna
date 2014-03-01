@@ -17,7 +17,7 @@ func TestGetSongVideo(t *testing.T) {
 }
 func ExampleGetSongVideo() {
 	var video *Video
-	item, err := GetSongVideo(1182901)
+	item, err := GetSongVideo(1209100)
 	if err != nil {
 		panic(err.Error())
 	} else {
@@ -35,34 +35,34 @@ func ExampleGetSongVideo() {
 		}
 	}
 	PanicError(err)
-	if video.Plays < 168297 {
-		panic("Plays has to be greater than 168297")
+	if video.Plays < 342712 {
+		panic("Plays has to be greater than 342712")
 	}
-	if video.Downloads < 5541 {
-		panic("Plays has to be greater than 5541")
+	if video.Downloads < 9858 {
+		panic("Plays has to be greater than 9858")
 	}
-	video.Plays = 168297
-	video.Downloads = 5541
+	video.Plays = 342712
+	video.Downloads = 9858
 	video.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
 	// video.Formats changing from day to day "1183/3/1182901-658f6751" => `3` means Wed
-	video.Formats = "[{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21720,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":31150,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":52740,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":11580,\"resolution\":\"180p\"}]"
+	video.Formats = "[{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":45440,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":67490,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":122300,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/flac/file-name.mp4\",\"type\":\"mp4\",\"file_size\":228310,\"resolution\":\"1080p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21270,\"resolution\":\"180p\"}]"
 	LogStruct(video)
 	// Output:
-	// Id : 1182901
-	// Title : "Tam Giác Tình"
-	// Artists : dna.StringArray{"Lâm Chấn Khang", "Saka Trương Tuyền"}
-	// Authors : dna.StringArray{"Lại Hoàng Sang"}
+	// Id : 1209100
+	// Title : "Con Gái Thời Nay"
+	// Artists : dna.StringArray{"Lý Hải", "Bảo Chung"}
+	// Authors : dna.StringArray{"Văn Hoà"}
 	// Topics : dna.StringArray{"Video Clip", "Việt Nam"}
-	// Thumbnail : "http://data.chiasenhac.com/data/thumb/1183/1182901_prv.jpg"
-	// Producer : "Eye (2013)"
-	// Downloads : 5541
-	// Plays : 168297
-	// Formats : "[{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21720,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":31150,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":52740,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":11580,\"resolution\":\"180p\"}]"
-	// Href : "http://chiasenhac.com/hd/video/v-video/tam-giac-tinh~lam-chan-khang-saka-truong-tuyen~1182901.html"
+	// Thumbnail : "http://data.chiasenhac.com/data/thumb/1210/1209100_prv.jpg"
+	// Producer : ""
+	// Downloads : 9858
+	// Plays : 342712
+	// Formats : "[{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":45440,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":67490,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":122300,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/flac/file-name.mp4\",\"type\":\"mp4\",\"file_size\":228310,\"resolution\":\"1080p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21270,\"resolution\":\"180p\"}]"
+	// Href : "http://chiasenhac.com/hd/video/v-video/con-gai-thoi-nay~ly-hai-bao-chung~1209100.html"
 	// IsLyric : 1
-	// Lyric : "Đớn đau lòng em khi giờ đây em nhận ra \nNgười em yêu giờ đã có một hạnh phúc\nXin em đừng nói những lời buồn đau\nĐừng để cho hai ta phải mất nhau.\n\nEm lo sợ một ngày người tình ơi\nCuộc tình ngang trái gieo yêu đau cho người đến sau\nThật tội nghiệp em giữa chốn hoang tình \nThế nhưng em vẫn đứng sau tình yêu.\n\nCuộc tình của anh có phải em đây chia lìa\nThật lòng giờ đây xin lỗi anh vì quá yêu anh.\n\n[ĐK:]\nĐừng nghi oan nữa đừng khóc em ơi\nTam Giác Tình lyrics on ChiaSeNhac.com\nĐừng trách than chỉ thêm đau lòng anh\nVì yêu nên anh không muốn cho em \nMang buồn đau tổn thương.\n\nSao duyên ta không tròn \nKhi bên anh em đứng sau một người\nĐường hoài nghi nữa anh chỉ yêu em\nYêu em xin anh đừng bên ai."
-	// DateReleased : ""
-	// DateCreated : "2013-12-11 16:50:00"
+	// Lyric : "Con gái thời nay trông thật là xinh \nNhư hoa vừa nở ngày xuân đầu mùa\nLàn da trắng tựa như mây \nLại thêm nụ cười duyên dáng \nLàm cho lòng anh đây nhớ.\n\nCon gái thời nay trông thật xì teen \nTung tăng ngoài phố làm bao người nhìn\nNhiều anh cứ muốn làm quen \nLàm sao được lòng em yêu \nÔi con gái nhà ai cưng ghê.\n\nDáng em tựa như nàng tiên đang về trên phố\nThì cho anh đi theo cùng \nAnh đây vẫn còn cô đơn nguyện xin dâng tròn cuộc đời anh \nCon Gái Thời Nay lyrics on ChiaSeNhac.com\nNếu em chưa chồng xin em trả lời đi để anh thương.\n\nCon gái thời nay trông thật là yêu \nYêu em từ phút gặp em lần đâu\nVậy là anh đã gặp may \nĐôi ta là do duyên số \nYêu ai cũng vậy yêu dùm anh đi."
+	// DateReleased : "2014"
+	// DateCreated : "2014-01-25 01:11:00"
 	// Type : false
 	// Checktime : "2013-11-21 00:00:00"
 }

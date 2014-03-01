@@ -42,6 +42,12 @@ func irrcrpt(_arg1 dna.String, _arg2 dna.Int) dna.String {
 }
 
 //DecryptLRC returns LRC string from encrypted string.
+//
+//For example: Given a song id 2882720 with a key 9Fd4zVvPMIbf
+//and an XML source file http://www.nhaccuatui.com/flash/xml?key1=8bfe9db992afaff5dc931dffca1b5c7b
+//
+//The encrypted lyric file url lies in <lyric> tags
+// http://lrc.nct.nixcdn.com/2013/12/29/0/a/5/b/1388320374102.lrc
 func DecryptLRC(data dna.String) (dna.String, error) {
 	// CODE_SPECIAL "M z s 2 d k v t u 5 o d u" separated by space
 	keyStr := irrcrpt(dna.Sprintf("%s", []byte{0x4d, 0x7a, 0x73, 0x32, 0x64, 0x6b, 0x76, 0x74, 0x75, 0x35, 0x6f, 0x64, 0x75}), 1)

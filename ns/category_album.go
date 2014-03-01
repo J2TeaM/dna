@@ -11,6 +11,7 @@ func getAlbumCategory(albums *[]*Album, genre Genre, page dna.Int) <-chan bool {
 	channel := make(chan bool, 1)
 	go func() {
 		link := "http://nhacso.net/album-theo-the-loai-" + genre.Id.ToString() + "/joke-link-2-" + page.ToString() + ".html"
+		// dna.Log(link)
 		result, err := http.Get(link)
 		if err == nil {
 			data := &result.Data
@@ -97,7 +98,6 @@ func (alca *AlbumCategory) New() item.Item {
 // Init implements item.Item interface.
 func (alca *AlbumCategory) Init(v interface{}) {
 	var n dna.Int
-	var LastNPages dna.Int = 10                          //  Last 10 pages from each category
 	var NGenres dna.Int = dna.Int(len((*SongGenreList))) // The total of genres
 	switch v.(type) {
 	case int:
@@ -120,14 +120,18 @@ func (alca *AlbumCategory) Save(db *sqlpg.DB) error {
 	var last error
 	var aids = dna.IntArray{}
 	albums := &[]Album{}
-
 	for _, album := range *(alca.Albums) {
 		aids.Push(album.Id)
+		// dna.Log(album)
 	}
 	query := "SELECT id, topics, genres from nsalbums WHERE id IN (" + aids.Join(",") + ")"
 	// dna.Log(query)
 	err := db.Select(albums, query)
-	dna.PanicError(err)
+	if err != nil {
+		dna.Log(query, alca, *alca.Albums)
+		dna.PanicError(err)
+	}
+
 	for _, album := range *(alca.Albums) {
 		foundIndex := 0
 		for j, anotherAlbum := range *(albums) {

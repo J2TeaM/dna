@@ -29,8 +29,8 @@ type Episode struct {
 	Audio          dna.Int
 	Season         dna.String
 	PlaylistM3u8   dna.String
-	ViSrt          dna.String // Vietnamese subtitle
-	EnSrt          dna.String // English subtitle
+	ViSrt          dna.String // Vietnamese subtitle - encoded in Base64
+	EnSrt          dna.String // English subtitle - encoded in Base64
 	EpisodeM3u8    dna.String
 	Checktime      time.Time
 }

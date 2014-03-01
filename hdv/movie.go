@@ -88,7 +88,20 @@ func getMovieFromPage(movie *Movie) <-chan bool {
 		link := "http://mmovie.hdviet.com/hdviet." + movie.Id.ToString() + ".html"
 		result, err := http.Get(link)
 		if err == nil {
-			mainDat := result.Data.FindAllString(`(?mis)<div class="main_decs">.+?</div>`, 1)
+			// Renew ACCESS_TOKEN_KEY
+			if AccessTokenKeyRenewable == false {
+				keyArr := result.Data.FindAllString(`_strLinkPlay.+`, 1)
+				if keyArr.Length() > 0 {
+					ACCESS_TOKEN_KEY = keyArr[0].Replace(`';`, "").ReplaceWithRegexp(`^.+;`, "").String()
+					if len(ACCESS_TOKEN_KEY) != 32 {
+						panic("Wrong ACCESS_TOKEN_KEY: Length has to be 32")
+					}
+				}
+				AccessTokenKeyRenewable = true
+			}
+
+			// Finding main data
+			mainDat := result.Data.FindAllString(`(?mis)<div class="main_decs">.+?<div class="clear">`, 1)
 			if len(mainDat) > 0 {
 				main := mainDat[0]
 				if main.GetTags("h4").Length() > 0 {

@@ -123,4 +123,5 @@ var CatTags dna.StringArray = dna.StringArray{
 	"Shining Show",
 	"Gương Mặt Thân Quen",
 	"Ngâm Thơ",
-	"Fanmade / Radio"}
+	"Fanmade / Radio",
+	"Nhạc Game"}

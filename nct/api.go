@@ -342,7 +342,7 @@ type apiArtistInfo struct {
 	Data   APIArtist `json:"Data"`
 }
 
-// APIArtist defines artist structure from API url.
+// APIArtist defines an artist structure from API url.
 type APIArtist struct {
 	Id      dna.Int    `json:"ArtistId"`
 	Name    dna.String `json:"ArtistName"`
@@ -363,6 +363,17 @@ func (apiArtist *APIArtist) CSVRecord() []string {
 		apiArtist.NVideos.ToString().String(),
 		apiArtist.ObjType.String(),
 	}
+}
+
+func (apiArtist *APIArtist) ToArtist() *Artist {
+	artist := NewArtist()
+	artist.Id = apiArtist.Id
+	artist.Name = apiArtist.Name
+	artist.Avatar = apiArtist.Avatar
+	artist.NSongs = apiArtist.NSongs
+	artist.NAlbums = apiArtist.NAlbums
+	artist.NVideos = apiArtist.NVideos
+	return artist
 }
 
 // GetAPIArtist returns APIArtsit from video id.

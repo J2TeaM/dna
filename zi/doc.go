@@ -13,6 +13,9 @@ All types with prefix "API" mean the are the types representing items from API a
 
 The difference between basic types' ids and real ids from the site is a constant : ID_DIFFERENCE =  307843200
 
+Direct HQ mp3 link: http://mp3.zing.vn/download/vip/song/ZWZAC6DU.html
+
+
 PROGRESS: type TV, Artist are not complete!!!!!
 */
 package zi

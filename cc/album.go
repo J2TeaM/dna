@@ -97,6 +97,12 @@ func getAlbumFromMainPage(album *Album) <-chan bool {
 				}
 			})
 
+			// On 2014-02-24, cc had new error. Songids.Length() - Nsongs = 8
+			// This following code to fix it
+			if album.Songids.Length()-album.Nsongs == 8 {
+				album.Nsongs += 8
+			}
+
 		}
 		channel <- true
 	}()

@@ -4,6 +4,7 @@ import (
 	"dna"
 	"dna/http"
 	"encoding/json"
+	"errors"
 )
 
 type APIMovieJSON struct {
@@ -57,8 +58,12 @@ func GetAPIMovie(movieid, ep dna.Int) (*APIMovie, error) {
 	} else {
 		link = urlb.GetEpisole(movieid, ep)
 	}
+	// dna.Log(link)
 	result, err := http.Get(link)
 	if err == nil {
+		if result.Data.Match(`"r":"acesstokenkey invalid or expired"`) == true {
+			return nil, errors.New("ACCESS_TOKEN_KEY invalid or expired")
+		}
 		var apiMoveiJSON = &APIMovieJSON{}
 		errd := json.Unmarshal(result.Data.ToBytes(), apiMoveiJSON)
 		if errd == nil {

@@ -53,7 +53,7 @@ func ExampleGetSong() {
 	// Plays : 20
 	// Topics : dna.StringArray{"Âu Mỹ", "Pop"}
 	// Link : "http://m.mp3.zing.vn/xml/song-load/MjAxMyUyRjEyJTJGMDElMkY4JTJGOCUyRjg4OTc0Mzg5MGJlNTlmMWVkNDgwYTZjM2Q2NWViZDNiLm1wMyU3QzI="
-	// Path : "2013/12/01/8/8/889743890be59f1ed480a6c3d65ebd3b.mp3"
+	// Path : "2013/12/01/8/8/889743890be59f1ed480a6c3d65ebd3b.mp3|2"
 	// Lyric : ""
 	// DateCreated : "2013-12-01 00:00:00"
 	// Checktime : "2013-11-21 00:00:00"

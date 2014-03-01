@@ -54,6 +54,17 @@ func (sa StringArray) Filter(fn func(v String, i Int) Bool) StringArray {
 	return result
 }
 
+// FilterEmpty returns a string array which does not contain any empty element.
+func (sa StringArray) FilterEmpty() StringArray {
+	return sa.Filter(func(val String, idx Int) Bool {
+		if val != "" {
+			return true
+		} else {
+			return false
+		}
+	})
+}
+
 // IndexOf returns an index of a string in array
 func (sa StringArray) IndexOf(value String) Int {
 	for i, v := range sa {

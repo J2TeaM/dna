@@ -14,6 +14,8 @@ var ns = []dna.StringArray{
 	dna.String(" X1 XF XV Wl W1 WF WV Vl V1").Split(" "),
 }
 
+var LastNPages dna.Int = 10 //  Last 10 pages from each category
+
 // This function will encode the Id of nhacso into cipher text.
 func Encrypt(id dna.Int) dna.String {
 	return dna.StringArray(id.ToString().Split("").Map(

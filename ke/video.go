@@ -4,6 +4,7 @@ import (
 	"dna"
 	"dna/item"
 	"dna/sqlpg"
+	"errors"
 	"time"
 )
 
@@ -53,9 +54,30 @@ func NewVideo() *Video {
 	return video
 }
 
+// GetVideo returns a video.
+func GetVideo(id dna.Int) (*Video, error) {
+	apiVideo, err := GetAPIVideo(id)
+	if err != nil {
+		return nil, err
+	} else {
+		video := apiVideo.ToVideo()
+		if video.Id == 0 {
+			return nil, errors.New(dna.Sprintf("Keeng - Video ID: %v not found", id).String())
+		} else {
+			return video, nil
+		}
+	}
+}
+
 // Do not implement
 func (video *Video) Fetch() error {
-	return nil // do not implement
+	_video, err := GetVideo(video.Id)
+	if err != nil {
+		return err
+	} else {
+		*video = *_video
+		return nil
+	}
 }
 
 // GetId implements GetId methods of item.Item interface

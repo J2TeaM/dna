@@ -13,7 +13,7 @@ func Post(url dna.String, header dhttp.Header, bodyStr dna.String) (*http.Result
 	return http.Post(url, bodyStr)
 }
 
-// GetLyric returns a lyric or an error from API using POST method.
+// GetAPILyric returns a lyric or an error from API using POST method.
 //
 // The SOAP data has the following format:
 //
@@ -27,7 +27,7 @@ func Post(url dna.String, header dhttp.Header, bodyStr dna.String) (*http.Result
 // 	    </tem:getLyric>
 // 	  </soap:Body>
 // 	</soap:Envelope>
-func GetLyric(id dna.Int) (*APILyric, error) {
+func GetAPILyric(id dna.Int) (*APILyric, error) {
 	if id == 0 {
 		return nil, errors.New("Id is zero")
 	}
@@ -130,9 +130,9 @@ func GetAPISongEntry(id dna.Int) (*APISongEntry, error) {
 	} else {
 		var apiStatusSong APIStatusSong
 		data := ret.Data.FindAllStringSubmatch(`<return>(.+)</return>`, -1)[0][1].DecodeHTML()
-		// dna.Log(data)
 		err := json.Unmarshal([]byte(data), &apiStatusSong)
 		if err != nil {
+
 			return nil, err
 		} else {
 			apiStatusSong.Data.MainSong.Lyric = apiStatusSong.Data.MainSong.Lyric.DecodeHTML()
@@ -329,5 +329,51 @@ func GetAPIArtistVideos(id, page, num dna.Int) (*APIArtistVideos, error) {
 		} else {
 			return &apiArtistVideos, nil
 		}
+	}
+}
+
+// GetAPIVideo returns an album or an error from API using POST method.
+//
+// The SOAP data has the following format:
+//
+// 	<?xml version="1.0" encoding="utf-8"?>
+// 	<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+// 	  <soap:Header/>
+// 	  <soap:Body>
+// 	    <tem:getVideo_v2 xmlns=" http://tempuri.org/ ">
+// 	      <tem:token></tem:token>
+// 	      <tem:id>86682</tem:id>
+// 	      <tem:identify></tem:identify>
+// 	    </tem:getVideo_v2>
+// 	  </soap:Body>
+// 	</soap:Envelope>
+func GetAPIVideo(id dna.Int) (*APIVideo, error) {
+	if id == 0 {
+		return nil, errors.New("Id is zero")
+	}
+	var dat dna.String = dna.Sprintf(`<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soap:Header/><soap:Body>
+<tem:getVideo_v2 xmlns=" http://tempuri.org/ "><tem:token></tem:token><tem:id>%v</tem:id><tem:identify></tem:identify></tem:getVideo_v2></soap:Body>
+</soap:Envelope>`, id)
+	header := Header
+	header.Set("SOAPAction", "http://tempuri.org/getVideo_v2")
+	ret, err := Post("http://service.keeng.vn/appwebservice/Service.asmx?wsdl", header, dat)
+	if err != nil {
+		return nil, err
+	} else {
+		var apiStatusVideo APIStatusVideo
+		dataArr := ret.Data.FindAllStringSubmatch(`<return>(.+)</return>`, -1)
+		if len(dataArr) > 0 {
+			// dna.Log(data)
+			err := json.Unmarshal([]byte(dataArr[0][1].DecodeHTML()), &apiStatusVideo)
+			if err != nil {
+				return nil, err
+			} else {
+				return &apiStatusVideo.Data, nil
+			}
+		} else {
+			return nil, errors.New("No return value")
+		}
+
 	}
 }

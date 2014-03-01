@@ -131,6 +131,7 @@ func TestDB(t *testing.T) {
 	if dropErr != nil {
 		t.Error("sqlpgsongs has to be dropped")
 	}
+	db.Close()
 }
 
 func ExampleDB() {

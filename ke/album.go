@@ -4,13 +4,9 @@ import (
 	"dna"
 	"dna/item"
 	"dna/sqlpg"
-	"dna/utils"
 	"errors"
 	"time"
 )
-
-// AlbumKeys defines a list of newest album keys found
-var FoundSongids = dna.IntArray{}
 
 // Album defines main Video type.
 type Album struct {
@@ -52,7 +48,7 @@ func GetAlbum(id dna.Int) (*Album, error) {
 	} else {
 		album := apiAlbum.ToAlbum()
 		if album.Id == 0 {
-			return nil, errors.New("Invalid albumid: Zero value found")
+			return nil, errors.New(dna.Sprintf("Keeng - Album ID: %v not found", id).String())
 		} else {
 			return album, nil
 		}
@@ -97,13 +93,5 @@ func (album *Album) Init(v interface{}) {
 }
 
 func (album *Album) Save(db *sqlpg.DB) error {
-	var err error
-	err = db.InsertIgnore(album)
-	ids, err := utils.SelectMissingIds("kesongs", &album.Songids, db)
-	if err != nil {
-		return err
-	} else {
-		FoundSongids = FoundSongids.Concat(*ids)
-		return nil
-	}
+	return db.InsertIgnore(album)
 }

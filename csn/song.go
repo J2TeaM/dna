@@ -97,6 +97,49 @@ func getSongFormats(song *Song) <-chan bool {
 				// dna.Log(song.Formats)
 			}
 
+			topicsArr := data.FindAllStringSubmatch(`<div class="plt-text">(.+)`, 1)
+			if len(topicsArr) > 0 {
+				topics := topicsArr[0][1].RemoveHtmlTags("").Trim().Split(`-&gt;`)
+				topics.Pop()
+				song.Topics = dna.StringArray(topics.Map(func(val dna.String, idx dna.Int) dna.String {
+					return val.Replace("...", "").Replace("Nước khác", "Nhạc Các Nước Khác").Replace("Âu, Mỹ", "Âu Mỹ").Trim().Title()
+				}).([]dna.String)).SplitWithRegexp(`, `).Unique()
+			}
+
+			hrefArr := data.FindAllString(`Download: <a.+`, 1)
+			if hrefArr.Length() > 0 {
+				song.Href = "http://chiasenhac.com/" + hrefArr[0].GetTagAttributes("href").Trim()
+				titleArtists := hrefArr[0].Replace("Download:", "").Trim().RemoveHtmlTags("").Split(" - ")
+				song.Artists = refineAuthorsOrArtists(titleArtists[titleArtists.Length()-1])
+				titleArtists.Pop()
+				song.Title = titleArtists.Join(" - ")
+
+				<-getSongFromMainPage(song)
+
+			}
+
+			dlArr := data.FindAllStringSubmatch(`([0-9]+) downloads`, 1)
+			if len(dlArr) > 0 {
+				song.Downloads = dlArr[0][1].Trim().Replace(".", "").ToInt()
+			}
+
+			dateCreatedArr := data.FindAllStringSubmatch(`<img src="images/tain5.gif" title="Upload at (.+?)" />`, 1)
+			if len(dateCreatedArr) > 0 {
+				tmp := dateCreatedArr[0][1].Trim()
+				switch {
+				case tmp.Match(`Hôm qua`) == true:
+					song.DateCreated = time.Now().AddDate(0, 0, -1)
+				case tmp.Match(`Hôm nay`) == true:
+					song.DateCreated = time.Now()
+				default:
+					val := tmp.ReplaceWithRegexp(`(\d+)/(\d+)/(\d+) (\d+):(\d+)`, "${3}-${2}-${1}T${4}:${5}:00Z")
+					parsedDate, err := time.Parse(time.RFC3339, val.String())
+					if err == nil {
+						song.DateCreated = parsedDate
+					}
+				}
+			}
+
 		}
 		channel <- true
 
@@ -109,34 +152,25 @@ func getSongFromMainPage(song *Song) <-chan bool {
 
 	channel := make(chan bool, 1)
 	go func() {
-		link := "http://playlist.chiasenhac.com/google-bot~" + song.Id.ToString() + ".html"
-		result, err := http.Get(link)
-		// dna.Log(link)
+		// link := "http://playlist.chiasenhac.com/google-bot~" + song.Id.ToString() + ".html"
+		result, err := http.Get(song.Href)
+		// dna.Log(song.Href)
 		if err == nil {
 			data := &result.Data
-			titleArr := data.FindAllStringSubmatch(`<span class="maintitle">(.+)`, 1)
-			if len(titleArr) > 0 {
-				song.Title = titleArr[0][1].RemoveHtmlTags("").Trim()
-			}
+			// titleArr := data.FindAllStringSubmatch(`<span class="maintitle">(.+)`, 1)
+			// if len(titleArr) > 0 {
+			// 	song.Title = titleArr[0][1].RemoveHtmlTags("").Trim()
+			// }
 
-			artistArr := data.FindAllStringSubmatch(`Trình bày:(.+)`, 1)
-			if len(artistArr) > 0 {
-				song.Artists = refineAuthorsOrArtists(artistArr[0][1].RemoveHtmlTags("").Trim())
-			}
+			// artistArr := data.FindAllStringSubmatch(`Trình bày:(.+)`, 1)
+			// if len(artistArr) > 0 {
+			// 	song.Artists = refineAuthorsOrArtists(artistArr[0][1].RemoveHtmlTags("").Trim())
+			// }
 
-			artistArr = data.FindAllStringSubmatch(`Ca sĩ:(.+)`, 1)
-			if len(artistArr) > 0 {
-				song.Artists = refineAuthorsOrArtists(artistArr[0][1].RemoveHtmlTags("").Trim())
-			}
-
-			topicsArr := data.FindAllStringSubmatch(`<div class="plt-text">(.+)`, 1)
-			if len(topicsArr) > 0 {
-				topics := topicsArr[0][1].RemoveHtmlTags("").Trim().Split(`-&gt;`)
-				topics.Pop()
-				song.Topics = dna.StringArray(topics.Map(func(val dna.String, idx dna.Int) dna.String {
-					return val.Replace("...", "").Replace("Nước khác", "Nhạc Các Nước Khác").Replace("Âu, Mỹ", "Âu Mỹ").Trim().Title()
-				}).([]dna.String)).SplitWithRegexp(`, `).Unique()
-			}
+			// artistArr = data.FindAllStringSubmatch(`Ca sĩ:(.+)`, 1)
+			// if len(artistArr) > 0 {
+			// 	song.Artists = refineAuthorsOrArtists(artistArr[0][1].RemoveHtmlTags("").Trim())
+			// }
 
 			albumTitleArr := data.FindAllStringSubmatch(`Album:</u>(.+?)</a>`, 1)
 			if len(albumTitleArr) > 0 {
@@ -168,27 +202,10 @@ func getSongFromMainPage(song *Song) <-chan bool {
 				song.Plays = playsArr[0][1].Trim().Replace(".", "").ToInt()
 			}
 
-			dlArr := data.FindAllStringSubmatch(`(?mis)images/bh3.gif.+?<span>(.+?)</span>`, 1)
-			if len(dlArr) > 0 {
-				song.Downloads = dlArr[0][1].Trim().Replace(".", "").ToInt()
-			}
-
-			dateCreatedArr := data.FindAllStringSubmatch(`<img src="images/tain5.gif" title="Upload at (.+?)" />`, 1)
-			if len(dateCreatedArr) > 0 {
-				tmp := dateCreatedArr[0][1].Trim()
-				switch {
-				case tmp.Match(`Hôm qua`) == true:
-					song.DateCreated = time.Now().AddDate(0, 0, -1)
-				case tmp.Match(`Hôm nay`) == true:
-					song.DateCreated = time.Now()
-				default:
-					val := tmp.ReplaceWithRegexp(`(\d+)/(\d+)/(\d+) (\d+):(\d+)`, "${3}-${2}-${1}T${4}:${5}:00Z")
-					parsedDate, err := time.Parse(time.RFC3339, val.String())
-					if err == nil {
-						song.DateCreated = parsedDate
-					}
-				}
-			}
+			// dlArr := data.FindAllStringSubmatch(`(?mis)images/bh3.gif.+?<span>(.+?)</span>`, 1)
+			// if len(dlArr) > 0 {
+			// 	song.Downloads = dlArr[0][1].Trim().Replace(".", "").ToInt()
+			// }
 
 			dateReleased := data.FindAllStringSubmatch(`Năm phát hành.+<b>(.+)<\/b>`, 1)
 			if len(dateReleased) > 0 {
@@ -199,11 +216,6 @@ func getSongFromMainPage(song *Song) <-chan bool {
 			if lyricArr.Length() > 0 {
 				song.Lyric = lyricArr[0].RemoveHtmlTags("").Replace("<br /> ", "\n").Replace("<br />", "").Trim()
 				song.IsLyric = 1
-			}
-
-			hrefArr := data.FindAllString(`<link rel="canonical".+`, 1)
-			if hrefArr.Length() > 0 {
-				song.Href = hrefArr[0].GetTagAttributes("href").Trim()
 			}
 
 		}
@@ -222,15 +234,15 @@ func GetSong(id dna.Int) (*Song, error) {
 	song.Id = id
 	c := make(chan bool)
 
-	go func() {
-		c <- <-getSongFromMainPage(song)
-	}()
+	// go func() {
+	// 	c <- <-getSongFromMainPage(song)
+	// }()
 
 	go func() {
 		c <- <-getSongFormats(song)
 	}()
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 1; i++ {
 		<-c
 	}
 	song.Checktime = time.Now()

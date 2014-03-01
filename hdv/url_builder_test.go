@@ -5,6 +5,9 @@ import (
 )
 
 func ExampleURLBuilder() {
+	// Prevent ACCESS_TOKEN_KEY getting updated
+	ACCESS_TOKEN_KEY = "1c3102056acd3c12440bd05af8b9c560"
+	AccessTokenKeyRenewable = false
 	urlb := NewURLBuilder()
 	dna.Log("MOVIE  :", urlb.GetMovie(5585))
 	dna.Log("EPISOLE:", urlb.GetEpisole(4807, 5))

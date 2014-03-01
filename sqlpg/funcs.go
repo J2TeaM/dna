@@ -201,21 +201,24 @@ func ExecQueriesInTransaction(db *DB, queries *dna.StringArray) error {
 	}
 
 	for idx, query := range *queries {
-		stmt, err := tx.Prepare(query.String())
+		_, err = tx.Exec(query.String())
 		if err != nil {
-			dna.Log(dna.Sprintf("DNAError Transaction No: %v - %v - %v - %v \n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not prepare"))
-		} else {
-			_, err = stmt.Exec()
-			if err != nil {
-				dna.Log(dna.Sprintf("DNAError: Transaction No: %v - %v - %v - %v\n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not execute the prepared statement"))
-			}
-
-			err = stmt.Close()
-			if err != nil {
-				dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not close\n")
-			}
+			dna.Log(dna.Sprintf("DNAError: Transaction No: %v - %v - %v - %v\n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not execute the statement"))
 		}
+		// stmt, err := tx.Prepare(query.String())
+		// if err != nil {
+		// 	dna.Log(dna.Sprintf("DNAError Transaction No: %v - %v - %v - %v \n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not prepare"))
+		// } else {
+		// 	_, err = stmt.Exec()
+		// 	if err != nil {
+		// 		dna.Log(dna.Sprintf("DNAError: Transaction No: %v - %v - %v - %v\n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not execute the prepared statement"))
+		// 	}
 
+		// 	err = stmt.Close()
+		// 	if err != nil {
+		// 		dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not close\n")
+		// 	}
+		// }
 	}
 	err = tx.Commit()
 	if err != nil {

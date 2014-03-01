@@ -16,6 +16,7 @@ type Song struct {
 	Artists           dna.StringArray
 	Plays             dna.Int
 	ListenType        dna.Int
+	HasLyric          dna.Bool
 	Lyric             dna.String
 	Link              dna.String
 	MediaUrlMono      dna.String
@@ -42,6 +43,7 @@ func NewSong() *Song {
 	song.Artists = dna.StringArray{}
 	song.Plays = 0
 	song.ListenType = 0
+	song.HasLyric = false
 	song.Lyric = ""
 	song.Link = ""
 	song.MediaUrlMono = ""
@@ -69,7 +71,7 @@ func GetSong(id dna.Int) (*Song, error) {
 	} else {
 		song := apiSong.MainSong.ToSong()
 		if song.Id == 0 {
-			return nil, errors.New("Invalid songid: Zero value found")
+			return nil, errors.New(dna.Sprintf("Keeng - Song ID: %v not found", id).String())
 		} else {
 			return song, nil
 		}

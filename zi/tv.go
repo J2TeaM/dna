@@ -35,7 +35,7 @@ type TV struct {
 	ProgramGenreIds  dna.IntArray
 	ProgramGenres    dna.StringArray
 	Plays            dna.Int
-	Comments         dna.Int
+	Comments         dna.Int // Disabled in NEW API
 	Likes            dna.Int
 	Rating           dna.Float
 	Subtitle         dna.String

@@ -2,10 +2,51 @@ package hdv
 
 import (
 	"dna"
+	"dna/sqlpg"
+	"dna/terminal"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
 )
+
+func SaveLastestMovieCurrentEps(db *sqlpg.DB, tblName dna.String, logger *terminal.Logger) {
+	for mvid, currentEp := range LastestMovieCurrentEps {
+		query := "UPDATE " + tblName + " SET current_eps=" + currentEp.ToString()
+		query += " WHERE id=" + mvid.ToString() + ";"
+		_, err := db.Exec(query.String())
+		if err != nil {
+			logger.Println("$$$error$$$" + query + "$$$error$$$")
+		}
+	}
+}
+
+// GetMoviesCurrentEps returns a map of MovideId and CurrentEps
+// if CurrentEps is less than MaxEp.
+// it returns an error if available.
+//
+// This function is used when we need to find all possible movie ids
+// to update.
+func GetMoviesCurrentEps(db *sqlpg.DB, tblName dna.String) (map[dna.Int]dna.Int, error) {
+	var movieCurrentEps = make(map[dna.Int]dna.Int)
+	ids := &[]dna.Int{}
+	currentEps := &[]dna.Int{}
+	err := db.Select(ids, dna.Sprintf(`SELECT id from %v where current_eps < max_ep order by id DESC`, tblName))
+	if err != nil {
+		return nil, err
+	}
+	err = db.Select(currentEps, dna.Sprintf(`SELECT current_eps from %v where current_eps < max_ep order by id DESC`, tblName))
+	if err != nil {
+		return nil, err
+	}
+	if len(*currentEps) != len(*ids) {
+		return nil, errors.New("Length of IDs and CurrentEps is not correspondent")
+	}
+	for idx, movieid := range *ids {
+		movieCurrentEps[movieid] = (*currentEps)[idx]
+	}
+	return movieCurrentEps, nil
+}
 
 // splitAndTruncateArtists splits stringarray by the key "feat:"
 // and filter only string elements not equal to empty string.

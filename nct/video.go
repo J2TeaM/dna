@@ -251,6 +251,5 @@ func (video *Video) Init(v interface{}) {
 }
 
 func (video *Video) Save(db *sqlpg.DB) error {
-	return db.Update(video, "id", "relatives")
-	// return db.InsertIgnore(video)
+	return db.InsertIgnore(video)
 }

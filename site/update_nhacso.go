@@ -31,7 +31,7 @@ func UpdateNhacso() {
 	state = NewStateHandler(new(ns.Video), siteConf, db)
 	Update(state)
 
-	r := NewRange(0, 209)
+	r := NewRange(0, dna.Int(len(*ns.SongGenreList))*ns.LastNPages-1)
 	siteConf.NConcurrent = 10
 	state = NewStateHandlerWithRange(new(ns.SongCategory), r, siteConf, db)
 	Update(state)

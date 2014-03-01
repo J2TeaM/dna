@@ -48,6 +48,7 @@ func getCategory(songs *[]*Song, genre Genre, page dna.Int) <-chan bool {
 	channel := make(chan bool, 1)
 	go func() {
 		link := "http://nhacso.net/bai-hat-theo-the-loai-" + genre.Id.ToString() + "/joke-link-2-" + page.ToString() + ".html"
+		// dna.Log(link)
 		result, err := http.Get(link)
 		if err == nil {
 			data := &result.Data
@@ -99,9 +100,15 @@ func getCategory(songs *[]*Song, genre Genre, page dna.Int) <-chan bool {
 				song.Id = songid
 				category := dna.StringArray{}
 				for _, val := range cats[idx] {
-					if CatTags[mapping[val]] != "" {
-						category.Push(CatTags[mapping[val]])
+					if mapping[val] > 0 && mapping[val] < CatTags.Length() {
+						if CatTags[mapping[val]] != "" {
+							category.Push(CatTags[mapping[val]])
+						}
+					} else {
+						mess := dna.Sprintf("WRONG INDEX AT CATTAGS: %v %v %v - %v", mapping[val], genre, page, link)
+						panic(mess.String())
 					}
+
 				}
 				category.Push(genre.Name)
 				song.Category = transformCats(category.Unique()).Unique()
@@ -178,7 +185,7 @@ func (soca *SongCategory) New() item.Item {
 // Init implements item.Item interface.
 func (soca *SongCategory) Init(v interface{}) {
 	var n dna.Int
-	var LastNPages dna.Int = 10                          //  Last 10 pages from each category
+
 	var NGenres dna.Int = dna.Int(len((*SongGenreList))) // The total of genres
 	switch v.(type) {
 	case int:
@@ -200,6 +207,7 @@ func (soca *SongCategory) Save(db *sqlpg.DB) error {
 
 	var last error
 	for _, song := range *(soca.Songs) {
+		// dna.Log(song)
 		last = db.Update(song, "id", "category")
 	}
 	return last

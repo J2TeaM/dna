@@ -16,40 +16,46 @@ func TestGetSong(t *testing.T) {
 	}
 }
 func ExampleGetSong() {
-	song, err := GetSong(1182753)
+	song, err := GetSong(1222808)
 	PanicError(err)
-	if song.Plays < 274133 {
-		panic("Plays has to be greater than 274133")
+	if song.Plays < 1205 {
+		panic("Plays has to be greater than 1205")
 	}
-	if song.Downloads < 6856 {
-		panic("Plays has to be greater than 6856")
+	if song.Downloads < 104 {
+		panic("Plays has to be greater than 104")
 	}
-	song.Plays = 274133
-	song.Downloads = 6856
+	if song.AlbumCoverart == "" {
+		panic("Has to have coverart")
+	}
+	if song.Formats == "" {
+		panic("Has to have Formats")
+	}
+	song.AlbumCoverart = "http://data.chiasenhac.com/data/cover/17/16766.jpg"
+	song.Plays = 1205
+	song.Downloads = 104
 	song.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
 	// song.Formats changing from day to day "1183/3/1182753-ef690820" => `3` means Wed
-	song.Formats = "[{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/128/file-name.mp3\",\"type\":\"mp3\",\"file_size\":3770,\"bitrate\":\"128kbps\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/320/file-name.mp3\",\"type\":\"mp3\",\"file_size\":9400,\"bitrate\":\"320kbps\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/m4a/file-name.m4a\",\"type\":\"m4a\",\"file_size\":11630,\"bitrate\":\"500kbps\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/flac/file-name.flac\",\"type\":\"flac\",\"file_size\":25500,\"bitrate\":\"Lossless\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/32/file-name.m4a\",\"type\":\"m4a\",\"file_size\":1110,\"bitrate\":\"32kbps\"}]"
+	song.Formats = "[{\"link\":\"http://data.chiasenhac.com/downloads/1223/2/1222808-e6d92163/128/file-name.mp3\",\"type\":\"mp3\",\"file_size\":5520,\"bitrate\":\"128kbps\"},{\"link\":\"http://data.chiasenhac.com/downloads/1223/2/1222808-e6d92163/32/file-name.m4a\",\"type\":\"m4a\",\"file_size\":1520,\"bitrate\":\"32kbps\"}]"
 	LogStruct(song)
 
 	// Output:
-	// Id : 1182753
-	// Title : "Chỉ Cần Em Vui Để Anh Được Vui"
-	// Artists : dna.StringArray{"Ưng Đại Vệ"}
-	// Authors : dna.StringArray{"Ưng Đại Vệ"}
-	// Topics : dna.StringArray{"Việt Nam", "Pop", "Rock", "Nhạc Trẻ"}
-	// AlbumTitle : "Chỉ Cần Em Vui Để Anh Được Vui (Single)"
-	// AlbumHref : "http://playlist.chiasenhac.com/nghe-album/chi-can-em-vui-de-anh-duoc-vui~ung-dai-ve~1182753.html"
-	// AlbumCoverart : "http://data.chiasenhac.com/data/cover/14/13388.jpg"
-	// Producer : "HIT (2013)"
-	// Downloads : 6856
-	// Plays : 274133
-	// Formats : "[{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/128/file-name.mp3\",\"type\":\"mp3\",\"file_size\":3770,\"bitrate\":\"128kbps\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/320/file-name.mp3\",\"type\":\"mp3\",\"file_size\":9400,\"bitrate\":\"320kbps\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/m4a/file-name.m4a\",\"type\":\"m4a\",\"file_size\":11630,\"bitrate\":\"500kbps\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/flac/file-name.flac\",\"type\":\"flac\",\"file_size\":25500,\"bitrate\":\"Lossless\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182753-ef690820/32/file-name.m4a\",\"type\":\"m4a\",\"file_size\":1110,\"bitrate\":\"32kbps\"}]"
-	// Href : "http://chiasenhac.com/mp3/vietnam/v-pop/chi-can-em-vui-de-anh-duoc-vui~ung-dai-ve~1182753.html"
+	// Id : 1222808
+	// Title : "Hoa Nở Về Đêm"
+	// Artists : dna.StringArray{"Giang Tử", "Hương Lan"}
+	// Authors : dna.StringArray{"Mạnh Phát"}
+	// Topics : dna.StringArray{"Việt Nam", "Pop", "Rock", "Trữ Tình"}
+	// AlbumTitle : "Duyên Quê"
+	// AlbumHref : "http://playlist.chiasenhac.com/nghe-album/hoa-no-ve-dem~giang-tu-huong-lan~1222808.html"
+	// AlbumCoverart : "http://data.chiasenhac.com/data/cover/17/16766.jpg"
+	// Producer : "Thuý Nga TNCD533 (2014)"
+	// Downloads : 104
+	// Plays : 1205
+	// Formats : "[{\"link\":\"http://data.chiasenhac.com/downloads/1223/2/1222808-e6d92163/128/file-name.mp3\",\"type\":\"mp3\",\"file_size\":5520,\"bitrate\":\"128kbps\"},{\"link\":\"http://data.chiasenhac.com/downloads/1223/2/1222808-e6d92163/32/file-name.m4a\",\"type\":\"m4a\",\"file_size\":1520,\"bitrate\":\"32kbps\"}]"
+	// Href : "http://chiasenhac.com/mp3/vietnam/v-pop/hoa-no-ve-dem~giang-tu-huong-lan~1222808.html"
 	// IsLyric : 1
-	// Lyric : "1. Đã không tin một điều\nEm đã nói không còn tình yêu\nMột câu nói khiến anh đau lòng\nMột vết thương không lành sâu trong tim anh.\n\nVì sao vẫn mãi không tin một điều\nLà em kết thúc trong một tình yêu\nLà anh cố chấp đơn phương\nCố gắng thật nhiều vì em...tự dối lòng!\n\n[ĐK:]\nBởi vì một người và chỉ một người anh tin suốt đời\nDù là thiệt thòi nguyện làm tất cả để em được vui\nNước mắt rơi sau tiếng cười\nChỉ cần em vui để anh được vui.\n\nBởi vì một lời và chỉ một lời em nói suốt đời\nLặng thầm đợi chờ một ngày em sẽ thấu hiểu lòng anh\nChỉ Cần Em Vui Để Anh Được Vui lyrics on ChiaSeNhac.com\nVẫn biết giấc mơ đó khó thành\nNhận ra em đã hết yêu anh rồi.\n\n2. Vì sao vẫn mãi không tin một điều\nEm đã nói không còn tình yêu\nMột câu nói khiến anh đau lòng\nMột vết thương không lành sâu trong tim anh."
+	// Lyric : "Chuyện từ một đêm cuối nẻo một người tiễn một người đi\nĐẹp tựa bài thơ nở giữa đêm sương nở tận tâm hồn\nChuyện một mình tôi chép dòng tâm tình tặng người chưa biết một lần\nVì giây phút ấy tôi tình cờ hiểu rằng\nTình yêu đẹp nghìn đời là tình yêu khi đơn côi.\n\nVào chuyện từ một đêm khoác bờ vai một mảnh áo dạ đường khuya\nBồi hồi người trai hướng nẻo đêm sâu, dấu tình yêu đầu\nVì còn tìm nhau lối về ngõ hẹp còn chờ in dấu chân anh\nNiềm thương mến đó bây giờ và nghìn đời\nDù gió đùa dạt dào còn đẹp như khi quen nhau.\n\n[ĐK:]\nAi lớn lên không từng hẹn hò không từng yêu thương\nNhưng có mấy người tìm được một tình yêu ngát hương\nMến những người chưa quen\nHoa Nở Về Đêm lyrics on ChiaSeNhac.com\nMột người ở lại đèn trăng gối mộng\nYêu ai anh băng sông dài cho đẹp lòng trai.\n\nMột người tìm vui mãi tận trời nào giá lạnh hồn đông\nMột người chợt nghe gió giữa mênh mông rót vào trong lòng\nVà một mình tôi chép dòng tâm tình tặng người chưa biết một lần\nVì trong phút ấy tôi tìm mình thì thầm giờ đã gặp được một nụ hoa nở về đêm."
 	// DateReleased : ""
-	// DateCreated : "2013-12-11 12:32:00"
+	// DateCreated : "2014-02-22 18:42:00"
 	// Type : true
 	// Checktime : "2013-11-21 00:00:00"
-
 }

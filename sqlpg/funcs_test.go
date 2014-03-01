@@ -2,6 +2,7 @@ package sqlpg
 
 import (
 	. "dna"
+	"testing"
 	"time"
 )
 
@@ -118,4 +119,54 @@ func ExampleGetUpdateStatement() {
 	// songids=$binhdna${1, 2, 3, 4}$binhdna$,
 	// checktime=$binhdna$2013-02-03 19:54:00$binhdna$
 	// WHERE id=345399
+}
+
+func TestExecQueriesInTransaction(t *testing.T) {
+	queries := StringArray{}
+	db, err := Connect(NewSQLConfig("./config.ini"))
+	if err != nil {
+		t.Error("DB has to have no connection error")
+	}
+	_, createErr := db.Exec("CREATE table sqlpgsongs as select * from nssongs ORDER BY id ASC LIMIT 2") // Get id 1 & 6
+	if createErr != nil {
+		t.Error("sqlpgsongs has to be created")
+	}
+
+	queries.Push("UPDATE sqlpgsongs SET plays=12345 where id=1;")
+	queries.Push("UPDATE sqlpgsongs SET plays=23456 where id=6;")
+	queries.Push("UPDATE sqlpgsongs SET duration=666 where id=1;")
+	queries.Push("UPDATE sqlpgsongs SET duration=111 where id=6;")
+
+	txErr := ExecQueriesInTransaction(db, &queries)
+	if txErr != nil {
+		t.Error("Transaction cannot complete!")
+	}
+
+	ids := []Int{}
+	err = db.Select(&ids, "SELECT plays FROM sqlpgsongs ORDER BY id ASC")
+	if err != nil {
+		t.Error("Cannot select ids")
+	} else {
+		if ids[0] != 12345 || ids[1] != 23456 {
+			t.Log(ids)
+			t.Error("New plays values are not correct")
+		}
+	}
+
+	durations := []Int{}
+	err = db.Select(&durations, "SELECT duration FROM sqlpgsongs ORDER BY id ASC")
+	if err != nil {
+		t.Error("Cannot select durations")
+	} else {
+		if durations[0] != 666 || durations[1] != 111 {
+			t.Log(durations)
+			t.Error("New duration values are not correct")
+		}
+	}
+
+	_, dropErr := db.Exec("DROP TABLE IF EXISTS sqlpgsongs")
+	if dropErr != nil {
+		t.Error("sqlpgsongs has to be dropped")
+	}
+	db.Close()
 }
