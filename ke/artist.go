@@ -10,7 +10,7 @@ import (
 
 type Artist struct {
 	Id        dna.Int
-	Title     dna.String
+	Name      dna.String
 	Coverart  dna.String
 	Nsongs    dna.Int
 	Nalbums   dna.Int
@@ -21,7 +21,7 @@ type Artist struct {
 func NewArtist() *Artist {
 	artist := new(Artist)
 	artist.Id = 0
-	artist.Title = ""
+	artist.Name = ""
 	artist.Coverart = ""
 	artist.Nsongs = 0
 	artist.Nalbums = 0

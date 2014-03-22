@@ -10,8 +10,11 @@ import (
 
 // Defines API key and session key TV
 const (
+	// More API key a34811d0cdc52c769a54647b6bde97de
 	TV_API_KEY     = dna.String("d04210a70026ad9323076716781c223f")
 	TV_SESSION_KEY = dna.String("91618dfec493ed7dc9d61ac088dff36b")
+
+	// Session key efee214b668c266173af983e7f33d217
 )
 
 // TV defines basic TV type
@@ -92,6 +95,7 @@ func GetTV(id dna.Int) (*TV, error) {
 		tv.Id = apiTV.Id + ID_DIFFERENCE
 
 		if tv.Id != id {
+
 			return nil, errors.New(string(dna.Sprintf("Item id: %v - key:%v does not match", tv.Id, tv.Key)))
 		}
 		tv.Key = GetKey(tv.Id)

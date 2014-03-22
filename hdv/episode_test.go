@@ -59,9 +59,9 @@ func ExampleGetEpisode() {
 	// SubtitleExt : dna.StringArray{"http://s.vn-hd.com/mp4_02/store_01_2014/onair_2014/Grimm_S03_HDTV_AC3/E001/Grimm_S03_HDTV_AC3_E001_VIE.srt", "http://s.vn-hd.com/mp4_02/store_01_2014/onair_2014/Grimm_S03_HDTV_AC3/E001/Grimm_S03_HDTV_AC3_E001_ENG.srt"}
 	// SubtitleExtSe : dna.StringArray{"http://s.vn-hd.com/mp4_02/store_01_2014/onair_2014/Grimm_S03_HDTV_AC3/E001/Grimm_S03_HDTV_AC3_E001_VIE.srt", "http://s.vn-hd.com/mp4_02/store_01_2014/onair_2014/Grimm_S03_HDTV_AC3/E001/Grimm_S03_HDTV_AC3_E001_ENG.srt"}
 	// Subtitle : dna.StringArray{"", "http://s.vn-hd.com/mp4_02/store_01_2014/onair_2014/Grimm_S03_HDTV_AC3/E001/Grimm_S03_HDTV_AC3_E001_ENG.srt"}
-	// EpisodeId : 12
+	// EpisodeId : 15
 	// Audiodub : 0
-	// Audio : 1
+	// Audio : 0
 	// Season : "[{\"MovieID\":\"473\",\"Name\":\"Grimm (Season 1)\"},{\"MovieID\":\"2364\",\"Name\":\"Grimm (Season 2)\"}]"
 	// PlaylistM3u8 : ""
 	// ViSrt : ""

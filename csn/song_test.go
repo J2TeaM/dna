@@ -30,6 +30,11 @@ func ExampleGetSong() {
 	if song.Formats == "" {
 		panic("Has to have Formats")
 	}
+
+	if song.AlbumHref == "" {
+		panic("Album href have value")
+	}
+	song.AlbumHref = "http://playlist.chiasenhac.com/nghe-album/hoa-no-ve-dem~giang-tu-huong-lan~1222808.html"
 	song.AlbumCoverart = "http://data.chiasenhac.com/data/cover/17/16766.jpg"
 	song.Plays = 1205
 	song.Downloads = 104

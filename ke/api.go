@@ -174,7 +174,7 @@ type APIArtist struct {
 func (apiArtistEntry *APIArtist) ToArtist() *Artist {
 	artist := NewArtist()
 	artist.Id = apiArtistEntry.Artist.Id
-	artist.Title = apiArtistEntry.Artist.Title
+	artist.Name = apiArtistEntry.Artist.Title
 	artist.Coverart = apiArtistEntry.Artist.Coverart
 	artist.Nsongs = apiArtistEntry.Nsongs
 	artist.Nalbums = apiArtistEntry.Nalbums

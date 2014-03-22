@@ -51,7 +51,7 @@ func getColumn(f reflect.StructField, structValue interface{}) (dna.String, dna.
 	return columnName, columnValue
 }
 
-// GetInsertQuery returns insert statement from a struct. If input value is not struct, it will panic.
+// GetInsertStatement returns insert statement from a struct. If input value is not struct, it will panic.
 //	* tbName : A name of table in database you want to insert
 //	* structValue : A struct-typed value. The struct's fields has to be dna basic types (dna.Int, dna.String..) or time.Time
 //	* isPrintable: A param determines where to print the pretty result statement
@@ -101,9 +101,68 @@ func GetInsertStatement(tbName dna.String, structValue interface{}, isPrintable 
 
 	}
 	if isPrintable == true {
-		return "INSERT INTO " + tbName + "\n(" + columnNames.Join(",") + ")\n" + "VALUES (\n" + columnValues.Join(",\n") + "\n)"
+		return "INSERT INTO " + tbName + "\n(" + columnNames.Join(",") + ")\n" + "VALUES (\n" + columnValues.Join(",\n") + "\n);"
 	} else {
-		return "INSERT INTO " + tbName + "(" + columnNames.Join(",") + ")" + " VALUES (" + columnValues.Join(",") + ")"
+		return "INSERT INTO " + tbName + "(" + columnNames.Join(",") + ")" + " VALUES (" + columnValues.Join(",") + ");"
+	}
+}
+
+// GetInsertIgnoreStatement returns insert ignore statement from a struct. If input value is not struct, it will panic.
+//	* tbName : A name of table in database you want to insert
+//	* structValue : A struct-typed value. The struct's fields has to be dna basic types (dna.Int, dna.String..) or time.Time
+//	* primaryColumn : A name of primary column. If a row is duplicate, it will be discarded.
+//	* primaryValue : A value of row needed to be compared.
+//	* isPrintable: A param determines where to print the pretty result statement
+//	* Return an insert statement
+// Notice:  Insert statement uses Dollar-quoted String Constants with special tag "binhdna".
+// So string or array is contained between $binhdna$ symbols.
+// Therefore no need to escape values.
+func GetInsertIgnoreStatement(tbName dna.String, structValue interface{}, primaryColumn dna.String, primaryValue interface{}, isPrintable dna.Bool) dna.String {
+	var realKind string
+	var columnNames, columnValues dna.StringArray
+	tempintslice := []int{0}
+	var ielements int
+	var kind string = reflect.TypeOf(structValue).Kind().String()
+	if kind == "ptr" {
+		realKind = reflect.TypeOf(structValue).Elem().Kind().String()
+
+	} else {
+		realKind = reflect.TypeOf(structValue).Kind().String()
+
+	}
+
+	if realKind != "struct" {
+		panic("Param has to be struct")
+	}
+
+	if kind == "ptr" {
+		ielements = reflect.TypeOf(structValue).Elem().NumField()
+	} else {
+		ielements = reflect.TypeOf(structValue).NumField()
+	}
+
+	for i := 0; i < ielements; i++ {
+		tempintslice[0] = i
+		if kind == "ptr" {
+			f := reflect.TypeOf(structValue).Elem().FieldByIndex(tempintslice)
+			v := reflect.ValueOf(structValue).Elem().FieldByIndex(tempintslice)
+			clName, clValue := getColumn(f, v.Interface())
+			columnNames.Push(clName)
+			columnValues.Push(clValue)
+		} else {
+			f := reflect.TypeOf(structValue).FieldByIndex(tempintslice)
+			v := reflect.ValueOf(structValue).FieldByIndex(tempintslice)
+			clName, clValue := getColumn(f, v.Interface())
+			columnNames.Push(clName)
+			columnValues.Push(clValue)
+		}
+
+	}
+	condStr := dna.Sprintf("WHERE NOT EXISTS (SELECT 1 FROM %v WHERE id=%v)", tbName, primaryValue)
+	if isPrintable == true {
+		return "INSERT INTO " + tbName + "\n(" + columnNames.Join(",") + ")\n" + " SELECT " + columnValues.Join(",\n") + " \n" + condStr + ";" + " \n"
+	} else {
+		return "INSERT INTO " + tbName + "(" + columnNames.Join(",") + ")" + " SELECT " + columnValues.Join(",") + " " + condStr + ";"
 	}
 }
 
@@ -177,7 +236,7 @@ func GetUpdateStatement(tbName dna.String, structValue interface{}, conditionCol
 	for _, column := range columns {
 		result.Push(getPairValue(structValue, column))
 	}
-	conditionRet := "\nWHERE " + getPairValue(structValue, conditionColumn)
+	conditionRet := "\nWHERE " + getPairValue(structValue, conditionColumn) + ";"
 	return query + result.Join(",\n") + conditionRet, nil
 }
 

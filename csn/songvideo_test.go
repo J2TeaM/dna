@@ -17,7 +17,7 @@ func TestGetSongVideo(t *testing.T) {
 }
 func ExampleGetSongVideo() {
 	var video *Video
-	item, err := GetSongVideo(1209100)
+	item, err := GetSongVideo(1216124)
 	if err != nil {
 		panic(err.Error())
 	} else {
@@ -35,34 +35,37 @@ func ExampleGetSongVideo() {
 		}
 	}
 	PanicError(err)
-	if video.Plays < 342712 {
-		panic("Plays has to be greater than 342712")
+	if video.Plays < 32778 {
+		panic("Plays has to be greater than 32778")
 	}
 	if video.Downloads < 9858 {
 		panic("Plays has to be greater than 9858")
 	}
-	video.Plays = 342712
+	video.Plays = 32778
 	video.Downloads = 9858
 	video.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
+	if video.Formats.Length() == 0 {
+		panic("Video has to have formats")
+	}
 	// video.Formats changing from day to day "1183/3/1182901-658f6751" => `3` means Wed
 	video.Formats = "[{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":45440,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":67490,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":122300,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/flac/file-name.mp4\",\"type\":\"mp4\",\"file_size\":228310,\"resolution\":\"1080p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21270,\"resolution\":\"180p\"}]"
 	LogStruct(video)
 	// Output:
-	// Id : 1209100
-	// Title : "Con Gái Thời Nay"
-	// Artists : dna.StringArray{"Lý Hải", "Bảo Chung"}
-	// Authors : dna.StringArray{"Văn Hoà"}
+	// Id : 1216124
+	// Title : "Mình Yêu Nhau Đi"
+	// Artists : dna.StringArray{"Bích Phương"}
+	// Authors : dna.StringArray{"Tiên Cookie"}
 	// Topics : dna.StringArray{"Video Clip", "Việt Nam"}
-	// Thumbnail : "http://data.chiasenhac.com/data/thumb/1210/1209100_prv.jpg"
-	// Producer : ""
+	// Thumbnail : "http://data.chiasenhac.com/data/thumb/1217/1216124_prv.jpg"
+	// Producer : "RED Team (2014)"
 	// Downloads : 9858
-	// Plays : 342712
+	// Plays : 32778
 	// Formats : "[{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":45440,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":67490,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":122300,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/flac/file-name.mp4\",\"type\":\"mp4\",\"file_size\":228310,\"resolution\":\"1080p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1210/3/1209100-56d5b4b1/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21270,\"resolution\":\"180p\"}]"
-	// Href : "http://chiasenhac.com/hd/video/v-video/con-gai-thoi-nay~ly-hai-bao-chung~1209100.html"
+	// Href : "http://chiasenhac.com/hd/video/v-video/minh-yeu-nhau-di~bich-phuong~1216124.html"
 	// IsLyric : 1
-	// Lyric : "Con gái thời nay trông thật là xinh \nNhư hoa vừa nở ngày xuân đầu mùa\nLàn da trắng tựa như mây \nLại thêm nụ cười duyên dáng \nLàm cho lòng anh đây nhớ.\n\nCon gái thời nay trông thật xì teen \nTung tăng ngoài phố làm bao người nhìn\nNhiều anh cứ muốn làm quen \nLàm sao được lòng em yêu \nÔi con gái nhà ai cưng ghê.\n\nDáng em tựa như nàng tiên đang về trên phố\nThì cho anh đi theo cùng \nAnh đây vẫn còn cô đơn nguyện xin dâng tròn cuộc đời anh \nCon Gái Thời Nay lyrics on ChiaSeNhac.com\nNếu em chưa chồng xin em trả lời đi để anh thương.\n\nCon gái thời nay trông thật là yêu \nYêu em từ phút gặp em lần đâu\nVậy là anh đã gặp may \nĐôi ta là do duyên số \nYêu ai cũng vậy yêu dùm anh đi."
-	// DateReleased : "2014"
-	// DateCreated : "2014-01-25 01:11:00"
+	// Lyric : "Hình như anh có điều muốn nói\nCứ ngập ngừng rồi thôi\nVà có lẽ anh không biết rằng em cũng đang chờ đợi.\n\nỞ cạnh bên anh bình yên lắm\nAnh hiền lành ấm áp\nCứ tiếp tục ngại ngùng thì ai sẽ là người đầu tiên nói ra?\n\n[ĐK 1:]\nHay là mình cứ bất chấp hết yêu nhau đi\nHay để chắc chắn anh cứ lắng nghe tim muốn gì\nRồi nói cho em nghe\nMột câu thôi.\n\n1, 2, 3, 5... anh có đánh rơi nhịp nào không?\nNếu câu trả lời là có anh hãy đến ôm em ngay đi\nEm đã chờ đợi từ anh giây phút ấy cũng lâu lắm rồi\nVà dẫu cho mai sau có ra sao\nThì em vẫn sẽ không hối tiếc vì ngày hôm nay đã nói yêu.\n\n[ĐK 2:]\nCho dù ta đã mất rất rất lâu để yêu nhau\nNhưng chẳng còn gì ý nghĩa nếu như chúng ta không hiểu nhau\nMình Yêu Nhau Đi lyrics on ChiaSeNhac.com\nVà muốn quan tâm nhau, phải không anh?\nVà em xin hứa sẽ mãi mãi yêu một mình anh.\n\nCho dù ngày sau dẫu có nắng hay mưa trên đầu\nEm chẳng ngại điều gì đâu chỉ cần chúng ta che chở nhau\nCó anh bên em là em yên lòng\nKể từ hôm nay em sẽ chính thức được gọi anh: Anh yêu."
+	// DateReleased : ""
+	// DateCreated : "2014-02-09 21:10:00"
 	// Type : false
 	// Checktime : "2013-11-21 00:00:00"
 }

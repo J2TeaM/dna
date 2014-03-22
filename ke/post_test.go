@@ -72,10 +72,10 @@ func ExampleGetAPISongEntry() {
 	// Plays : 14727
 	// ListenType : 0
 	// Lyric : "<p>\r\n\t<strong>Giáng Sinh Không Nhà </strong></p>\r\n<p>\r\n\t1. Chân bước đi dưới muôn ánh đèn đêm<br />\r\n\tNhưng cớ sao vẫn luôn thấy quạnh hiu<br />\r\n\tThêm Giáng Sinh nữa con đã không ở nhà.</p>\r\n<p>\r\n\tTrên phố đông tấp nập người lại qua<br />\r\n\tNhưng trái tim vẫn luôn nhớ nơi xa<br />\r\n\tCon muốn quay bước chân muốn trở về nhà.</p>\r\n<p>\r\n\t[ĐK:]<br />\r\n\tVề nghe gió đông đất trời giá lạnh<br />\r\n\tĐể ngồi nép bên nhau lòng con ấm hơn<br />\r\n\tNhìn theo ánh sao đêm gửi lời chúc lành<br />\r\n\tGiờ tâm trí con mong...về nhà.</p>\r\n<p>\r\n\t2. Khi tiếng chuông ngân lên lúc nửa đêm<br />\r\n\tThấy xuyến xao giống như những ngày xưa<br />\r\n\tTheo lũ bạn tung tăng đi xem nhà thờ.</p>\r\n<p>\r\n\tNhư cánh chim đến lúc cũng bay xa<br />\r\n\tCon đã mang theo mình những ước vọng<br />\r\n\tNhưng lúc này bâng khuâng con nhớ mọi người.</p>\r\n<p>\r\n\t[ĐK]<br />\r\n\tNhững ký ức ấm áp mãi như đang còn<br />\r\n\tVà sẽ giúp con đứng vững trước những phong ba<br />\r\n\tTrong tim con luôn yêu và nhớ thiết tha<br />\r\n\tMarry christmas, giáng sinh bình an.</p>"
-	// Link : "http://media2.keeng.vn/medias/audio/2013/12/19/a5cc9183b876c288f099e97aecc189f004b2137a_128.mp3"
+	// Link : "http://streaming1.keeng.vn/1968535_1_wap.mp3"
 	// MediaUrlMono : "http://media2.keeng.vn/medias/audio/2013/12/19/a5cc9183b876c288f099e97aecc189f004b2137a_24.mp3"
-	// MediaUrlPre : "http://media2.keeng.vn/medias/audio/2013/12/19/a5cc9183b876c288f099e97aecc189f004b2137a_128.mp3"
-	// DownloadUrl : "http://media2.keeng.vn/medias/audio/2013/12/19/a5cc9183b876c288f099e97aecc189f004b2137a.mp3"
+	// MediaUrlPre : "http://streaming1.keeng.vn/1968535_1_wap.mp3"
+	// DownloadUrl : "http://streaming1.keeng.vn/1968535_1.mp3"
 	// IsDownload : 1
 	// RingbacktoneCode : ""
 	// RingbacktonePrice : 0

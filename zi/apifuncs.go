@@ -4,6 +4,7 @@ import (
 	. "dna"
 	"dna/http"
 	"encoding/json"
+	"errors"
 )
 
 // Defines key code of API
@@ -332,4 +333,28 @@ func GetAPITV(id Int) (*APITV, error) {
 
 type tempAPITVReponse struct {
 	Response APITV `json:"response"`
+}
+
+// GetAPIUser gets user info from ZING ME with URL format like
+// http://mapi2.me.zing.vn/frs/mapi2/user?avatarSize=100&fields=status,feed,dob,gender,profilepoint,mobile,coverurl,statuswall,friend,vip,status,userid,tinyurl,displayname,username,profile_type,email,yahooid,googleid&method=user.getinfo&ostype=iOS&session_key=2K78.335113.a2.rNWf9HK_db8E1LzI01XQKcLnD3fZTZjO6G-5rD4barFYyK41&uids=335113
+func GetAPIUsers(ids IntArray) ([]APIUser, error) {
+	var apiFullUser = new(apiFullUser)
+	var baseURL String = "http://mapi2.me.zing.vn/frs/mapi2/user?avatarSize=100&fields=status,feed,dob,gender,profilepoint,mobile,coverurl,statuswall,friend,vip,status,userid,tinyurl,displayname,username,profile_type,email,yahooid,googleid&method=user.getinfo&ostype=iOS&session_key=2K78.335113.a2.rNWf9HK_db8E1LzI01XQKcLnD3fZTZjO6G-5rD4barFYyK41&uids="
+	link := baseURL + ids.Join(",")
+	// Log(link)
+	result, err := http.Get(link)
+	if err == nil {
+		data := &result.Data
+
+		// Log(*data)
+		json.Unmarshal([]byte(*data), apiFullUser)
+		if apiFullUser.ErrorCode == 0 {
+			return apiFullUser.Data.List, nil
+		} else {
+			return nil, errors.New(Sprintf("Cannot getting user ids:%v - Error Code: %v - %v", ids.Join(","), apiFullUser.ErrorCode, apiFullUser.ErrorMessage).String())
+		}
+
+	} else {
+		return nil, err
+	}
 }

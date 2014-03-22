@@ -170,3 +170,45 @@ type APIProgramGenre struct {
 	Id   dna.Int    `json:"id"`
 	Name dna.String `json:"name"`
 }
+
+type APIUser struct {
+	Id           dna.Int      `json:"uid"`
+	Email        dna.String   `json:"eml"`
+	Mobile       []dna.String `json:"mob"`
+	ProfilePoint dna.Int      `json:"prt"`
+	StatusWall   dna.String   `json:"statuswall"`
+	DisplayName  dna.String   `json:"dpn"`
+	Point        dna.Int      `json:"poi"`
+	Username     dna.String   `json:"urn"`
+	Avatar       dna.String   `json:"avt"`
+	BirthdayType dna.Int      `json:"dobtype"`
+	Vip          struct {
+		Total     dna.Int    `json:"total"`
+		Block     dna.String `json:"block"`
+		AvatarVip dna.String `json:"ravatarvip"`
+	} `json:"vip"`
+	Benull   dna.Bool   `json:"benull"`
+	Gender   dna.Int    `json:"ged"`
+	Status   dna.Int    `json:"stt"`
+	Birthday dna.String `json:"dob"`
+	GoogleId dna.String `json:"gid"`
+	Feed     struct {
+		WriteWallAll dna.Bool `json:"ewritewall"`
+		ViewWallAll  dna.Bool `json:"eviewwall"`
+	} `json:"feed"`
+	CoverUrl dna.String `json:"coverurl"`
+	YahooId  dna.String `json:"yid"`
+	Friend   struct {
+		Total  dna.Int    `json:"total"`
+		Block  dna.String `json:"block"`
+		Avatar dna.String `json:"ravatar"`
+	} `json:"friend"`
+}
+
+type apiFullUser struct {
+	ErrorCode    dna.Int    `json:"error_code"`
+	ErrorMessage dna.String `json:"error_message"`
+	Data         struct {
+		List []APIUser `json:"list"`
+	} `json:"data"`
+}

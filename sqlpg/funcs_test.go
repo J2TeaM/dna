@@ -37,7 +37,7 @@ func ExampleGetInsertStatement() {
 	// $binhdna$$binhdna$,
 	// $binhdna$2007$binhdna$,
 	// NULL
-	// )
+	// );
 }
 
 func ExampleGetTableName() {
@@ -118,7 +118,7 @@ func ExampleGetUpdateStatement() {
 	// float_value=3.3666666666666667,
 	// songids=$binhdna${1, 2, 3, 4}$binhdna$,
 	// checktime=$binhdna$2013-02-03 19:54:00$binhdna$
-	// WHERE id=345399
+	// WHERE id=345399;
 }
 
 func TestExecQueriesInTransaction(t *testing.T) {
