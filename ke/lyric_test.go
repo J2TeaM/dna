@@ -5,11 +5,11 @@ import (
 )
 
 func ExampleGetLyric() {
-	_, err := GetLyric(1966248)
+	_, err := GetLyric(1972114)
 	if err == nil {
 		panic("Lyric has to have an error")
 	} else {
-		if err.Error() != "Keeng - Lyric ID: 1966248 not found" {
+		if err.Error() != "Keeng - Lyric ID: 1972114 not found" {
 			panic("Wrong error message!")
 		}
 	}

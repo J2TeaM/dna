@@ -67,10 +67,10 @@ func ExampleGetAPISongLyric() {
 	PanicError(err)
 	LogStruct(apiSongLyric)
 	// Output:
-	// Id : ""
+	// Id : 0
 	// Content : "飞身到天边为这世界一战\r\n红日在夜空天际出现\r\n抛出救生圈雾里舞我的剑\r\n邪道外魔星际飞闪\r\n周:你你你快跪下\r\n看我引弓千里箭\r\n汤:你你你快跪下\r\n勿要我放出了魔毯\r\n王:你你你快跪下\r\n勿要我手握天血剑\r\n你你你快跪下\r\n狂风扫落雷电\r\n美少女转身变\r\n已变成战士\r\n以爱凝聚力量救世人跳出生天\r\n身体套光圈合上两眼都见\r\n明亮像佛光天际初现\r\n虽诡计多端但美少女一变\r\n邪道外魔都企一边"
+	// Username : "mp3"
 	// Mark : 0
-	// Author : "buzzed"
 	// Response : zi.APIResponse{MsgCode:1}
 
 }
@@ -161,16 +161,14 @@ func ExampleGetAPIVideo() {
 }
 
 func ExampleGetAPIVideoLyric() {
-	apiVideoLyric, err := GetAPIVideoLyric(1381585674)
+	apiVideoLyric, err := GetAPIVideoLyric(1381585483)
 	PanicError(err)
 	LogStruct(apiVideoLyric)
 	// Output:
-	// Id : ""
-	// Content : "Em yêu ơi sao quên đi từng đêm mưa ướt cuộc tình\r\nMặn nồng ân ái đôi ta cùng say quên đêm giá băng\r\nNay em đã ra đi vùi chôn dĩ vãng ngày nào\r\nHỡi em yêu, người là niềm đau\r\nEm dối gian anh, em dối gian anh\r\nLời yêu nồng say ngày nào\r\nĐã quên lãng sao hỡi người\r\nEm đã xa rồi, em mãi xa rồi\r\nĐể từng đêm ngồi chờ mong người\r\nMà người chẳng quay về\r\nKhi anh đây xa em cõi lòng giá băng\r\nTrong đêm thâu anh mãi gọi tên em, hỡi người\r\nBao nhiêu đêm lang thang, mình đã vùi chôn nỗi buồn\r\nTìm vào quên lãng bằng muôn xót xa\r\nEm yêu ơi sao quên đi từng đêm mưa ướt cuộc tình\r\nMặn nồng ân ái đôi ta cùng say quên đêm giá băng\r\nNay em đã ra đi vùi chôn dĩ vãng ngày nào\r\nHỡi em yêu, người là niềm đau"
-	// Mark : 0
-	// StatusId : 0
-	// Author : "freshyidol"
-	// DateCreated : 0
+	// Id : 431534
+	// Content : "In this farewell\nThere's no blood, there's no alibi\n'Cause I've drawn regret\nFrom the truth of a thousand lies\nSo let mercy come and wash away\n\nWhat I've done, I'll face myself\nTo cross out what I've become\nErase myself and let go of what I've done\n\nPut to rest what you thought\nOf me while I clean this slate\nWith the hands of uncertainty\nSo let mercy come and wash away\n\nWhat I've done, I'll face myself\nTo cross out what I've become\nErase myself, and let go of what I've done\n\nFor what I've done, I start again\nAnd whatever pain may come\nToday this ends, I'm forgiving\n\nWhat I've done, I'll face myself\nTo cross out what I've become, erase myself\nAnd let go of what I've done\n\nWhat I've done\nForgiving what I've done"
+	// Username : "shaphireluz"
+	// Mark : 170
 	// Response : zi.APIResponse{MsgCode:1}
 
 }

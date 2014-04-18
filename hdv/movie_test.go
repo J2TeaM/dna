@@ -16,7 +16,7 @@ func ExampleGetMovie() {
 	// AnotherTitle : "The Scandal"
 	// ForeignTitle : "The Scandal"
 	// VnTitle : "Sự Thật Nghiệt Ngã"
-	// Topics : dna.StringArray{"HDViệt Đề Cử", "Hàn quốc", "Gia Đình", "Lãng Mạn"}
+	// Topics : dna.StringArray{"Hàn quốc", "Gia Đình", "Lãng Mạn"}
 	// Actors : dna.StringArray{"Kim Jae Won", "Jung Yoon Suk", "Kim Hwi Soo"}
 	// Directors : dna.StringArray{"Kim Jin Man", "Park Jae Bum"}
 	// Countries : dna.StringArray{"Hàn Quốc"}

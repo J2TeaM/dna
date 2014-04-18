@@ -34,8 +34,8 @@ func ExampleGetAlbum() {
 	// LinkKey : "6d0815b24a40117506fe5f12f3234846"
 	// LinkShare : "http://www.nhaccuatui.com/playlist/biet-truoc-se-khong-mat-nhau-single-vinh-thuyen-kim-ho-quang-hieu.nsnkteavOHbX.html"
 	// Type : "PLAYLIST_SONG"
-	// Official : false
-	// HasFeature : true
+	// Official : true
+	// HasFeature : false
 	// DateCreated : "2013-11-28 20:09:02"
 	// Checktime : "2013-11-21 00:00:00"
 }

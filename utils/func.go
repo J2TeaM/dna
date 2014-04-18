@@ -77,7 +77,7 @@ func GetMaxId(tableName dna.String, db *sqlpg.DB) (dna.Int, error) {
 }
 
 // SelectMissingIds accepts a table name as an input and a list of ids as a source.
-// It returns a new list of ids that do not exist in the destination table
+// It returns a new list of ids that does not exist in the destination table
 //
 // 	* tblName : a table name
 // 	* srcIds : a source ids
@@ -117,7 +117,7 @@ func SelectMissingIds(tblName dna.String, srcIds *dna.IntArray, db *sqlpg.DB) (*
 }
 
 // SelectMissingIds accepts a table name as an input and a range as a source.
-// It returns a new list of ids that do not exist in the destination table
+// It returns a new list of ids that does not exist in the destination table
 //
 // 	* tblName : a table name
 // 	* head, tail : first and last number defines a range
@@ -152,7 +152,7 @@ func SelectMissingIdsWithRange(tblName dna.String, head, tail dna.Int, db *sqlpg
 }
 
 // SelectMissingKeys accepts a table name as an input and a list of keys as a source.
-// It returns a new list of keys that do not exist in the destination table
+// It returns a new list of keys that does not exist in the destination table
 //
 // 	* tblName : a table name
 // 	* srcKeys : a source keys

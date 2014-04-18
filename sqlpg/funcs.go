@@ -254,15 +254,16 @@ var globalSqlTransactoNo = 0
 func ExecQueriesInTransaction(db *DB, queries *dna.StringArray) error {
 	var err error
 	globalSqlTransactoNo += 1
-	tx, err := db.Begin()
-	if err != nil {
-		dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not create transaction\n")
-	}
+	// tx, err := db.Begin()
+	// if err != nil {
+	// 	dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not create transaction\n")
+	// }
 
 	for idx, query := range *queries {
-		_, err = tx.Exec(query.String())
+		_, err = db.Exec(query.String())
+		// _, err = tx.Exec(query.String())
 		if err != nil {
-			dna.Log(dna.Sprintf("DNAError: Transaction No: %v - %v - %v - %v\n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not execute the statement"))
+			dna.Log(dna.Sprintf("DNAError: Query series No: %v - %v - %v - %v\n", dna.Sprintf("%v", globalSqlTransactoNo), idx, err.Error(), "Could not execute the statement"))
 		}
 		// stmt, err := tx.Prepare(query.String())
 		// if err != nil {
@@ -279,10 +280,10 @@ func ExecQueriesInTransaction(db *DB, queries *dna.StringArray) error {
 		// 	}
 		// }
 	}
-	err = tx.Commit()
-	if err != nil {
-		dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not commit transaction\n")
-	}
+	// err = tx.Commit()
+	// if err != nil {
+	// 	dna.Log("Transaction No:" + dna.Sprintf("%v", globalSqlTransactoNo).String() + err.Error() + " Could not commit transaction\n")
+	// }
 
 	if err != nil {
 		errQueries := dna.StringArray(queries.Map(func(val dna.String, idx dna.Int) dna.String {

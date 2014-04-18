@@ -93,6 +93,7 @@ func getSongFormats(song *Song) <-chan bool {
 			data := &result.Data
 			urlsArr := data.FindAllString(`<a href.+(Link|Mobile) Download.+`, -1)
 			if urlsArr.Length() > 0 {
+				// dna.Log(urlsArr.Length())
 				song.Formats, song.Type = GetFormats(urlsArr)
 				// dna.Log(song.Formats)
 			}

@@ -54,7 +54,7 @@ func ExampleGetSong() {
 	// Topics : dna.StringArray{"Âu Mỹ", "Pop"}
 	// Link : "http://m.mp3.zing.vn/xml/song-load/MjAxMyUyRjEyJTJGMDElMkY4JTJGOCUyRjg4OTc0Mzg5MGJlNTlmMWVkNDgwYTZjM2Q2NWViZDNiLm1wMyU3QzI="
 	// Path : "2013/12/01/8/8/889743890be59f1ed480a6c3d65ebd3b.mp3|2"
-	// Lyric : ""
+	// Lyric : "\"Bridges\"\n(feat. John Legend)\n\nOn my, on my pride\nI don't know, I don't know where we could start\nThe bombs they were throwing, we should've know\nSomething would die\nI look out my window\nWatching my world blown up from my eyes\n\nI see bridges burning\nCrashing down in the fire fight\nThe time's not turning\nThe war is over, we both know why\nYou're not coming home\nYou're not coming home\nI'll watch these bridges burning on my own\n\nWe loved, we loved hard\nBut who knew that this love was bad for our hearts\nThrew down our defenses, lost all our senses\nOur bodies exposed\nThe moments of weakness slowly defeat us\nStole all our hope\n\nI see bridges burning\nCrashing down in the fire fight\nThe time's not turning\nThe war is over, we both know why\nYou're not coming home\nYou're not coming home\nI'll watch these bridges burning on my own\n\nOh oh\nYou know that's clear\nOh oh\nYou're home and I care\nOh oh\nFrom where I stand\nI see bridges burning\n\nI see bridges burning\nCrashing down in the fire fight\nThe time's not turning\nThe war is over, we both know why\nYou're letting go\nYou're letting go\nI'll watch these bridges burning on my own\n\nI'll watch these bridges burning on my own\nBridges burning on my\u0085 own"
 	// DateCreated : "2013-12-01 00:00:00"
 	// Checktime : "2013-11-21 00:00:00"
 	// ArtistIds : dna.IntArray{12556, 2072}

@@ -2,7 +2,6 @@ package csn
 
 import (
 	"dna"
-	"encoding/json"
 )
 
 // SongUrl defines a struct for format field of csnsongs
@@ -115,12 +114,19 @@ func getStringifiedSongUrls(urls dna.StringArray) dna.String {
 	// http://data.chiasenhac.com/downloads/1184/2/1183017-cfc5f7df/flac/file-name.flac
 	// replace the link 500kps and lossless with available link,  apply for registered user only
 	// and reduce the link length
-	b, err := json.Marshal(songUrls)
-	if err == nil {
-		return dna.String(b)
-	} else {
-		return ""
+	var ret = dna.StringArray{}
+	for _, songUrl := range songUrls {
+		var br dna.String
+		if songUrl.Bitrate == "Lossless" {
+			br = "1411"
+		} else {
+			br = songUrl.Bitrate.Replace("kbps", "")
+		}
+		t := `"(` + songUrl.Link + "," + songUrl.Type + "," + songUrl.Size.ToString() + "," + br + `)"`
+		ret.Push(t)
 	}
+	// dna.Log(`{` + ret.Join(",") + `}`)
+	return `{` + ret.Join(",") + `}`
 
 }
 
@@ -153,12 +159,14 @@ func getStringifiedVideoUrls(urls dna.StringArray) dna.String {
 			videoUrls = append(videoUrls, *songUrl)
 		}
 	})
-	b, err := json.Marshal(videoUrls)
-	if err == nil {
-		return dna.String(b)
-	} else {
-		return ""
+
+	var ret = dna.StringArray{}
+	for _, videoUrl := range videoUrls {
+		t := `"(` + videoUrl.Link + "," + videoUrl.Type + "," + videoUrl.Size.ToString() + "," + videoUrl.Resolution.Replace("p", "") + `)"`
+		ret.Push(t)
 	}
+	// dna.Log(`{` + ret.Join(",") + `}`)
+	return `{` + ret.Join(",") + `}`
 }
 
 // GetFormats returns proper formatStr for a song or a video.

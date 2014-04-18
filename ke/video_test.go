@@ -21,7 +21,12 @@ func ExampleGetVideo() {
 	if video.Plays < 6688 {
 		panic("Wrong play")
 	}
+	if video.Thumbnail == "" {
+		panic("WRong covert")
+	}
 	video.Plays = 6688
+
+	video.Thumbnail = "http://media3.keeng.vn:8082/medias/images/images_thumb/f_medias_6/video/images/2013/12/24/e2d4ef038c1922a23d4f82b7d4c06972638e8753_147_83.jpg"
 	dna.LogStruct(video)
 	// Output:
 	// Id : 215236

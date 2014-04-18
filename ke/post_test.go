@@ -30,6 +30,10 @@ func ExampleGetAPIAlbum() {
 		}
 		var length = len(album.SongList)
 		album.SongList = nil
+		if album.Coverart == "" {
+			panic("WRong covert")
+		}
+		album.Coverart = "http://media3.keeng.vn:8082/medias/images/images_thumb/f_medias_6/album/image/2014/01/10/27a4cdcbb7f60aa123529a49d76888708ec8872d_103_103.jpg"
 		dna.LogStruct(album)
 		dna.Log("Lenght :", length)
 	} else {
@@ -59,6 +63,30 @@ func ExampleGetAPISongEntry() {
 		}
 		var length = len(apiSongEntry.RelevantSongs)
 		dna.Log("MAIN SONG:")
+		if apiSongEntry.MainSong.Link == "" {
+			panic("apiSongEntry.MainSong link is empty")
+		}
+		if apiSongEntry.MainSong.MediaUrlMono == "" {
+			panic("apiSongEntry.MainSong media url is empty")
+		}
+		if apiSongEntry.MainSong.MediaUrlPre == "" {
+			panic("apiSongEntry.MainSong medial url pre is empty")
+		}
+		if apiSongEntry.MainSong.DownloadUrl == "" {
+			panic("apiSongEntry.MainSong download url is empty")
+		}
+		apiSongEntry.MainSong.Link = "http://streaming1.keeng.vn/1968535_1_wap.mp3"
+		apiSongEntry.MainSong.MediaUrlMono = "http://media2.keeng.vn/medias/audio/2013/12/19/a5cc9183b876c288f099e97aecc189f004b2137a_24.mp3"
+		apiSongEntry.MainSong.MediaUrlPre = "http://streaming1.keeng.vn/1968535_1_wap.mp3"
+		apiSongEntry.MainSong.DownloadUrl = "http://streaming1.keeng.vn/1968535_1.mp3"
+		if apiSongEntry.MainSong.Coverart == "" {
+			panic("WRong covert")
+		}
+		if apiSongEntry.MainSong.Coverart310 == "" {
+			panic("WRong coverart 310")
+		}
+		apiSongEntry.MainSong.Coverart = "http://media3.keeng.vn:8082/medias/images/images_thumb/f_medias2/singer/2013/06/13/a05019cceb7742d108159d661d894f19bc886eb1_103_103.jpg"
+		apiSongEntry.MainSong.Coverart310 = "http://media3.keeng.vn:8082/medias/images/images_thumb/f_medias2/singer/2013/06/13/a05019cceb7742d108159d661d894f19bc886eb1_310_310.jpg"
 		dna.LogStruct(&apiSongEntry.MainSong)
 		dna.Log("SIMILAR SONGS LENGTH:", length)
 	} else {
@@ -92,8 +120,8 @@ func ExampleGetAPISongEntry() {
 func ExampleGetAPIArtistEntry() {
 	apiArtistEntry, err := GetAPIArtistEntry(1394)
 	if err == nil {
-		if apiArtistEntry.Nsongs < 46 {
-			panic("Nsongs has to be greater than 46")
+		if apiArtistEntry.Nsongs < 43 {
+			panic("Nsongs has to be greater than 46 - GOT" + string(apiArtistEntry.Nsongs.ToString()))
 		}
 		if apiArtistEntry.Nalbums < 7 {
 			panic("Nalbums has to be greater than 7")
@@ -101,9 +129,13 @@ func ExampleGetAPIArtistEntry() {
 		if apiArtistEntry.Nvideos < 24 {
 			panic("Nvideos has to be greater than 24")
 		}
+		if apiArtistEntry.Artist.Coverart == "" {
+			panic("Artist.Coverart has not to be equal to empty")
+		}
 		apiArtistEntry.Nsongs = 46
 		apiArtistEntry.Nalbums = 7
 		apiArtistEntry.Nvideos = 24
+		apiArtistEntry.Artist.Coverart = "http://media3.keeng.vn:8082/medias/images/images_thumb/f_medias_6/singer/2013/11/19/1226beceb5d049998976a08f822c0cc9037c0a32_103_103.jpg"
 		dna.LogStruct(apiArtistEntry)
 	} else {
 		panic("Error has to be nil")

@@ -20,6 +20,10 @@ func ExampleGetAlbum() {
 	if album.Plays < 36049 {
 		panic("Wrong play")
 	}
+	if album.Coverart == "" {
+		panic("WRong covert")
+	}
+	album.Coverart = "http://media3.keeng.vn:8082/medias/images/images_thumb/f_medias_6/album/image/2013/12/23/b6abfc53bcb1f5ecd1c7a2ee7f6f5292a79e12e2_103_103.jpg"
 	album.Plays = 36049
 	dna.LogStruct(album)
 	// Output:

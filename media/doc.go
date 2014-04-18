@@ -2,6 +2,31 @@
 This package supports accumulation of artists, songs, albums and videos.
 
 
+
+CREATING GRAND SONGS:
+
+
+	Create abbbbbb temp grand songs table by select all tables
+	Create
+
+CUSTOME TYPES:
+	1. source (id int,siteid int)
+	2. album_source ( sources source[], songids int[] )
+
+
+CUSTOM AGGREGATE FUNCTIONS:
+
+	1.agg_array_accum
+
+agg_array_accum accumulates all varchar arrays into a new arrays
+
+CUSTOM TYPES:
+	TYPE media_type AS ENUM ('mp3', 'm4a', 'flac','mp4','flv');
+	TYPE media_bitrate AS ENUM ('128kbps', '320kbps', '32kbps','500kbps','Lossless');
+	TYPE song_format AS (link varchar(300), type media_type, size int4, bitrate media_bitrate);
+
+
+
 CUSTOME PL/PGSQL FUNCTIONS:
 
 	1.dna_hash
@@ -11,6 +36,24 @@ CUSTOME PL/PGSQL FUNCTIONS:
 	5.upsert_hashids
 	6.get_lasted_checktime
 	7.get_sources
+	8.to_bitrate
+	9.anyarray_sort (from https://github.com/JDBurnZ/anyarray)
+	10.anyarray_uniq (from https://github.com/JDBurnZ/anyarray)
+	11.transform_topics
+	12.get_language
+	13.array_avg
+	14.anyarrray_remove (from https://github.com/JDBurnZ/anyarray)
+	15.get_duration
+	16.get_genres
+	17.anyarray_remove (from https://github.com/JDBurnZ/anyarray)
+	18.get_song_details
+	19.get_songids
+	20.to_source
+	21.convert_hashids_to_songids
+	22.get_agg_album // select count(*) from get_agg_album(255555);
+	23.get_high_priority_unordered_hashid
+	24.hash_songids
+	25.anyarray_remove_null(from https://github.com/JDBurnZ/anyarray)
 
 1.dna_hash
 
@@ -208,6 +251,156 @@ Example:
 	  738766 | ccsongs  | Never Say Never | {"Justin Bieber"}
 	(38 rows)
 
+
+8.to_bitrate
+
+	 FUNCTION to_bitrate(bitrate_flag int2) RETURNS int
+
+Example:
+
+	select to_bitrate(7::int2);
+
+11. transform_topics
+
+	FUNCTION transform_topics(topics varchar[]) RETURNS varchar[]
+
+transform_topics tranforms all topics to theirs normalized form
+
+Example:
+
+	 select transform_topics('{"âu, mỹ","nhạc trẻ","nhạc hàn"}') as topics;;
+	                              topics
+	------------------------------------------------------------------
+	 {"Nhạc Âu Mỹ","Nhạc Việt Nam","Nhạc Trẻ","Nhạc Hàn","Tiếng Hàn"}
+	(1 row)
+
+12. get_language
+
+	FUNCTION get_language(topics varchar[]) RETURNS varchar[]
+
+get_language returns a list of langueges found in a list of topics.
+
+Example:
+
+	select * from get_language(transform_topics('{"âu, mỹ","nhạc trẻ","nhạc hàn"}')) as languages;
+	         languages
+	----------------------------
+	 {"Tiếng Việt","Tiếng Hàn"}
+	(1 row)
+
+15.get_duration
+
+	FUNCTION get_duration(int []) RETURNS int
+
+get_duration returns the most occured duration from duration list. Zero values are omitted.
+
+	select get_duration('{333,333,333,0,0,0,0,0,0,0,0,0,0,0,0,0,333,333,333,333,333,333,333,180,333,333,299,332,33	3,333,333,335,333,333,333,333,333,284,333,335,333,333,333,333,333,332,333,333,0,333,333,333,0}');
+	 get_duration
+	--------------
+	          333
+	(1 row)
+
+15.get_genres
+
+	FUNCTION get_genres(topics varchar[]) RETURNS  varchar[]
+
+get_genres returns a list of genres from topics.
+
+	select get_genres('{"Nhạc Việt Nam","Nhạc Trữ Tình","Nhạc Quê Hương",Pop,Ballad,Rock,"Nhạc Cách Mạng","Nhạc Đỏ"}') as genres ;
+	      genres
+	-------------------
+	 {Pop,Ballad,Rock}
+	(1 row)
+
+18.get_song_details
+
+	FUNCTION get_song_details(itemId int) RETURNS   TABLE (mid int,id int, site varchar, title varchar, artists varchar[], album_title varchar, album_artists varchar[], video_title varchar, video_artists varchar[], authors varchar[],topics varchar[],official boolean,plays int,bitrate int,duration int,link varchar,lyric text, date_created timestamp )
+
+Example:
+
+	select * from get_song_details(3144484)
+
+
+19.get_songids
+
+	FUNCTION get_songids(songids int[], src_table varchar) RETURNS varchar[]
+
+Example:
+
+	select * from get_songids('{1321697,1321696,1321695,1321698,1321699}','nssongs');
+	                                                     get_songids
+	----------------------------------------------------------------------------------------------------------------------
+	 {mFphzHqzoQ4G+7Wgq7YgaQ,1krSVeZ8oOQEKnhztITs8A,/Brjgj2O8o04NJQKrwzt3w,sQsKRdgGCYS6tS7NdlKPvQ,Hb96Mv0CjU4MdMlrakwV8g}
+	(1 row)
+
+
+20.to_source
+
+	FUNCTION to_source(sites varchar[],ids int[]) RETURNS source[]
+
+Example:
+
+	select to_source('{nctalbums,ccalbums}'::varchar[],'{12026316,18058}'::int[]);
+	          to_source
+	------------------------------
+	 {"(4,12026316)","(8,18058)"}
+	(1 row)
+
+21.convert_hashids_to_songids
+
+	FUNCTION convert_hashids_to_songids(hashids varchar[]) RETURNS int[]
+
+Example:
+
+	SELECT convert_hashids_to_songids('{0lBTYsgbp8lwm+ltx1ObRw,1OU/S3gEPSUfjvv81tKxPQ}'::varchar[]);
+	 convert_hashids_to_songids
+	----------------------------
+	 {168515,136826}
+	(1 row)
+
+22.get_high_priority_unordered_hashid
+
+	FUNCTION get_high_priority_unordered_hashid(sources source[],hashids varchar[]) RETURNS varchar
+
+get_high_priority_unordered_hashid determined an order of songids in which album being selected.
+For example. Album A has many sources (nct, zi, ns). Because zi has highest priority. The order of the songs in that zi album will be selected. In the case that A has many zi sources, the first one will be chosen.
+
+From the highest priority to the lowest:
+	zi 2
+	ns 1
+	cc 8
+	nct 4
+	nv 16
+	ke 128
+	csn 32
+
+EX:
+
+	select 	get_high_priority_unordered_hashid('{"(4,12026316)","(8,18058)","(16,18058)","(2,18058)"}','{hash1,hash2,hash3	,hash4}');
+	 get_high_priority_unordered_hashid
+	------------------------------------
+	 hash4
+	(1 row)
+
+	select get_high_priority_unordered_hashid('{"(4,12026316)","(8,18058)","(1,18058)","(16,18058)"}','{hash1,	hash2,hash3,hash4}');
+	 get_high_priority_unordered_hashid
+	------------------------------------
+	 hash3
+	(1 row)
+
+24.
+
+	FUNCTION hash_songids(songids int[]) returns int
+
+hash_songids return 32bit integer from songids.
+
+EX:
+
+	select hash_songids('{3065543,622368,1116753,168515,2092682,3161373,2833357,2441939,136826,2788118}');
+	 hash_songids
+	--------------
+	   1278073522
+	(1 row)
 
 */
 package media

@@ -28,8 +28,11 @@ func ExampleGetVideo() {
 	video.Plays = 168297
 	video.Downloads = 5541
 	video.Checktime = time.Date(2013, time.November, 21, 0, 0, 0, 0, time.UTC)
+	if video.Formats == "" || video.Formats.Count("http") != 5 {
+		panic("Wrong formats")
+	}
 	// video.Formats changing from day to day "1183/3/1182901-658f6751" => `3` means Wed
-	video.Formats = "[{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21720,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":31150,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":52740,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":11580,\"resolution\":\"180p\"}]"
+	video.Formats = "{\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/128/file-name.mp4,mp4,35290,360)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/320/file-name.mp4,mp4,51240,480)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/m4a/file-name.mp4,mp4,88840,720)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/flac/file-name.mp4,mp4,167770,1080)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/32/file-name.mp4,mp4,17060,180)\"}"
 	LogStruct(video)
 	// Output:
 	// Id : 1213739
@@ -41,7 +44,7 @@ func ExampleGetVideo() {
 	// Producer : ""
 	// Downloads : 5541
 	// Plays : 168297
-	// Formats : "[{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/128/file-name.mp4\",\"type\":\"mp4\",\"file_size\":21720,\"resolution\":\"360p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/320/file-name.mp4\",\"type\":\"mp4\",\"file_size\":31150,\"resolution\":\"480p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/m4a/file-name.mp4\",\"type\":\"mp4\",\"file_size\":52740,\"resolution\":\"720p\"},{\"link\":\"http://data6.chiasenhac.com/downloads/1183/3/1182901-658f6751/32/file-name.mp4\",\"type\":\"mp4\",\"file_size\":11580,\"resolution\":\"180p\"}]"
+	// Formats : "{\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/128/file-name.mp4,mp4,35290,360)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/320/file-name.mp4,mp4,51240,480)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/m4a/file-name.mp4,mp4,88840,720)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/flac/file-name.mp4,mp4,167770,1080)\",\"(http://data6.chiasenhac.com/downloads/1214/3/1213739-a77ed0e5/32/file-name.mp4,mp4,17060,180)\"}"
 	// Href : "http://chiasenhac.com/hd/video/v-video/thuong-vo~ly-hai~1213739.html"
 	// IsLyric : 1
 	// Lyric : "Muốn chơi cho hoài tôi cứ để vợ lo hoài\nSáng trưa hay chiều cả ngày tôi cứ nhậu say\nTội nghiệp vợ tôi 1 lòng 1 dạ với tôi\nHôm sớm lo cho chồng chưa 1 lần vợ than bất công.\n\nCó khi ra hoài tôi cứ lén vợ ra ngoài \nVới bao cô nàng tóc dài xoả tới ngan vai\nTại gì tôi say nên chẳng lấy lòng được ai\nMới hiểu ra chân tình chỉ có vợ là yêu mình.\n \n[ĐK:]\nƠi vợ vợ ơi...sao mà em hổng cười\nƠi vợ vợ ơi...thương vợ nhất trên đời\nAnh thề từ nay sẽ không còn nhậu say\nThương Vợ lyrics on ChiaSeNhac.com\nAnh thề từ đây sẽ không để ý ai.\n\nƠi vợ vợ ơi...bây giờ anh hiểu rồi\nAnh thiệt không nên,để vợ khổ 1 đời\nAnh thề từ nay chăm lo dựng lại tương lai\nAnh thề suốt kiếp trọn đời không hề đổi thay."

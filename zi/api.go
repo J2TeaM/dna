@@ -40,10 +40,10 @@ type APISong struct {
 
 // APISongLyric maps JSON fields of a song lyric in the API to struct fields.
 type APISongLyric struct {
-	Id       dna.String  `json:"id"`
+	Id       dna.Int     `json:"id"`
 	Content  dna.String  `json:"content"`
+	Username dna.String  `json:"username"`
 	Mark     dna.Int     `json:"mark"`
-	Author   dna.String  `json:"author"`
 	Response APIResponse `json:"response"`
 }
 
@@ -103,13 +103,11 @@ type APIVideo struct {
 
 // APIVideoLyric maps JSON fields of a video lyric in the API to struct fields.
 type APIVideoLyric struct {
-	Id          dna.String  `json:"id"`
-	Content     dna.String  `json:"content"`
-	Mark        dna.Int     `json:"mark"`
-	StatusId    dna.Int     `json:"status_id"`
-	Author      dna.String  `json:"author"`
-	DateCreated dna.Int     `json:"created_date"`
-	Response    APIResponse `json:"response"`
+	Id       dna.Int     `json:"id"`
+	Content  dna.String  `json:"content"`
+	Username dna.String  `json:"username"`
+	Mark     dna.Int     `json:"mark"`
+	Response APIResponse `json:"response"`
 }
 
 // APIArtist maps JSON fields of an artist in the API to struct fields.

@@ -220,9 +220,11 @@ func GetAPIVideoLyric(id Int) (*APIVideoLyric, error) {
 	var apiVideoLyric = new(APIVideoLyric)
 	baseURL := "http://api.mp3.zing.vn/api/mobile/video/getlyrics?"
 	link := Sprintf(`%vkeycode=%v&requestdata={"id":"%v"}`, baseURL, API_KEYCODE, id-ID_DIFFERENCE)
+	// Log(link)
 	result, err := http.Get(link)
 	if err == nil {
 		data := &result.Data
+		// Log(*data)
 		json.Unmarshal([]byte(*data), apiVideoLyric)
 		return apiVideoLyric, nil
 	} else {
