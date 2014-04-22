@@ -36,7 +36,17 @@ func NewQuestion() *Question {
 }
 
 func (q Question) ToRecord() []string {
-	return []string{q.Cat.Subject.String(), q.Cat.Name.String(), q.Description.String(), q.QuestionContent.String(), q.OptionA.String(), q.OptionB.String(), q.OptionC.String(), q.OptionD.String(), q.OptionE.String(), q.Answer.String(), q.Explaination.String(), q.ExerciseNo.ToString().String()}
+
+	if q.Cat.Subject == "non-verbal-reasoning/questions-and-answers" {
+		imagesArr := q.QuestionContent.FindAllString(`<img.+?src=.+?>`, -1)
+		images := dna.StringArray{}
+		for _, image := range imagesArr {
+			images.Push("http://indiabix.com" + image.GetTagAttributes("src"))
+		}
+		return []string{"Non Verbal Reasoning", q.Cat.Name.String(), q.Description.String(), images.Join(",").String(), q.QuestionContent.String(), q.OptionA.String(), q.OptionB.String(), q.OptionC.String(), q.OptionD.String(), q.OptionE.String(), q.Answer.String(), q.Explaination.String(), q.ExerciseNo.ToString().String()}
+	} else {
+		return []string{q.Cat.Subject.String(), q.Cat.Name.String(), q.Description.String(), q.QuestionContent.String(), q.OptionA.String(), q.OptionB.String(), q.OptionC.String(), q.OptionD.String(), q.OptionE.String(), q.Answer.String(), q.Explaination.String(), q.ExerciseNo.ToString().String()}
+	}
 }
 
 type Questions []Question
@@ -178,11 +188,14 @@ func GetQuestions(cat Category, execiseNo dna.Int) (Questions, error) {
 
 	}
 
+	// dna.Log(pageLinks.Unique())
+
 	for _, pageLink := range pageLinks.Unique() {
-		go func() {
+		go func(pageLink dna.String) {
 			c <- <-getQuestions(cat, false, pageLink, pageLinks)
-		}()
+		}(pageLink)
 	}
+
 	for i := 0; i < pageLinks.Unique().Length().ToPrimitiveValue(); i++ {
 		qts := <-c
 		for _, qt := range qts {
